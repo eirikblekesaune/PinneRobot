@@ -5,31 +5,34 @@ VTPinneRobot {
 	var updateTask, <>updateInterval = 1.0;//update is when values are requested from the robot
 	var semaphore;
 
-	*new{arg path;
-		^super.new.init(path);
+	*new{arg path, doConnect = true;
+		^super.new.init(path, doConnect);
 	}
 
-	init{arg path_;
+	init{arg path_, doConnect = true;
 		leftMotor = VTPinneRobotMotor.new(this, \left);
 		rightMotor = VTPinneRobotMotor.new(this, \right);
 		rotationMotor = VTPinneRotationMotor.new(this, \rotation);
-		this.connect(path_);
+		if(doConnect, {
+			this.connect(path_);
+			refreshTask = Task({
+				loop{
+					this.refresh;
+					refreshInterval.wait;
+				}
+			}).play;
+			updateTask = Task({
+				loop{
+					this.requestValuesFromRobot([\currentPosition]);
+					updateInterval.wait;
+				}
+			}).play;
+			this.sendMsg(\right, \get, \direction);
+			this.sendMsg(\left, \get, \direction);
+			this.sendMsg(\rotation, \get, \direction);
+
+		});
 		if(this.connected.not, {"PinneRobot is offline".warn});
-		refreshTask = Task({
-			loop{
-				this.refresh;
-				refreshInterval.wait;
-			}
-		}).play;
-		updateTask = Task({
-			loop{
-				this.requestValuesFromRobot([\currentPosition]);
-				updateInterval.wait;
-			}
-		}).play;
-		this.sendMsg(\right, \get, \direction);
-		this.sendMsg(\left, \get, \direction);
-		this.sendMsg(\rotation, \get, \direction);
 	}
 
 	connect{arg path;
@@ -37,7 +40,7 @@ VTPinneRobot {
 	}
 
 	connected{
-		^parser.connected;
+		^(parser.notNil and: {parser.connected});
 	}
 
 	disconnect{
@@ -76,7 +79,7 @@ VTPinneRobot {
 	}
 
 	update{arg theChanged, theChanger, address, key, value;
-//		"Robot update: %".format([theChanged, theChanger, address, key, value]).postln;
+		//		"Robot update: %".format([theChanged, theChanger, address, key, value]).postln;
 		if(theChanger !== this, {
 
 			switch(address,
@@ -273,11 +276,11 @@ VTPinneRobotMotor{
 			specs.keys.do({arg item;
 				//robot.sendMsg(address, \get, item);
 			});
-			}, {
-				//"Requesting: %\n".postf(which);
-				which.do({arg item;
-					robot.sendMsg(address, \get, item, 0);
-				})
+		}, {
+			//"Requesting: %\n".postf(which);
+			which.do({arg item;
+				robot.sendMsg(address, \get, item, 0);
+			})
 		});
 	}
 
@@ -430,33 +433,33 @@ VTPinneRobotParser{
 			currentCommand = command;
 			currentAddress = address;
 			currentSetGet = setGet;
-			}, {
-				if(state == \waitingForDataByte, {
-					switch(dataBytesReceived,
-						0, {
-							valueBytesBuffer = valueBytesBuffer.add(byte);
-							dataBytesReceived = 1;
-						},
-						1, {
-							valueBytes = valueBytesBuffer.add(byte).copy;
-							this.doCommand;
-						}
-					)
+		}, {
+			if(state == \waitingForDataByte, {
+				switch(dataBytesReceived,
+					0, {
+						valueBytesBuffer = valueBytesBuffer.add(byte);
+						dataBytesReceived = 1;
+					},
+					1, {
+						valueBytes = valueBytesBuffer.add(byte).copy;
+						this.doCommand;
+					}
+				)
+			});
+			if(state == \waitingForStateByte, {
+				//"State byte received".postln;
+				this.doStateCommand(byte);
+			});
+			if(state == \waitingForInfoByte, {
+				if(byte != 4, {//4 is end of transmission byte according to ASCII
+					infoBytes = infoBytes.add(byte);
+				}, {
+					"INFO: [%]: ".postf(currentAddress);
+					String.newFrom(infoBytes).collect(_.asAscii).postln;
+					infoBytes = Array.new;
+					this.reset;
 				});
-				if(state == \waitingForStateByte, {
-					//"State byte received".postln;
-					this.doStateCommand(byte);
-				});
-				if(state == \waitingForInfoByte, {
-					if(byte != 4, {//4 is end of transmission byte according to ASCII
-						infoBytes = infoBytes.add(byte);
-						}, {
-							"INFO: [%]: ".postf(currentAddress);
-							String.newFrom(infoBytes).collect(_.asAscii).postln;
-							infoBytes = Array.new;
-							this.reset;
-					});
-				});
+			});
 		});
 	}
 
