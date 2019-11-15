@@ -455,7 +455,11 @@ VTPinneRobotParser{
 					infoBytes = infoBytes.add(byte);
 				}, {
 					"INFO: [%]: ".postf(currentAddress);
-					String.newFrom(infoBytes).collect(_.asAscii).postln;
+					try{
+						String.newFrom(infoBytes).collect(_.asAscii).postln;
+					} {
+						"Failed parsing info bytes: %".format(infoBytes).warn;
+					};
 					infoBytes = Array.new;
 					this.reset;
 				});

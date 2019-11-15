@@ -13,11 +13,11 @@ SerialPort.listDevices;
 
 
 ~pinne = ~pinne1;
-~pinne = ~pinneApp.modules['pinne.2'].envir[\robot];
+~pinne = ~pinneApp.modules['pinne.1'].envir[\robot];
 ~pinne.stopRefreshTask;
 ~pinne.startRefreshTask;
 ~pinne.stop;
-~pinne.leftMotor.speed_(80);
+~pinne.leftMotor.speed_(120);
 ~pinne.leftMotor.speed_(0);
 ~pinne.leftMotor.direction_(\down);
 ~pinne.leftMotor.direction_(\up);
@@ -26,13 +26,15 @@ SerialPort.listDevices;
 ~pinne.rightMotor.speed_(0);
 ~pinne.rightMotor.direction_(\down);
 ~pinne.rightMotor.direction_(\up);
-~pinne.rotationMotor.speed_(1000);
+~pinne.rotationMotor.speed_(800);
 ~pinne.rotationMotor.speed_(0);
 ~pinne.rotationMotor.direction_(\left);
 ~pinne.rotationMotor.direction_(\right);
 ~pinne.leftMotor.currentPosition;
 ~pinne.rightMotor.currentPosition;
 ~pinne.rotationMotor.currentPosition;
+
+~pinne.leftMotor.maxPosition_(2000)
 
 ~pinne.leftMotor.speed_(120);
 ~pinne.rightMotor.speed_(120);
