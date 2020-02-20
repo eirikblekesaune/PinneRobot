@@ -505,7 +505,7 @@ VTPinneRobotParser{
 
 	connect{arg path;
 		this.disconnect;
-		serialPort = SerialPort.new(path, 9600, crtscts:true);
+		serialPort = SerialPort.new(path, 57600, crtscts:true);
 	}
 
 	disconnect{
