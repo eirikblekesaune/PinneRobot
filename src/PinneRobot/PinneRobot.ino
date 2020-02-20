@@ -10,7 +10,7 @@ extern const int LOOP_UPDATE_RATE = 10;
 
 void setup()
 { 
-  Serial1.begin(9600);
+  Serial1.begin(57600);
   while(!Serial1);
   delay(100);
   robot = new PinneRobot();
