@@ -1,4 +1,5 @@
 #include "PinneRobot.h"
+#include "PinneAPI.h"
 
 //pin connections
 //left driver aka motor 1, right driver motor 2
@@ -44,6 +45,14 @@ void PinneRobot::update()
 {
 	leftMotor->UpdateState();
 	rightMotor->UpdateState();
+	if(leftMotor->HasPositionChanged()) {
+		ReturnGetValue(CMD_CURRENT_POSITION, ADDRESS_LEFT, leftMotor->GetCurrentPosition());
+		leftMotor->SetPositionNotChanged();
+	}
+	if(rightMotor->HasPositionChanged()) {
+		ReturnGetValue(CMD_CURRENT_POSITION, ADDRESS_RIGHT, rightMotor->GetCurrentPosition());
+		rightMotor->SetPositionNotChanged();
+	}
 	rotationMotor->UpdateState();
 }
 
