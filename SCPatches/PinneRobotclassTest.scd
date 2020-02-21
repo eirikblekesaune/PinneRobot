@@ -11,7 +11,7 @@ SerialPort.listDevices;
 ~pinne8 = VTPinneRobot("/dev/tty.usbserial-FT5QT6UL1");// pinne aatte
 );
 (
-~pinne1 = VTPinneRobot("/dev/tty.usbserial-FT5QT6TQ0");// pinne en
+~pinne1 = VTPinneRobot("/dev/tty.usbserial-FT5QT6TQ0", reverseMount: true);// pinne en
 ~pinne = ~pinne1;
 )
 ~pinne = ~pinneApp.modules['pinne.1'].envir[\robot];

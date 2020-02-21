@@ -5,13 +5,18 @@ VTPinneRobot {
 	var updateTask, <>updateInterval = 1.0;//update is when values are requested from the robot
 	var semaphore;
 
-	*new{arg path, doConnect = true;
-		^super.new.init(path, doConnect);
+	*new{arg path, doConnect = true, reverseMount = false;
+		^super.new.init(path, doConnect, reverseMount);
 	}
 
-	init{arg path_, doConnect = true;
-		leftMotor = VTPinneRobotMotor.new(this, \left);
-		rightMotor = VTPinneRobotMotor.new(this, \right);
+	init{arg path_, doConnect = true, reverseMount;
+		if(reverseMount, {
+			leftMotor = VTPinneRobotMotor.new(this, \right);
+			rightMotor = VTPinneRobotMotor.new(this, \left);
+		}, {
+			leftMotor = VTPinneRobotMotor.new(this, \left);
+			rightMotor = VTPinneRobotMotor.new(this, \right);
+		});
 		rotationMotor = VTPinneRotationMotor.new(this, \rotation);
 		if(doConnect, {
 			this.connect(path_);
@@ -579,7 +584,7 @@ VTPinneRobotParser{
 		hasOutgoingMessages.signal;
 		// serialPort.putAll(this.prBuildMessage(addr, setGet, command, value));
 		// serialPortLock.signal;
-	// }
+		// }
 	}
 
 	connect{arg path;
