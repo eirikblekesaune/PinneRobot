@@ -23,7 +23,7 @@ VTPinneRobot {
 			}).play;
 			updateTask = Task({
 				loop{
-					this.requestValuesFromRobot([\currentPosition]);
+					// this.requestValuesFromRobot([\currentPosition]);
 					updateInterval.wait;
 				}
 			}).play;
