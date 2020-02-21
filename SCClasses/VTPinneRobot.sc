@@ -562,7 +562,7 @@ VTPinneRobotParser{
 	}
 
 	prBuildMessage{ arg address, setGet, command, value;
-		var msg;
+		var msg, checksum = 0;
 		msg = [
 			128,//2r10000000 signifies a command byte
 			this.class.addressMasks[address],
@@ -572,6 +572,12 @@ VTPinneRobotParser{
 		if(setGet == \set, {
 			msg = msg ++ this.class.makeDataBytes(value);
 		});
+		msg.do({|it|
+			checksum = (checksum + it).bitAnd(0xFF);
+		});
+
+		checksum = 0xFF - checksum;
+		msg = msg ++ checksum;
 		^msg;
 	}
 
