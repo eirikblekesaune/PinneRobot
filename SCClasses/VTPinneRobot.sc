@@ -78,6 +78,10 @@ VTPinneRobot {
 		[leftMotor, rightMotor, rotationMotor].do(_.requestValuesFromRobot(which));
 	}
 
+	echoMessages_{arg val;
+		parser.sendMsg('global', 'set', 'echoMessages', val.booleanValue.asInteger);
+	}
+
 	update{arg theChanged, theChanger, address, key, value;
 		//		"Robot update: %".format([theChanged, theChanger, address, key, value]).postln;
 		if(theChanger !== this, {
@@ -354,7 +358,8 @@ VTPinneRobotParser{
 			\goToTargetPosition -> 2r1011,//0x0B
 			\goToSpeedRampUp -> 2r1100,//argument is ramp up percent of halfway point
 			\goToSpeedRampDown -> 2r1101,//ramp down time will take effect after halfway point
-			\goToSpeedScaling -> 2r1110
+			\goToSpeedScaling -> 2r1110,
+			\echoMessages -> 2r1111
 		];
 		setGetMasks = TwoWayIdentityDictionary[
 			\set -> 2r00000000,
@@ -419,7 +424,7 @@ VTPinneRobotParser{
 					nextParserState = \waitingForStateByte;
 				},
 				\speed, {/*"Received speed command".postln*/},
-				\direction, {"Received direction command".postln},
+				\direction, {/*"Received direction command".postln*/},
 				\targetPosition, {"Received targetPosition command".postln},
 				\currentPosition, {/*"Receive currentPosition command".postln;*/},
 				\brake, {"Received brake command".postln;},
@@ -454,9 +459,22 @@ VTPinneRobotParser{
 				if(byte != 4, {//4 is end of transmission byte according to ASCII
 					infoBytes = infoBytes.add(byte);
 				}, {
-					"INFO: [%]: ".postf(currentAddress);
 					try{
-						String.newFrom(infoBytes).collect(_.asAscii).postln;
+						var str;
+						str = String.newFrom(infoBytes.collect(_.asAscii));
+						if(str.beginsWith("ECHO "), {
+							str = str.copyRange(5, str.size);
+							str = str.parseYAML;
+							"ECHO-> cmd: '%' addr: '%' setGet: '%' value: '%'".format(
+								commandMasks.getID(str["cmd"].asInteger),
+								addressMasks.getID(str["addr"].asInteger),
+								setGetMasks.getID(str["setGet"].asInteger),
+								str["value"]
+							).postln;
+						}, {
+							"INFO: [%]: ".postf(currentAddress);
+							str.postln;
+						});
 					} {
 						"Failed parsing info bytes: %".format(infoBytes).warn;
 					};
