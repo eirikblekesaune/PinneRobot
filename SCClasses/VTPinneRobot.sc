@@ -535,8 +535,18 @@ VTPinneRobotParser{
 
 	doCommand{
 		var value;
-		value = this.class.parseDataBytes(valueBytes);
-		robot.update(robot, this, currentAddress, currentCommand, value);
+		try{
+			value = this.class.parseDataBytes(valueBytes);
+		} {
+			"Parsing valueBytes failed: %".format(valueBytes).warn;
+		};
+		try{
+			robot.update(robot, this, currentAddress, currentCommand, value);
+		} {
+			"Failed doing command from robot: addr: '%' command: '%' value: '%'".format(
+				currentAddress, currentCommand, value
+			).warn;
+		};
 		this.reset;
 	}
 
