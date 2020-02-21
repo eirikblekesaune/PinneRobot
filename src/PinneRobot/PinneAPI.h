@@ -20,6 +20,7 @@ enum command_t
 	CMD_GOTO_SPEED_RAMP_UP = 0x0C,
 	CMD_GOTO_SPEED_RAMP_DOWN = 0x0D,
 	CMD_GOTO_SPEED_SCALING = 0x0E,
+	CMD_ECHO_MESSAGES = 0x0F,
 	CMD_UNKNOWN
 };
 
@@ -114,6 +115,21 @@ static void DebugPrint(int msg)
 {
 	Serial1.write(BYTE_COMMAND | SET_MESSAGE | ADDRESS_GLOBAL | CMD_INFO );
 	Serial1.print(msg);
+	Serial1.write(4);
+}
+
+static void DebugMessagePrint(command_t cmd, address_t addr, setGet_t setGet, int value)
+{
+	Serial1.write(BYTE_COMMAND | SET_MESSAGE | ADDRESS_GLOBAL | CMD_INFO);
+	Serial1.print("ECHO {cmd: ");
+	Serial1.print(cmd);
+	Serial1.print(", addr: ");
+	Serial1.print(addr);
+	Serial1.print(", setGet: ");
+	Serial1.print(setGet);
+	Serial1.print(", value: ");
+	Serial1.print(value);
+	Serial1.print("}");
 	Serial1.write(4);
 }
 

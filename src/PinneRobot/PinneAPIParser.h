@@ -17,6 +17,7 @@ class PinneAPIParser
 		setGet_t _currentSetGet;
 		address_t _currentAddress;
 		char _dataByteBuffer[2];
+		boolean _echoMessages;
 
 		void _parseCommand(byte inByte);
 		boolean _getDataBytes();
@@ -34,7 +35,8 @@ class PinneAPIParser
 		void _processSetGoToSpeedRampUpCommand();
 		void _processSetGoToSpeedRampDownCommand();
 		void _processSetGoToSpeedScalingCommand();
-	void _processSetGotoParkingPosition();
+		void _processSetGotoParkingPosition();
+		void _processSetEchoMessages();
 
 		void _processGetStateCommand();
 		void _processGetSpeedCommand();
@@ -48,5 +50,6 @@ class PinneAPIParser
 		void _processGetGoToSpeedRampDownCommand();
 		void _processGetGoToSpeedScalingCommand();
 		void _processGetStopCommand();
+		void _processGetEchoMessages();
 };
 #endif

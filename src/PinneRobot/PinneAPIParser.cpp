@@ -4,7 +4,8 @@ PinneAPIParser::PinneAPIParser(PinneRobot* robot) :
 	_robot(robot),
 	_currentCommand(CMD_UNKNOWN),
 	_currentSetGet(SETGET_UNKNOWN),
-	_currentAddress(ADDRESS_UNKNOWN)
+	_currentAddress(ADDRESS_UNKNOWN),
+	_echoMessages(false)
 {
 }
 
@@ -64,6 +65,9 @@ void PinneAPIParser::_parseCommand(byte inByte)
 						case CMD_GOTO_SPEED_SCALING:
 							_processSetGoToSpeedScalingCommand();
 							break;
+						case CMD_ECHO_MESSAGES:
+							_processSetEchoMessages();
+							break;
 						default:
 							DebugPrint("Unknown command");
 							DebugPrint(_currentCommand);
@@ -108,12 +112,19 @@ void PinneAPIParser::_parseCommand(byte inByte)
 				case CMD_GOTO_SPEED_SCALING:
 					_processGetGoToSpeedScalingCommand();
 					break;			
+				case CMD_ECHO_MESSAGES:
+					_processGetEchoMessages();
+					break;
 				default:
 					DEBUG_PRINT("Unknown command");
 			}
 			break;
 		default:
 			DEBUG_PRINT("SetGet fault");
+	}
+	if(_echoMessages)
+	{
+		DebugMessagePrint(_currentCommand, _currentAddress, _currentSetGet, _parseDataValue());
 	}
 
 	_currentCommand = CMD_UNKNOWN;
@@ -702,5 +713,22 @@ void PinneAPIParser::_processGetGoToSpeedScalingCommand()
 	} else {
 		//DEBUG_PRINT("Something wrong with geting max position");DEBUG_NL;
 	}
+}
+
+void PinneAPIParser::_processSetEchoMessages()
+{
+	int value;
+	value = _parseDataValue();
+	if(value)
+	{
+		_echoMessages = true;
+	} else {
+		_echoMessages = false;
+	}
+}
+
+void PinneAPIParser::_processGetEchoMessages()
+{
+	ReturnGetValue(CMD_ECHO_MESSAGES, ADDRESS_GLOBAL, _echoMessages);
 }
 
