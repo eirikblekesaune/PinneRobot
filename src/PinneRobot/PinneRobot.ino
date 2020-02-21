@@ -20,7 +20,7 @@ void setup()
 
 void loop()
 {
-  if(Serial1.available())
+  while(Serial1.available() > 0)
   {
     parser->parseIncomingByte(Serial1.read());
   }

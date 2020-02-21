@@ -16,6 +16,10 @@ public:
 	PinneMotor *rightMotor;
 	RotationMotor *rotationMotor;
 	void GoToParkingPosition();
+private:
+	unsigned long _lastPositionUpdate;
+	int _lastLeftPositionSent;
+	int _lastRightPositionSent;
 };
 
 

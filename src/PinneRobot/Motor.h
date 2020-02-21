@@ -49,8 +49,6 @@ class PinneMotor
 		int GetDirection() { return static_cast<int>(_driver->GetDirection()); };
 		int GetTargetPosition() { return static_cast<int>(_targetPosition); };
 		int GetCurrentPosition();
-		boolean HasPositionChanged();
-		void SetPositionNotChanged();
 		int GetBrake() { return static_cast<int>(_driver->GetBrake()); };
 		int GetMaxPosition() { return static_cast<int>(_maxPosition); };
 		int GetMinPosition() { return static_cast<int>(_minPosition); };
@@ -71,7 +69,6 @@ class PinneMotor
 
 		volatile int* _encoderCounter;
 		volatile int* _encoderIncrement;
-		volatile boolean* _positionChanged;
 	private:
 		int _topStopSensorPin;
 		int _slackStopSensorPin;

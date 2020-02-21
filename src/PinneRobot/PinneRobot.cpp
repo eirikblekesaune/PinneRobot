@@ -39,19 +39,31 @@ void PinneRobot::init()
 	leftMotor->init();
 	rightMotor->init();
 	rotationMotor->init();
+	_lastPositionUpdate = millis();
+	_lastLeftPositionSent = -1; // -1 for forcing init update
+	_lastRightPositionSent = -1;
 }
 
 void PinneRobot::update()
 {
 	leftMotor->UpdateState();
 	rightMotor->UpdateState();
-	if(leftMotor->HasPositionChanged()) {
-		ReturnGetValue(CMD_CURRENT_POSITION, ADDRESS_LEFT, leftMotor->GetCurrentPosition());
-		leftMotor->SetPositionNotChanged();
-	}
-	if(rightMotor->HasPositionChanged()) {
-		ReturnGetValue(CMD_CURRENT_POSITION, ADDRESS_RIGHT, rightMotor->GetCurrentPosition());
-		rightMotor->SetPositionNotChanged();
+	if((millis() - _lastPositionUpdate) > 50)
+	{
+		// DebugPrint("hello");
+		int pos = leftMotor->GetCurrentPosition();
+		if(_lastLeftPositionSent != pos)
+		{
+			ReturnGetValue(CMD_CURRENT_POSITION, ADDRESS_LEFT, pos);
+			_lastLeftPositionSent = pos;
+		}
+		pos = rightMotor->GetCurrentPosition();
+		if(_lastRightPositionSent != pos)
+		{
+			ReturnGetValue(CMD_CURRENT_POSITION, ADDRESS_RIGHT, pos);
+			_lastRightPositionSent = pos;
+		}
+		_lastPositionUpdate = millis();
 	}
 	rotationMotor->UpdateState();
 }

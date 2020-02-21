@@ -4,8 +4,6 @@ volatile int encoderCounter1 = 0;
 volatile int encoderCounter2 = 0;
 volatile int encoderIncrement1 = 1;
 volatile int encoderIncrement2 = 1;
-volatile boolean positionChanged1 = true;
-volatile boolean positionChanged2 = true;
 
 //init static variables
 const int PinneMotor::DIRECTION_DOWN = 0;
@@ -27,13 +25,11 @@ const unsigned long slackSensorDebounceDelay = 350;
 void encoderISR1()
 {
 	encoderCounter1 = max(encoderCounter1 + encoderIncrement1, 0);
-	positionChanged1 = true;
 }
 
 void encoderISR2()
 {
 	encoderCounter2 = max(encoderCounter2 + encoderIncrement2, 0);
-	positionChanged2 = true;
 }
 
 int PinneMotor::GetCurrentPosition()
@@ -49,16 +45,6 @@ int PinneMotor::GetCurrentPosition()
 	value = *_encoderCounter;
 	return value;
 };
-
-boolean PinneMotor::HasPositionChanged()
-{
-	return *_positionChanged;
-}
-
-void PinneMotor::SetPositionNotChanged() {
-	*_positionChanged = false;
-}
-
 
 PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin, int encoderInterruptIndex, VNH5019Driver* driver, address_t address) :
 	_currentPosition(POSITION_ALL_UP),
@@ -82,13 +68,11 @@ void PinneMotor::init()
 		attachInterrupt(0, encoderISR1, CHANGE);
 		_encoderCounter = &encoderCounter1;
 		_encoderIncrement = &encoderIncrement1;
-		_positionChanged = &positionChanged1;
 		break;
 	case 1:
 		attachInterrupt(1, encoderISR2, CHANGE);
 		_encoderCounter = &encoderCounter2;
 		_encoderIncrement = &encoderIncrement2;
-		_positionChanged = &positionChanged2;
 		break;
 	}
 	pinMode(_topStopSensorPin, INPUT);
