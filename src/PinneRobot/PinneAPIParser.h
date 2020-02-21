@@ -16,12 +16,16 @@ class PinneAPIParser
 		command_t _currentCommand;
 		setGet_t _currentSetGet;
 		address_t _currentAddress;
+		byte _currentChecksum;
 		char _dataByteBuffer[2];
 		boolean _echoMessages;
 
 		void _parseCommand(byte inByte);
 		boolean _getDataBytes();
 		int _parseDataValue();
+		boolean _getChecksum();
+		boolean _verifyGetCommandChecksum(byte inByte);
+		boolean _verifySetCommandChecksum(byte inByte);
 
 		void _processSetStopCommand();
 		void _processSetSpeedCommand();

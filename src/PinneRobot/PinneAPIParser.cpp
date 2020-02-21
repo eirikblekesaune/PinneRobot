@@ -23,99 +23,116 @@ void PinneAPIParser::_parseCommand(byte inByte)
 	{
 	case SET_MESSAGE:
 		_getDataBytes();
-		switch (_currentCommand)
+		_getChecksum();
+		if (_verifySetCommandChecksum(inByte))
 		{
-		case CMD_STOP:
-			_processSetStopCommand();
-			break;
-		case CMD_SPEED:
-			_processSetSpeedCommand();
-			break;
-		case CMD_DIRECTION:
-			_processSetDirectionCommand();
-			break;
-		case CMD_TARGET_POSITION:
-			_processSetTargetPositionCommand();
-			break;
-		case CMD_CURRENT_POSITION:
-			_processSetCurrentPositionCommand();
-			break;
-		case CMD_BRAKE:
-			_processSetBrakeCommand();
-			break;
-		case CMD_MIN_POSITION:
-			_processSetMinPositionCommand();
-			break;
-		case CMD_MAX_POSITION:
-			_processSetMaxPositionCommand();
-			break;
-		case CMD_GOTO_PARKING_POSITION:
-			_processSetGotoParkingPosition();
-			break;
-		case CMD_GOTO_TARGET:
-			_processSetGoToTargetCommand();
-			break;
-		case CMD_GOTO_SPEED_RAMP_UP:
-			_processSetGoToSpeedRampUpCommand();
-			break;
-		case CMD_GOTO_SPEED_RAMP_DOWN:
-			_processSetGoToSpeedRampDownCommand();
-			break;
-		case CMD_GOTO_SPEED_SCALING:
-			_processSetGoToSpeedScalingCommand();
-			break;
-		case CMD_ECHO_MESSAGES:
-			_processSetEchoMessages();
-			break;
-		default:
-			DebugPrint("Unknown command");
-			DebugPrint(_currentCommand);
+			switch (_currentCommand)
+			{
+			case CMD_STOP:
+				_processSetStopCommand();
+				break;
+			case CMD_SPEED:
+				_processSetSpeedCommand();
+				break;
+			case CMD_DIRECTION:
+				_processSetDirectionCommand();
+				break;
+			case CMD_TARGET_POSITION:
+				_processSetTargetPositionCommand();
+				break;
+			case CMD_CURRENT_POSITION:
+				_processSetCurrentPositionCommand();
+				break;
+			case CMD_BRAKE:
+				_processSetBrakeCommand();
+				break;
+			case CMD_MIN_POSITION:
+				_processSetMinPositionCommand();
+				break;
+			case CMD_MAX_POSITION:
+				_processSetMaxPositionCommand();
+				break;
+			case CMD_GOTO_PARKING_POSITION:
+				_processSetGotoParkingPosition();
+				break;
+			case CMD_GOTO_TARGET:
+				_processSetGoToTargetCommand();
+				break;
+			case CMD_GOTO_SPEED_RAMP_UP:
+				_processSetGoToSpeedRampUpCommand();
+				break;
+			case CMD_GOTO_SPEED_RAMP_DOWN:
+				_processSetGoToSpeedRampDownCommand();
+				break;
+			case CMD_GOTO_SPEED_SCALING:
+				_processSetGoToSpeedScalingCommand();
+				break;
+			case CMD_ECHO_MESSAGES:
+				_processSetEchoMessages();
+				break;
+			default:
+				DebugPrint("Unknown command");
+				DebugPrint(_currentCommand);
+			}
 		}
+		else
+		{
+			DebugPrint("CHECKSUM FAILED");
+		}
+
 		break;
 	case GET_MESSAGE:
-		switch (_currentCommand)
+		_getChecksum();
+		if(_verifyGetCommandChecksum(inByte))
 		{
-		case CMD_STOP:
-			_processGetStopCommand();
-			break;
-		case CMD_SPEED:
-			_processGetSpeedCommand();
-			break;
-		case CMD_DIRECTION:
-			_processGetDirectionCommand();
-			break;
-		case CMD_TARGET_POSITION:
-			_processGetTargetPositionCommand();
-			break;
-		case CMD_CURRENT_POSITION:
-			_processGetCurrentPositionCommand();
-			break;
-		case CMD_BRAKE:
-			_processGetBrakeCommand();
-			break;
-		case CMD_STATE_CHANGE:
-			_processGetStateCommand();
-			break;
-		case CMD_MIN_POSITION:
-			_processGetMinPositionCommand();
-			break;
-		case CMD_MAX_POSITION:
-			_processGetMaxPositionCommand();
-			break;
-		case CMD_GOTO_SPEED_RAMP_UP:
-			_processGetGoToSpeedRampUpCommand();
-			break;
-		case CMD_GOTO_SPEED_RAMP_DOWN:
-			_processGetGoToSpeedRampDownCommand();
-			break;
-		case CMD_GOTO_SPEED_SCALING:
-			_processGetGoToSpeedScalingCommand();
-			break;
-		case CMD_ECHO_MESSAGES:
-			_processGetEchoMessages();
-			break;
-		default:
-			DEBUG_PRINT("Unknown command");
+			switch (_currentCommand)
+			{
+			case CMD_STOP:
+				_processGetStopCommand();
+				break;
+			case CMD_SPEED:
+				_processGetSpeedCommand();
+				break;
+			case CMD_DIRECTION:
+				_processGetDirectionCommand();
+				break;
+			case CMD_TARGET_POSITION:
+				_processGetTargetPositionCommand();
+				break;
+			case CMD_CURRENT_POSITION:
+				_processGetCurrentPositionCommand();
+				break;
+			case CMD_BRAKE:
+				_processGetBrakeCommand();
+				break;
+			case CMD_STATE_CHANGE:
+				_processGetStateCommand();
+				break;
+			case CMD_MIN_POSITION:
+				_processGetMinPositionCommand();
+				break;
+			case CMD_MAX_POSITION:
+				_processGetMaxPositionCommand();
+				break;
+			case CMD_GOTO_SPEED_RAMP_UP:
+				_processGetGoToSpeedRampUpCommand();
+				break;
+			case CMD_GOTO_SPEED_RAMP_DOWN:
+				_processGetGoToSpeedRampDownCommand();
+				break;
+			case CMD_GOTO_SPEED_SCALING:
+				_processGetGoToSpeedScalingCommand();
+				break;
+			case CMD_ECHO_MESSAGES:
+				_processGetEchoMessages();
+				break;
+			default:
+				DEBUG_PRINT("Unknown command");
+			}
+		}
+		else
+		{
+			DebugPrint("CHECKSUM FAILED");
 		}
 		break;
 	default:
@@ -129,6 +146,7 @@ void PinneAPIParser::_parseCommand(byte inByte)
 	_currentCommand = CMD_UNKNOWN;
 	_currentAddress = ADDRESS_UNKNOWN;
 	_currentSetGet = SETGET_UNKNOWN;
+	_currentChecksum = 0;
 }
 
 boolean PinneAPIParser::_getDataBytes()
@@ -136,6 +154,37 @@ boolean PinneAPIParser::_getDataBytes()
 	boolean result;
 	result = Serial1.readBytes(_dataByteBuffer, 2) == 2;
 	return result;
+}
+
+boolean PinneAPIParser::_getChecksum()
+{
+	boolean result;
+	result = Serial1.readBytes(&_currentChecksum, 1) == 1;
+	return result;
+}
+
+boolean PinneAPIParser::_verifySetCommandChecksum(byte inByte)
+{
+	// DebugPrint("set checksumByte");
+	// DebugPrint(_currentChecksum);
+	byte checksum = inByte;
+	checksum += _dataByteBuffer[0];
+	checksum += _dataByteBuffer[1];
+	checksum = 0xFF - checksum;
+	// DebugPrint("checksum");
+	// DebugPrint(checksum);
+	return _currentChecksum == checksum;
+}
+
+boolean PinneAPIParser::_verifyGetCommandChecksum(byte inByte)
+{
+	// DebugPrint("get checksumByte");
+	// DebugPrint(_currentChecksum);
+	byte checksum = inByte;
+	checksum = 0xFF - checksum;
+	// DebugPrint("checksum");
+	// DebugPrint(checksum);
+	return _currentChecksum == checksum;
 }
 
 int PinneAPIParser::_parseDataValue()
