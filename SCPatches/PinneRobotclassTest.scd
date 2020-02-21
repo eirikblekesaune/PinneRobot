@@ -10,14 +10,15 @@ SerialPort.listDevices;
 ~pinne7 = VTPinneRobot("/dev/tty.usbserial-FT5QT6UL0");// pinne syv
 ~pinne8 = VTPinneRobot("/dev/tty.usbserial-FT5QT6UL1");// pinne aatte
 );
-
-
+(
+~pinne1 = VTPinneRobot("/dev/tty.usbserial-FT5QT6TQ0");// pinne en
 ~pinne = ~pinne1;
+)
 ~pinne = ~pinneApp.modules['pinne.1'].envir[\robot];
 ~pinne.stopRefreshTask;
 ~pinne.startRefreshTask;
 ~pinne.stop;
-~pinne.leftMotor.speed_(120);
+~pinne.leftMotor.speed_(220);
 ~pinne.leftMotor.speed_(0);
 ~pinne.leftMotor.direction_(\down);
 ~pinne.leftMotor.direction_(\up);
@@ -36,6 +37,9 @@ SerialPort.listDevices;
 
 ~pinne.leftMotor.maxPosition_(2000)
 
+~pinne.echoMessages_(true);
+~pinne.echoMessages_(false);
+
 ~pinne.leftMotor.speed_(120);
 ~pinne.rightMotor.speed_(120);
 ~pinne.leftMotor.targetPosition_(200);
@@ -45,7 +49,42 @@ SerialPort.listDevices;
 ~pinne.leftMotor.speedScaling_(200);
 ~pinne.rightMotor.speedScaling_(200);
 
+~pinne.leftMotor.addDependant({|...args|"LEFT: %".format(args).postln;});
+~pinne.rightMotor.addDependant({|...args|"RIGHT: %".format(args).postln;});
 
+"{cmd: 15,addr: 48,setGet: 0,value: 1}".parseYAML["addr"];
+(
+SimpleController.new(~pinne.leftMotor).put(\currentPosition, {
+	"Left: %".format(~pinne.leftMotor.currentPosition).postln;
+});
+SimpleController.new(~pinne.rightMotor).put(\currentPosition, {
+	"Right: %".format(~pinne.rightMotor.currentPosition).postln;
+});
+)
+~pinne.leftMotor.dependants
+~pinne.rightMotor.dependants
+~pinne.rightMotor.changed(\currentPosition)
+
+//test equal speed
+(
+~pinne.leftMotor.direction_(\down);
+~pinne.rightMotor.direction_(\down);
+~pinne.leftMotor.speed_(100);
+~pinne.rightMotor.speed_(100);
+)
+(
+~pinne.leftMotor.stop(0);
+~pinne.rightMotor.stop(0);
+)
+(
+~pinne.leftMotor.direction_(\up);
+~pinne.rightMotor.direction_(\up);
+~pinne.leftMotor.speed_(120);
+~pinne.rightMotor.speed_(120);
+)
+~pinne.leftMotor.bipolarSpeed_(100)
+~pinne.leftMotor.bipolarSpeed_(0)
+Slider().action_({|slid| ~pinne.leftMotor.bipolarSpeed_(slid.value.linlin(0.0,1.0, -511, 511).asInteger)}.inEnvir).value_(0.5).front;
 
 ~pinne.leftMotor.goToParkingPosition;
 ~pinne.rightMotor.goToParkingPosition;

@@ -114,6 +114,7 @@ VTPinneRobotMotor{
 	var needsRefresh;//parameters that need to be sent to the robot
 	var outputCache;//parameter values to be sent to the robot
 	var needsUpdate;//parameter values to be update from the robot
+	var commandOrder;
 
 	*new{arg robot, address;
 		^super.new.init(robot, address);
@@ -135,7 +136,26 @@ VTPinneRobotMotor{
 			stopTime: ControlSpec(0, 5000, step:1, default:0),
 			goToTargetPosition: ControlSpec(0, 5000, \lin, 1, default: 1000)
 		);
-		needsRefresh = OrderedIdentitySet.new;
+		commandOrder = (
+			'targetPosition': 1,
+			'direction': 2,
+			'speed': 3,
+			'currentPosition': 4,
+			'brake': 5,
+			'minPosition': 6,
+			'maxPosition': 7,
+			'goToParkingPosition': 9,
+			'goToTargetPosition': 10,
+			'goToSpeedRampUp': 11,
+			'goToSpeedRampDown': 12,
+			'goToSpeedScaling': 13,
+			'echoMessages': 14,
+			'stop': 15,
+			'stateChange': 16,
+			'info': 17
+		);
+
+		needsRefresh = Order.new;
 		//needsRefresh.add(\direction);
 		needsUpdate = IdentitySet.newFrom(specs.keys);
 		outputCache = IdentityDictionary.new;
@@ -143,9 +163,14 @@ VTPinneRobotMotor{
 	}
 
 	prInvalidateParameter{arg key, val;
-		//		"Invalidating parameter: % %".format(key, val).postln;
-		outputCache.put(key, val);
-		needsRefresh.add(key);
+		var commandPlace;
+		commandPlace = commandOrder[key];
+		if(commandOrder.notNil, {
+			outputCache.put(key, val);
+			needsRefresh.put(commandPlace, key);
+		}, {
+			"Unknown command order place: %".format(key).warn;
+		});
 	}
 
 	speed_{arg val, sync = true;
@@ -266,11 +291,20 @@ VTPinneRobotMotor{
 	}
 
 	refresh{arg forceRefresh = false;
-		var cachedValue, cachedKey;
-		cachedKey = needsRefresh.pop;
-		while({cachedKey.notNil}, {
-			robot.sendMsg(address, \set, cachedKey, outputCache.removeAt(cachedKey));
-			cachedKey = needsRefresh.pop;
+		var cachedValue, cachedKey, cacheStream, val;
+		if(needsRefresh.notEmpty, {
+			cacheStream = needsRefresh.deepCopy.iter;
+			needsRefresh.clear;
+			cachedKey = cacheStream.next;
+			while({cachedKey.notNil}, {
+				val = outputCache.removeAt(cachedKey);
+				if(val.notNil, {
+					robot.sendMsg(address, \set, cachedKey, val);
+				}, {
+					"Did not find value for cached key: %".format(cachedKey).postln;
+				});
+				cachedKey = cacheStream.next;
+			});
 		});
 	}
 
@@ -333,6 +367,9 @@ VTPinneRobotParser{
 	var infoBytes;
 	var valueBytes;
 	var valueBytesBuffer;
+	var messageQueue;
+	var hasOutgoingMessages;
+	var messageSender;
 
 	classvar <addressMasks, <commandMasks, <setGetMasks, <stateChangeMasks;
 
@@ -389,6 +426,17 @@ VTPinneRobotParser{
 		serialPortLock = Semaphore(1);
 		this.connect(path_);
 		this.addDependant(robot);
+		messageQueue = LinkedList.new;
+		hasOutgoingMessages = Condition.new(false);
+		messageSender = Task({
+			loop{
+				hasOutgoingMessages.wait;
+				serialPort.putAll(messageQueue.popFirst);
+				if(messageQueue.isEmpty, {
+					hasOutgoingMessages.test = false;
+				});
+			};
+		}).play;
 		readTask = Task({
 			loop{
 				var byte;
@@ -514,11 +562,14 @@ VTPinneRobotParser{
 
 	sendMsg{arg addr, setGet, command, value;
 		//"Sending message: %".format([addr, setGet, command, value]).postln;
-		forkIfNeeded{
-			serialPortLock.wait;
-			serialPort.putAll(this.prBuildMessage(addr, setGet, command, value));
-			serialPortLock.signal;
-		}
+		// forkIfNeeded{
+		// serialPortLock.wait;
+		messageQueue.add(this.prBuildMessage(addr, setGet, command, value));
+		hasOutgoingMessages.test = true;
+		hasOutgoingMessages.signal;
+		// serialPort.putAll(this.prBuildMessage(addr, setGet, command, value));
+		// serialPortLock.signal;
+	// }
 	}
 
 	connect{arg path;
