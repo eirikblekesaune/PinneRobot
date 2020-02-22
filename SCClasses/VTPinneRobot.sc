@@ -4,12 +4,14 @@ VTPinneRobot {
 	var refreshTask, <>refreshInterval = 0.01;//refresh is when cached values are sent to the robot
 	var updateTask, <>updateInterval = 1.0;//update is when values are requested from the robot
 	var semaphore;
+	var <reverseMount;
 
 	*new{arg path, doConnect = true, reverseMount = false;
 		^super.new.init(path, doConnect, reverseMount);
 	}
 
-	init{arg path_, doConnect = true, reverseMount;
+	init{arg path_, doConnect = true, reverseMount_;
+		reverseMount = reverseMount_;
 		if(reverseMount, {
 			leftMotor = VTPinneRobotMotor.new(this, \right);
 			rightMotor = VTPinneRobotMotor.new(this, \left);
@@ -167,6 +169,10 @@ VTPinneRobotMotor{
 
 	}
 
+	isReverseMounted{
+		^robot.reverseMount;
+	}
+
 	prInvalidateParameter{arg key, val;
 		var commandPlace;
 		commandPlace = commandOrder[key];
@@ -196,6 +202,24 @@ VTPinneRobotMotor{
 		});
 		this.speed_(val.abs);
 		this.changed(\bipolarSpeed);
+	}
+
+	getOppositeMotor{
+		var result;
+		if(address == \left, {
+			result = robot.rightMotor;
+		}, {
+			result = robot.leftMotor;
+		});
+		^result;
+	}
+
+	getLeftMotor{
+		^robot.leftMotor;
+	}
+
+	getRightMotor{
+		^robot.rightMotor;
 	}
 
 	stop{
