@@ -90,6 +90,25 @@ VTPinneRobot {
 		parser.sendMsg('global', 'set', 'echoMessages', val.booleanValue.asInteger);
 	}
 
+	//x and y are decimals from -1.0 to 1.0
+	joystickSpeed_{arg x, y, invertFactor;
+		var weights;
+		var values;
+		var invertScales;
+		//use x for weighting betwen left and right
+		weights = [
+			x.linlin(-1.0, 1.0, 2.0, 0.0).min(1.0),
+			x.linlin(-1.0, 1.0, 0.0, 2.0).min(1.0),
+		];
+		invertScales = [
+			invertFactor.linlin(-1.0, 1.0, -1.0, 3.0).min(1.0),
+			invertFactor.linlin(-1.0, 1.0, 3.0, -1.0).min(1.0),
+		];
+		values = ((y * 511) ! 2) * (weights * invertScales);
+		leftMotor.bipolarSpeed_(values[0]);
+		rightMotor.bipolarSpeed_(values[1]);
+	}
+
 	update{arg theChanged, theChanger, address, key, value;
 		//		"Robot update: %".format([theChanged, theChanger, address, key, value]).postln;
 		if(theChanger !== this, {
@@ -191,7 +210,7 @@ VTPinneRobotMotor{
 	}
 
 	bipolarSpeed{
-		if(direction == 0, {^speed;}, {^speed.neg});
+		if(direction == 0, {^speed.neg;}, {^speed});
 	}
 
 	bipolarSpeed_{arg val;

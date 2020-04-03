@@ -1,20 +1,104 @@
 ///Pinner
 SerialPort.listDevices;
 (
-~pinne1 = VTPinneRobot("/dev/tty.usbserial-FT5QT6TQ0");// pinne en
-~pinne2 = VTPinneRobot("/dev/tty.usbserial-FT5QT6TQ1");// pinne to
-~pinne3 = VTPinneRobot("/dev/tty.usbserial-FT5QT6TZ0");// pinne tre
-~pinne4 = VTPinneRobot("/dev/tty.usbserial-FT5QT6TZ1");// pinne fire
-~pinne5 = VTPinneRobot("/dev/tty.usbserial-FT5QT6UD0");// pinne fem
-~pinne6 = VTPinneRobot("/dev/tty.usbserial-FT5QT6UD1");// pinne seks
-~pinne7 = VTPinneRobot("/dev/tty.usbserial-FT5QT6UL0");// pinne syv
-~pinne8 = VTPinneRobot("/dev/tty.usbserial-FT5QT6UL1");// pinne aatte
+~pinner = Dictionary.new;
+~pinner[1] = VTPinneRobot("/dev/tty.usbserial-FT5QT6TQ0", reverseMount: true);// pinne en
+~pinner[2] = VTPinneRobot("/dev/tty.usbserial-FT5QT6TQ1", reverseMount: true);// pinne to
+~pinner[3] = VTPinneRobot("/dev/tty.usbserial-FT5QT6TZ0");// pinne tre
+~pinner[4] = VTPinneRobot("/dev/tty.usbserial-FT5QT6TZ1");// pinne fire
+~pinner[5] = VTPinneRobot("/dev/tty.usbserial-FT5QT6UD0", reverseMount: true);// pinne fem
+~pinner[6] = VTPinneRobot("/dev/tty.usbserial-FT5QT6UD1", reverseMount: true);// pinne seks
+~pinner[7] = VTPinneRobot("/dev/tty.usbserial-FT5QT6UL0");// pinne syv
+~pinner[8] = VTPinneRobot("/dev/tty.usbserial-FT5QT6UL1");// pinne aatte
 );
+(
+var speed = 0;
+~pinner.do({arg it;
+	it.leftMotor.bipolarSpeed_(speed);
+	it.rightMotor.bipolarSpeed_(speed);
+});
+)
+(
+~pinner[6].leftMotor.bipolarSpeed_(0);
+~pinner[6].rightMotor.bipolarSpeed_(0);
+)
+
+(
+~pinner[6].leftMotor.bipolarSpeed_(-100);
+~pinner[6].rightMotor.bipolarSpeed_(-100);
+)
+~pinner[8].leftMotor.currentPosition;
+~pinner[8].rightMotor.currentPosition;
+
+(
+~pinner[8].leftMotor.goToParkingPosition;
+~pinner[8].rightMotor.goToParkingPosition;
+)
+
+1600 /6.0
+
+(
+var speed = 0;
+~pinner.do({arg it;
+	it.leftMotor.goToParkingPosition;
+	it.rightMotor.goToParkingPosition;
+});
+)
+(
+var ctrlLayouts;
+(1..8).do({arg num;
+	ctrlLayouts = ctrlLayouts.add(
+		HLayout(
+			VLayout(
+				Slider().action_({|slid|
+					~pinner[num].leftMotor.bipolarSpeed_(slid.value.linlin(0.0,1.0, -511, 511).asInteger)}.inEnvir).value_(0.5),
+				Button().action_({|slid|
+					~pinner[num].leftMotor.stop;
+				}).states_([["STOP"]])
+			),
+			VLayout(
+				Slider().action_({|slid|
+					~pinner[num].rightMotor.bipolarSpeed_(slid.value.linlin(0.0,1.0, -511, 511).asInteger)}.inEnvir).value_(0.5),
+				Button().action_({|slid|
+					~pinner[num].rightMotor.stop;
+				}).states_([["STOP"]])
+			)
+		)
+	);
+});
+Window().layout_(
+	HLayout(*ctrlLayouts)
+).front
+)
+(
+var num = 8;
+Window().layout_(
+	HLayout(
+		VLayout(
+			Slider().action_({|slid|
+				~pinner[num].leftMotor.bipolarSpeed_(slid.value.linlin(0.0,1.0, -511, 511).asInteger)}.inEnvir).value_(0.5),
+			Button().action_({|slid|
+				~pinner[num].leftMotor.stop;
+			}).states_([["STOP"]])
+		),
+		VLayout(
+			Slider().action_({|slid|
+				~pinner[num].rightMotor.bipolarSpeed_(slid.value.linlin(0.0,1.0, -511, 511).asInteger)}.inEnvir).value_(0.5),
+			Button().action_({|slid|
+				~pinner[num].rightMotor.stop;
+			}).states_([["STOP"]])
+		)
+	)
+).front
+)
+
 (
 ~pinne1 = VTPinneRobot("/dev/tty.usbserial-FT5QT6TQ0", reverseMount: true);// pinne en
 ~pinne = ~pinne1;
 )
-~pinne = ~pinneApp.modules['pinne.1'].envir[\robot];
+
+~pinne = ~pinne1;
+// ~pinne = ~pinneApp.modules['pinne.1'].envir[\robot];
 ~pinne.stopRefreshTask;
 ~pinne.startRefreshTask;
 ~pinne.stop;
@@ -54,23 +138,20 @@ SerialPort.listDevices;
 
 "{cmd: 15,addr: 48,setGet: 0,value: 1}".parseYAML["addr"];
 (
-SimpleController.new(~pinne.leftMotor).put(\currentPosition, {
-	"Left: %".format(~pinne.leftMotor.currentPosition).postln;
+SimpleController.new(~pinne.leftMotor).put(\state, {
+	"Left: %".format(~pinne.leftMotor.state).postln;
 });
-SimpleController.new(~pinne.rightMotor).put(\currentPosition, {
-	"Right: %".format(~pinne.rightMotor.currentPosition).postln;
+SimpleController.new(~pinne.rightMotor).put(\state, {
+	"Right: %".format(~pinne.rightMotor.state).postln;
 });
 )
-~pinne.leftMotor.dependants
-~pinne.rightMotor.dependants
-~pinne.rightMotor.changed(\currentPosition)
 
 //test equal speed
 (
 ~pinne.leftMotor.direction_(\down);
 ~pinne.rightMotor.direction_(\down);
-~pinne.leftMotor.speed_(100);
-~pinne.rightMotor.speed_(100);
+~pinne.leftMotor.speed_(150);
+~pinne.rightMotor.speed_(150);
 )
 (
 ~pinne.leftMotor.stop(0);
@@ -79,12 +160,15 @@ SimpleController.new(~pinne.rightMotor).put(\currentPosition, {
 (
 ~pinne.leftMotor.direction_(\up);
 ~pinne.rightMotor.direction_(\up);
-~pinne.leftMotor.speed_(120);
-~pinne.rightMotor.speed_(120);
+~pinne.leftMotor.speed_(190);
+~pinne.rightMotor.speed_(190);
 )
-~pinne.leftMotor.bipolarSpeed_(100)
+~pinne.leftMotor.bipolarSpeed_(-100)
 ~pinne.leftMotor.bipolarSpeed_(0)
-Slider().action_({|slid| ~pinne.leftMotor.bipolarSpeed_(slid.value.linlin(0.0,1.0, -511, 511).asInteger)}.inEnvir).value_(0.5).front;
+~pinne.rightMotor.bipolarSpeed_(-100)
+~pinne.rightMotor.bipolarSpeed_(0)
+
+
 
 ~pinne.leftMotor.goToParkingPosition;
 ~pinne.rightMotor.goToParkingPosition;
