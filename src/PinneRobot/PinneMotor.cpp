@@ -120,6 +120,11 @@ void PinneMotor::SetSpeed(int speed)
 	}
 }
 
+int PinneMotor::GetMeasuredSpeed()
+{
+	return 123;
+}
+
 void PinneMotor::SetDirection(int direction)
 {
 	if(GetDirection() != direction)

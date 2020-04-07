@@ -6,6 +6,47 @@
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
 !_TAG_PROGRAM_VERSION	0.0.0	/a3c87ab5/
+$(OUTPUT)	src/PinneRobot/Makefile	/^mkout $(OUTPUT):$/;"	t
+$(OUTPUT)/$(PROJECT).elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT).elf: $(ALLOBJ) $(OUTPUT)\/libcore.a$/;"	t
+$(OUTPUT)/$(PROJECT)_2.elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT)_2.elf: $(ALLOBJ)$/;"	t
+$(OUTPUT)/$(PROJECT)_3.elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT)_3.elf: $(ALLOBJ)$/;"	t
+$(OUTPUT)/$(PROJECT)_4.elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT)_4.elf: $(ALLOBJ) $(OUTPUT)\/libcore.a \\$/;"	t
+$(OUTPUT)/$(PROJECT)_5.elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT)_5.elf: $(ALLOBJ) $(OUTPUT)\/libcore.a \\$/;"	t
+$(OUTPUT)/$(PROJECT)_6.elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT)_6.elf: $(ALLOBJ) $(OUTPUT)\/libcore.a \\$/;"	t
+$(OUTPUT)/$(PROJECT)_7.elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT)_7.elf: $(ALLOBJ) $(OUTPUT)\/libcore.a \\$/;"	t
+$(OUTPUT)/$(PROJECT)_8.elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT)_8.elf: $(ALLOBJ) $(OUTPUT)\/libcore.a \\$/;"	t
+$(OUTPUT)/$(PROJECT)_9.elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT)_9.elf: $(ALLOBJ) $(OUTPUT)\/liball.a$/;"	t
+$(OUTPUT)/$(PROJECT)_A.elf	src/PinneRobot/Makefile	/^$(OUTPUT)\/$(PROJECT)_A.elf: $(ALLOBJ) $(OUTPUT)\/libcore.a \\$/;"	t
+$(OUTPUT)/%.S	src/PinneRobot/Makefile	/^%.S $(OUTPUT)\/%.S: %.c$/;"	t
+$(OUTPUT)/%.S	src/PinneRobot/Makefile	/^%.S $(OUTPUT)\/%.S: %.cpp$/;"	t
+$(OUTPUT)/%.S.o	src/PinneRobot/Makefile	/^%.S.o $(OUTPUT)\/%.S.o: %.S$/;"	t
+$(OUTPUT)/%.c.o	src/PinneRobot/Makefile	/^%.c.o $(OUTPUT)\/%.c.o: %.c$/;"	t
+$(OUTPUT)/%.cpp	src/PinneRobot/Makefile	/^$(OUTPUT)\/%.cpp: %.ino$/;"	t
+$(OUTPUT)/%.cpp	src/PinneRobot/Makefile	/^$(OUTPUT)\/%.cpp: %.pde$/;"	t
+$(OUTPUT)/%.cpp.o	src/PinneRobot/Makefile	/^%.cpp.o $(OUTPUT)\/%.cpp.o: %.cpp$/;"	t
+$(OUTPUT)/liball.a	src/PinneRobot/Makefile	/^$(OUTPUT)\/liball.a: $(ULIBOBJ) $(ALIBOBJ) $(COREOBJ)$/;"	t
+$(OUTPUT)/libapp.a	src/PinneRobot/Makefile	/^$(OUTPUT)\/libapp.a: $(OBJ)$/;"	t
+$(OUTPUT)/libapp2.a	src/PinneRobot/Makefile	/^$(OUTPUT)\/libapp2.a: $(OBJ)$/;"	t
+$(OUTPUT)/libcore.a	src/PinneRobot/Makefile	/^$(OUTPUT)\/libcore.a: $(COREOBJ)$/;"	t
+$(OUTPUT)/libduino.a	src/PinneRobot/Makefile	/^$(OUTPUT)\/libduino.a: $(ALIBOBJ)$/;"	t
+$(OUTPUT)/libduinoall.a	src/PinneRobot/Makefile	/^$(OUTPUT)\/libduinoall.a: $(ALIBALLOBJ)$/;"	t
+$(OUTPUT)/libduinoall.a	src/PinneRobot/Makefile	/^$(OUTPUT)\/libduinoall.a: CINCS += $(ALIBALLDIRS:%=-I%)$/;"	t
+$(OUTPUT)/libuser.a	src/PinneRobot/Makefile	/^$(OUTPUT)\/libuser.a: $(ULIBOBJ)$/;"	t
+$(TARFILE).bz2	src/PinneRobot/Makefile	/^$(TARFILE).bz2: $(SRC) $(CXXSRC)$/;"	t
+$(TARFILE).xz	src/PinneRobot/Makefile	/^$(TARFILE).xz: $(SRC) $(CXXSRC)$/;"	t
+%.S	src/PinneRobot/Makefile	/^%.S $(OUTPUT)\/%.S: %.c$/;"	t
+%.S	src/PinneRobot/Makefile	/^%.S $(OUTPUT)\/%.S: %.cpp$/;"	t
+%.S.o	src/PinneRobot/Makefile	/^%.S.o $(OUTPUT)\/%.S.o: %.S$/;"	t
+%.c.o	src/PinneRobot/Makefile	/^%.c.o $(OUTPUT)\/%.c.o: %.c$/;"	t
+%.cpp.o	src/PinneRobot/Makefile	/^%.cpp.o $(OUTPUT)\/%.cpp.o: %.cpp$/;"	t
+%.eep	src/PinneRobot/Makefile	/^%.eep: %.elf$/;"	t
+%.hex	src/PinneRobot/Makefile	/^%.hex: %.elf$/;"	t
+%.listing	src/PinneRobot/Makefile	/^%.lss %.listing: %.elf$/;"	t
+%.listing	src/PinneRobot/Makefile	/^%.lss %.listing: %.o$/;"	t
+%.lss	src/PinneRobot/Makefile	/^%.lss %.listing: %.elf$/;"	t
+%.lss	src/PinneRobot/Makefile	/^%.lss %.listing: %.o$/;"	t
+%.sym	src/PinneRobot/Makefile	/^%.sym %.symbol: %.elf$/;"	t
+%.symbol	src/PinneRobot/Makefile	/^%.sym %.symbol: %.elf$/;"	t
 0	src/PinneRobot/.vscode/c_cpp_properties.json	/^                "${workspaceFolder}\/**",$/;"	s	array:configurations.0.includePath
 0	src/PinneRobot/.vscode/c_cpp_properties.json	/^                "${workspaceFolder}\/**",$/;"	s	array:configurations.1.includePath
 0	src/PinneRobot/.vscode/c_cpp_properties.json	/^                "_DEBUG",$/;"	s	array:configurations.0.defines
@@ -23,11 +64,46 @@ ADDRESS_LEFT	src/PinneRobot/PinneAPI.h	/^	ADDRESS_LEFT = 0x00,$/;"	e	enum:addres
 ADDRESS_RIGHT	src/PinneRobot/PinneAPI.h	/^	ADDRESS_RIGHT = 0x10,$/;"	e	enum:address_t
 ADDRESS_ROTATION	src/PinneRobot/PinneAPI.h	/^	ADDRESS_ROTATION = 0x20,$/;"	e	enum:address_t
 ADDRESS_UNKNOWN	src/PinneRobot/PinneAPI.h	/^	ADDRESS_UNKNOWN$/;"	e	enum:address_t
+ALIBALLASMSRC	src/PinneRobot/Makefile	/^ALIBALLASMSRC =	$(wildcard $(ALIBALLDIRS:%=%\/*.S))$/;"	m
+ALIBALLCXXSRC	src/PinneRobot/Makefile	/^ALIBALLCXXSRC =	$(wildcard $(ALIBALLDIRS:%=%\/*.cpp))$/;"	m
+ALIBALLDIRS	src/PinneRobot/Makefile	/^ALIBALLDIRS = $(wildcard \\$/;"	m
+ALIBALLOBJ	src/PinneRobot/Makefile	/^ALIBALLOBJ =	$(addprefix $(OUTPUT)\/,$(notdir \\$/;"	m
+ALIBALLSRC	src/PinneRobot/Makefile	/^ALIBALLSRC =	$(wildcard $(ALIBALLDIRS:%=%\/*.c))$/;"	m
+ALIBASMSRC	src/PinneRobot/Makefile	/^ALIBASMSRC =	$(wildcard $(ALIBDIRS:%=%\/*.S))$/;"	m
+ALIBCXXSRC	src/PinneRobot/Makefile	/^ALIBCXXSRC =	$(wildcard $(ALIBDIRS:%=%\/*.cpp))$/;"	m
+ALIBDIRS	src/PinneRobot/Makefile	/^ALIBDIRS = $(wildcard \\$/;"	m
+ALIBOBJ	src/PinneRobot/Makefile	/^ALIBOBJ =	$(addprefix $(OUTPUT)\/,$(notdir \\$/;"	m
+ALIBSRC	src/PinneRobot/Makefile	/^ALIBSRC =	$(wildcard $(ALIBDIRS:%=%\/*.c))$/;"	m
+ALLDEPS	src/PinneRobot/Makefile	/^ALLDEPS =	$(ALLOBJ:%.o=%.d)$/;"	m
+ALLOBJ	src/PinneRobot/Makefile	/^ALLOBJ =	$(OBJ) $(ULIBOBJ) $(ALIBOBJ) $(COREOBJ)$/;"	m
+AR	src/PinneRobot/Makefile	/^AR =		$(AVR_TOOLS_PATH)$(AVRPREFIX)ar$/;"	m
+ARCH	src/PinneRobot/Makefile	/^ARCH ?= avr$/;"	m
+ARDUINO	src/PinneRobot/Makefile	/^ARDUINO ?= 	181$/;"	m
+ARDUINO_ALL_LIBS	src/PinneRobot/Makefile	/^ARDUINO_ALL_LIBS = $(notdir $(wildcard $(ARDUINO_DIR)\/libraries\/*))$/;"	m
+ARDUINO_CORE	src/PinneRobot/Makefile	/^ARDUINO_CORE ?= $(ARDUINO_DIR)\/$(HARDWARE_DIRECTORY_NAME)\/avr\/cores\/arduino$/;"	m
+ARDUINO_DIR	src/PinneRobot/Makefile	/^ARDUINO_DIR ?=	\/usr\/share\/arduino$/;"	m
+ARDUINO_LIBS	src/PinneRobot/Makefile	/^ARDUINO_LIBS =$/;"	m
+ARDUINO_MODEL	src/PinneRobot/Makefile	/^ARDUINO_MODEL = leonardo$/;"	m
+ARDUINO_VARIANT	src/PinneRobot/Makefile	/^ARDUINO_VARIANT ?= $(ARDUINO_DIR)\/$(HARDWARE_DIRECTORY_NAME)\/avr\/variants\/mega$/;"	m
+ARDUINO_VARIANT	src/PinneRobot/Makefile	/^ARDUINO_VARIANT ?= $(ARDUINO_DIR)\/$(HARDWARE_DIRECTORY_NAME)\/avr\/variants\/micro$/;"	m
+ARDUINO_VARIANT	src/PinneRobot/Makefile	/^ARDUINO_VARIANT ?= $(ARDUINO_DIR)\/$(HARDWARE_DIRECTORY_NAME)\/avr\/variants\/standard$/;"	m
+ARDUINO_VARIANT	src/PinneRobot/Makefile	/^ARDUINO_VARIANT=$(ARDUINO_DIR)\/$(HARDWARE_DIRECTORY_NAME)\/avr\/variants\/leonardo$/;"	m
+ASFLAGS	src/PinneRobot/Makefile	/^ASFLAGS =	-mmcu=$(MCU) \\$/;"	m
+ASRC	src/PinneRobot/Makefile	/^ASRC =		$(wildcard *.S)$/;"	m
+ASTANDARD	src/PinneRobot/Makefile	/^ASTANDARD =	-x assembler-with-cpp$/;"	m
+AVRDUDE	src/PinneRobot/Makefile	/^AVRDUDE =	$(AVR_TOOLS_PATH)avrdude$/;"	m
+AVRDUDE_FLAGS	src/PinneRobot/Makefile	/^AVRDUDE_FLAGS =$/;"	m
+AVRDUDE_PROGRAMMER	src/PinneRobot/Makefile	/^AVRDUDE_PROGRAMMER = avr109$/;"	m
+AVRDUDE_PROGRAMMER	src/PinneRobot/Makefile	/^AVRDUDE_PROGRAMMER ?= $(call getboardvar,upload.protocol)$/;"	m
+AVRDUDE_WRITE_FLASH	src/PinneRobot/Makefile	/^AVRDUDE_WRITE_FLASH = -U flash:w:$(OUTPUT)\/$(PROJECT).hex:i$/;"	m
+AVRPREFIX	src/PinneRobot/Makefile	/^AVRPREFIX =	avr-$/;"	m
+AVR_TOOLS_PATH	src/PinneRobot/Makefile	/^AVR_TOOLS_PATH ?=$/;"	m
 BLOCKED_BY_ABS_MIN_POSITION	src/PinneRobot/PinneAPI.h	/^	BLOCKED_BY_ABS_MIN_POSITION,\/\/$/;"	e	enum:stateChange_t
 BLOCKED_BY_MAX_POSITION	src/PinneRobot/PinneAPI.h	/^	BLOCKED_BY_MAX_POSITION,\/\/Position counter is above range$/;"	e	enum:stateChange_t
 BLOCKED_BY_MIN_POSITION	src/PinneRobot/PinneAPI.h	/^	BLOCKED_BY_MIN_POSITION,\/\/Position counter is below range$/;"	e	enum:stateChange_t
 BLOCKED_BY_SLACK_SENSOR	src/PinneRobot/PinneAPI.h	/^	BLOCKED_BY_SLACK_SENSOR,$/;"	e	enum:stateChange_t
 BLOCKED_BY_TOP_SENSOR	src/PinneRobot/PinneAPI.h	/^	BLOCKED_BY_TOP_SENSOR,\/\/The stop sensor was hit$/;"	e	enum:stateChange_t
+BOARD	src/PinneRobot/Makefile	/^BOARD ?=	$(call getboardvar,build.board)$/;"	m
 BRAKE_FULL	src/PinneRobot/MotorDriver.h	/^		const static speed_t BRAKE_FULL;$/;"	m	class:VNH5019Driver	typeref:typename:const speed_t
 BRAKE_FULL	src/PinneRobot/VNH5019Driver.cpp	/^const speed_t VNH5019Driver::BRAKE_FULL = 512;$/;"	m	class:VNH5019Driver	typeref:typename:const speed_t
 BRAKE_NONE	src/PinneRobot/MotorDriver.h	/^		const static speed_t BRAKE_NONE;$/;"	m	class:VNH5019Driver	typeref:typename:const speed_t
@@ -35,23 +111,41 @@ BRAKE_NONE	src/PinneRobot/VNH5019Driver.cpp	/^const speed_t VNH5019Driver::BRAKE
 BYTE_COMMAND	src/PinneRobot/PinneAPI.h	/^	BYTE_COMMAND = 0x80,$/;"	e	enum:byteType_t
 BYTE_DATA	src/PinneRobot/PinneAPI.h	/^	BYTE_DATA = 0x00,$/;"	e	enum:byteType_t
 BYTE_UNKNOWN	src/PinneRobot/PinneAPI.h	/^	BYTE_UNKNOWN$/;"	e	enum:byteType_t
+CC	src/PinneRobot/Makefile	/^CC =		$(AVR_TOOLS_PATH)$(AVRPREFIX)gcc$/;"	m
+CDEFS	src/PinneRobot/Makefile	/^CDEFS ?=$/;"	m
+CFLAGS	src/PinneRobot/Makefile	/^CFLAGS =	-mmcu=$(MCU) \\$/;"	m
+CINCS	src/PinneRobot/Makefile	/^CINCS = \\$/;"	m
+CLEANEXT	src/PinneRobot/Makefile	/^CLEANEXT = .elf .hex .eep .cof .lss .sym .listing .symbol .map .log$/;"	m
+CLEANPRG	src/PinneRobot/Makefile	/^CLEANPRG = $(foreach p,_2 _3 _4 _5 _6 _7 _8 _9 _A,$(patsubst %,$p%,$(CLEANEXT)))$/;"	m
 CMD_BRAKE	src/PinneRobot/PinneAPI.h	/^	CMD_BRAKE = 0x05,$/;"	e	enum:command_t
 CMD_CURRENT_POSITION	src/PinneRobot/PinneAPI.h	/^	CMD_CURRENT_POSITION = 0x04,$/;"	e	enum:command_t
 CMD_DIRECTION	src/PinneRobot/PinneAPI.h	/^	CMD_DIRECTION = 0x02,$/;"	e	enum:command_t
 CMD_ECHO_MESSAGES	src/PinneRobot/PinneAPI.h	/^	CMD_ECHO_MESSAGES = 0x0F,$/;"	e	enum:command_t
 CMD_GOTO_PARKING_POSITION	src/PinneRobot/PinneAPI.h	/^	CMD_GOTO_PARKING_POSITION = 0x0A,$/;"	e	enum:command_t
 CMD_GOTO_SPEED_RAMP_DOWN	src/PinneRobot/PinneAPI.h	/^	CMD_GOTO_SPEED_RAMP_DOWN = 0x0D,$/;"	e	enum:command_t
-CMD_GOTO_SPEED_RAMP_UP	src/PinneRobot/PinneAPI.h	/^	CMD_GOTO_SPEED_RAMP_UP = 0x0C,$/;"	e	enum:command_t
 CMD_GOTO_SPEED_SCALING	src/PinneRobot/PinneAPI.h	/^	CMD_GOTO_SPEED_SCALING = 0x0E,$/;"	e	enum:command_t
 CMD_GOTO_TARGET	src/PinneRobot/PinneAPI.h	/^	CMD_GOTO_TARGET = 0x0B, \/\/duration after halfway point as argument$/;"	e	enum:command_t
 CMD_INFO	src/PinneRobot/PinneAPI.h	/^	CMD_INFO = 0x07,\/\/used for debugging, arbitrary numboer of asci characters$/;"	e	enum:command_t
 CMD_MAX_POSITION	src/PinneRobot/PinneAPI.h	/^	CMD_MAX_POSITION = 0x09,$/;"	e	enum:command_t
+CMD_MEASURED_SPEED	src/PinneRobot/PinneAPI.h	/^	CMD_MEASURED_SPEED = 0x0C,$/;"	e	enum:command_t
 CMD_MIN_POSITION	src/PinneRobot/PinneAPI.h	/^	CMD_MIN_POSITION = 0x08,$/;"	e	enum:command_t
 CMD_SPEED	src/PinneRobot/PinneAPI.h	/^	CMD_SPEED = 0x01,$/;"	e	enum:command_t
 CMD_STATE_CHANGE	src/PinneRobot/PinneAPI.h	/^	CMD_STATE_CHANGE = 0x06,$/;"	e	enum:command_t
 CMD_STOP	src/PinneRobot/PinneAPI.h	/^	CMD_STOP = 0x00,\/\/speed fade out time as argument$/;"	e	enum:command_t
 CMD_TARGET_POSITION	src/PinneRobot/PinneAPI.h	/^	CMD_TARGET_POSITION = 0x03,$/;"	e	enum:command_t
 CMD_UNKNOWN	src/PinneRobot/PinneAPI.h	/^	CMD_UNKNOWN$/;"	e	enum:command_t
+COFFCONVERT	src/PinneRobot/Makefile	/^COFFCONVERT=$(OBJCOPY) --debugging \\$/;"	m
+COREASMSRC	src/PinneRobot/Makefile	/^COREASMSRC =	$(wildcard $(ARDUINO_CORE)\/*.S)$/;"	m
+CORECXXSRC	src/PinneRobot/Makefile	/^CORECXXSRC =	$(wildcard $(ARDUINO_CORE)\/*.cpp)$/;"	m
+COREOBJ	src/PinneRobot/Makefile	/^COREOBJ =	$(addprefix $(OUTPUT)\/,$(notdir \\$/;"	m
+CORESRC	src/PinneRobot/Makefile	/^CORESRC =	$(wildcard $(ARDUINO_CORE)\/*.c)$/;"	m
+CSTANDARD	src/PinneRobot/Makefile	/^CSTANDARD =	-std=gnu99$/;"	m
+CXX	src/PinneRobot/Makefile	/^CXX =		$(AVR_TOOLS_PATH)$(AVRPREFIX)g++$/;"	m
+CXXFLAGS	src/PinneRobot/Makefile	/^CXXFLAGS =	-mmcu=$(MCU) \\$/;"	m
+CXXSRC	src/PinneRobot/Makefile	/^CXXSRC =$/;"	m
+CXXSRCINO	src/PinneRobot/Makefile	/^CXXSRCINO :=	$(filter-out $(PROJECT).ino $(PROJECT).pde,$(CXXSRCINO))$/;"	m
+CXXSRCINO	src/PinneRobot/Makefile	/^CXXSRCINO =	$(wildcard *.ino) $(wildcard *.pde)$/;"	m
+CXXSTANDARD	src/PinneRobot/Makefile	/^CXXSTANDARD =	-std=gnu++14$/;"	m
 Calculate	src/PinneRobot/SpeedRamping.cpp	/^boolean SpeedRamping::Calculate(int currPosition)$/;"	f	class:SpeedRamping	typeref:typename:boolean
 DEBUG	src/PinneRobot/PinneAPI.h	/^#define DEBUG$/;"	d
 DEBUG_NL	src/PinneRobot/PinneAPI.h	/^#define DEBUG_NL$/;"	d
@@ -59,6 +153,7 @@ DEBUG_PRINT	src/PinneRobot/PinneAPI.h	/^#define DEBUG_PRINT(/;"	d
 DEFAULT_CALC_INTERVAL	src/PinneRobot/SpeedRamping.cpp	/^const unsigned long SpeedRamping::DEFAULT_CALC_INTERVAL = 50;$/;"	m	class:SpeedRamping	typeref:typename:const unsigned long
 DEFAULT_CALC_INTERVAL	src/PinneRobot/SpeedRamping.h	/^	const static unsigned long DEFAULT_CALC_INTERVAL;$/;"	m	class:SpeedRamping	typeref:typename:const unsigned long
 DEFAULT_RAMP_TIME	src/PinneRobot/SpeedRamping.cpp	/^#define DEFAULT_RAMP_TIME /;"	d	file:
+DEPFILE	src/PinneRobot/Makefile	/^DEPFILE =	$(OUTPUT)\/Makefile.depend$/;"	m
 DIRECTION_DOWN	src/PinneRobot/Motor.h	/^		const static int DIRECTION_DOWN;$/;"	m	class:PinneMotor	typeref:typename:const int
 DIRECTION_DOWN	src/PinneRobot/Motor.h	/^		const static int DIRECTION_DOWN;$/;"	m	class:RotationMotor	typeref:typename:const int
 DIRECTION_DOWN	src/PinneRobot/PinneMotor.cpp	/^const int PinneMotor::DIRECTION_DOWN = 0;$/;"	m	class:PinneMotor	typeref:typename:const int
@@ -82,6 +177,7 @@ DebugPrint	src/PinneRobot/PinneAPI.h	/^static void DebugPrint(int msg)$/;"	f	typ
 DebugUnitPrint	src/PinneRobot/PinneAPI.h	/^static void DebugUnitPrint(address_t address, const char* msg)$/;"	f	typeref:typename:void
 DebugUnitPrint	src/PinneRobot/PinneAPI.h	/^static void DebugUnitPrint(address_t address, int msg)$/;"	f	typeref:typename:void
 FALLING_RAMP	src/PinneRobot/SpeedRamping.h	/^		FALLING_RAMP$/;"	e	enum:SpeedRamping::__anon880d42800103
+F_CPU	src/PinneRobot/Makefile	/^F_CPU ?=	$(call getboardvar,build.f_cpu)$/;"	m
 GET_MESSAGE	src/PinneRobot/PinneAPI.h	/^	GET_MESSAGE = 0x40,$/;"	e	enum:setGet_t
 GOING_DOWN	src/PinneRobot/PinneAPI.h	/^	GOING_DOWN,\/\/direction set to up$/;"	e	enum:stateChange_t
 GOING_TO_TARGET	src/PinneRobot/PinneAPI.h	/^	GOING_TO_TARGET,$/;"	e	enum:stateChange_t
@@ -98,13 +194,13 @@ GetDirection	src/PinneRobot/MotorDriver.h	/^		virtual int GetDirection() { retur
 GetFault	src/PinneRobot/VNH5019Driver.cpp	/^unsigned char VNH5019Driver::GetFault()$/;"	f	class:VNH5019Driver	typeref:typename:unsigned char
 GetGoToSpeedRampDown	src/PinneRobot/Motor.h	/^		int GetGoToSpeedRampDown() {return static_cast<int>(_speedRamper->GetRampDown()); };$/;"	f	class:PinneMotor	typeref:typename:int
 GetGoToSpeedRampDown	src/PinneRobot/Motor.h	/^		int GetGoToSpeedRampDown() {return static_cast<int>(_speedRamper->GetRampDown()); };$/;"	f	class:RotationMotor	typeref:typename:int
-GetGoToSpeedRampUp	src/PinneRobot/Motor.h	/^		int GetGoToSpeedRampUp() {return static_cast<int>(_speedRamper->GetRampUp()); };$/;"	f	class:PinneMotor	typeref:typename:int
 GetGoToSpeedRampUp	src/PinneRobot/Motor.h	/^		int GetGoToSpeedRampUp() {return static_cast<int>(_speedRamper->GetRampUp()); };$/;"	f	class:RotationMotor	typeref:typename:int
 GetGoToSpeedScaling	src/PinneRobot/Motor.h	/^		int GetGoToSpeedScaling() {return static_cast<int>(_speedRamper->GetSpeedScaling() * 1000); };$/;"	f	class:PinneMotor	typeref:typename:int
 GetGoToSpeedScaling	src/PinneRobot/Motor.h	/^		int GetGoToSpeedScaling() {return static_cast<int>(_speedRamper->GetSpeedScaling() * 1000); };$/;"	f	class:RotationMotor	typeref:typename:int
 GetMaxPosition	src/PinneRobot/Motor.h	/^		int GetMaxPosition() { return static_cast<int>(_maxPosition); };$/;"	f	class:PinneMotor	typeref:typename:int
 GetMaxPosition	src/PinneRobot/Motor.h	/^		int GetMaxPosition() { return static_cast<int>(_maxPosition); };$/;"	f	class:RotationMotor	typeref:typename:int
 GetMaxSpeed	src/PinneRobot/SpeedRamping.h	/^	int GetMaxSpeed() {return static_cast<int>(_maxSpeed); };$/;"	f	class:SpeedRamping	typeref:typename:int
+GetMeasuredSpeed	src/PinneRobot/PinneMotor.cpp	/^int PinneMotor::GetMeasuredSpeed()$/;"	f	class:PinneMotor	typeref:typename:int
 GetMinPosition	src/PinneRobot/Motor.h	/^		int GetMinPosition() { return static_cast<int>(_minPosition); };$/;"	f	class:PinneMotor	typeref:typename:int
 GetMinPosition	src/PinneRobot/Motor.h	/^		int GetMinPosition() { return static_cast<int>(_minPosition); };$/;"	f	class:RotationMotor	typeref:typename:int
 GetMinSpeed	src/PinneRobot/SpeedRamping.h	/^	int GetMinSpeed() {return static_cast<int>(_minSpeed); };$/;"	f	class:SpeedRamping	typeref:typename:int
@@ -123,23 +219,49 @@ GoToParkingPosition	src/PinneRobot/PinneRobot.cpp	/^void PinneRobot::GoToParking
 GoToParkingPosition	src/PinneRobot/RotationMotor.cpp	/^void RotationMotor::GoToParkingPosition()$/;"	f	class:RotationMotor	typeref:typename:void
 GoToTargetPosition	src/PinneRobot/PinneMotor.cpp	/^void PinneMotor::GoToTargetPosition(int value)$/;"	f	class:PinneMotor	typeref:typename:void
 GoToTargetPosition	src/PinneRobot/RotationMotor.cpp	/^void RotationMotor::GoToTargetPosition(int value)$/;"	f	class:RotationMotor	typeref:typename:void
+HARDWARE_DIRECTORY_NAME	src/PinneRobot/Makefile	/^HARDWARE_DIRECTORY_NAME = hardware\/archlinux-arduino$/;"	m
+HEXFORMAT	src/PinneRobot/Makefile	/^HEXFORMAT =	ihex$/;"	m
 IsBlocked	src/PinneRobot/PinneMotor.cpp	/^boolean PinneMotor::IsBlocked()$/;"	f	class:PinneMotor	typeref:typename:boolean
 IsBlocked	src/PinneRobot/RotationMotor.cpp	/^boolean RotationMotor::IsBlocked()$/;"	f	class:RotationMotor	typeref:typename:boolean
 L293Driver	src/PinneRobot/L293Driver.cpp	/^L293Driver::L293Driver(unsigned char INA, unsigned char INB, unsigned char PWM) :$/;"	f	class:L293Driver
 L293Driver	src/PinneRobot/MotorDriver.h	/^class L293Driver: public MotorDriver$/;"	c
+LDFLAGS	src/PinneRobot/Makefile	/^LDFLAGS =	-mmcu=$(MCU)$/;"	m
+LDLIBS	src/PinneRobot/Makefile	/^LDLIBS ?=$/;"	m
+LISTING_ARGS	src/PinneRobot/Makefile	/^LISTING_ARGS =	-h -S$/;"	m
+MCU	src/PinneRobot/Makefile	/^MCU ?=		$(call getboardvar,build.mcu)$/;"	m
+MKVERSION	src/PinneRobot/Makefile	/^MKVERSION = 1.0$/;"	m
+MODEL_PATTERN_MATCHING	src/PinneRobot/Makefile	/^MODEL_PATTERN_MATCHING = $(ARDUINO_MODEL)$/;"	m
+MODEL_PATTERN_MATCHING	src/PinneRobot/Makefile	/^MODEL_PATTERN_MATCHING = $(ARDUINO_MODEL)\\|$(ARDUINO_FAMILY)$/;"	m
 MOTOR_H	src/PinneRobot/Motor.h	/^#define MOTOR_H$/;"	d
+MV	src/PinneRobot/Makefile	/^MV =		mv -f$/;"	m
 MotorDriver	src/PinneRobot/MotorDriver.h	/^		MotorDriver() {};$/;"	f	class:MotorDriver
 MotorDriver	src/PinneRobot/MotorDriver.h	/^class MotorDriver$/;"	c
 MotorDriver_h	src/PinneRobot/MotorDriver.h	/^#define MotorDriver_h$/;"	d
+NM	src/PinneRobot/Makefile	/^NM =		$(AVR_TOOLS_PATH)$(AVRPREFIX)nm$/;"	m
 NotifyStateChange	src/PinneRobot/PinneAPI.h	/^static void NotifyStateChange(stateChange_t stateChange, address_t address)$/;"	f	typeref:typename:void
+OBJ	src/PinneRobot/Makefile	/^OBJ =		$(addprefix $(OUTPUT)\/,$(notdir \\$/;"	m
+OBJDUMP	src/PinneRobot/Makefile	/^OBJDUMP =	$(AVR_TOOLS_PATH)$(AVRPREFIX)objdump$/;"	m
+OPT_DEBUG	src/PinneRobot/Makefile	/^OPT_DEBUG =	-g2 -gstabs$/;"	m
+OPT_OPTIMS	src/PinneRobot/Makefile	/^OPT_OPTIMS =	-Os$/;"	m
+OPT_OTHER	src/PinneRobot/Makefile	/^OPT_OTHER = -fno-threadsafe-statics$/;"	m
+OPT_WARN	src/PinneRobot/Makefile	/^OPT_WARN =	-Wall$/;"	m
+OPT_WARN_C	src/PinneRobot/Makefile	/^OPT_WARN_C =	$(OPT_WARN)$/;"	m
+OPT_WARN_CXX	src/PinneRobot/Makefile	/^OPT_WARN_CXX =	$(OPT_WARN)$/;"	m
+OSNAME	src/PinneRobot/Makefile	/^OSNAME =	$(shell uname)$/;"	m
+OUTPUT	src/PinneRobot/Makefile	/^OUTPUT ?=	bin$/;"	m
 PARSE_MASK_ADDRESS	src/PinneRobot/PinneAPI.h	/^	PARSE_MASK_ADDRESS = 0x30,\/\/which motor is address$/;"	e	enum:parseMask_t
 PARSE_MASK_COMMAND	src/PinneRobot/PinneAPI.h	/^	PARSE_MASK_COMMAND = 0x0F,$/;"	e	enum:parseMask_t
 PARSE_MASK_MESSAGE_TYPE	src/PinneRobot/PinneAPI.h	/^	PARSE_MASK_MESSAGE_TYPE = 0x80,\/\/command byte of data byte$/;"	e	enum:parseMask_t
 PARSE_MASK_SETGET	src/PinneRobot/PinneAPI.h	/^	PARSE_MASK_SETGET = 0x40,\/\/setter or getter$/;"	e	enum:parseMask_t
 PARSE_MASK_UNKNOWN	src/PinneRobot/PinneAPI.h	/^	PARSE_MASK_UNKNOWN$/;"	e	enum:parseMask_t
+PID	src/PinneRobot/Makefile	/^PID ?=		$(call getboardvar,build.pid)$/;"	m
 PINNE_API_H	src/PinneRobot/PinneAPI.h	/^#define PINNE_API_H$/;"	d
 PINNE_API_PARSER_H	src/PinneRobot/PinneAPIParser.h	/^#define PINNE_API_PARSER_H$/;"	d
 PINNE_ROBOT_H	src/PinneRobot/PinneRobot.h	/^#define PINNE_ROBOT_H$/;"	d
+PORT	src/PinneRobot/Makefile	/^    PORT ?= \/dev\/cuaU0$/;"	m
+PORT	src/PinneRobot/Makefile	/^    PORT ?= \/dev\/ttyACM0$/;"	m
+PORT	src/PinneRobot/Makefile	/^    PORT ?= \/dev\/ttyUSB0$/;"	m
+PORT	src/PinneRobot/Makefile	/^PORT ?=	\/dev\/serial\/by-id\/usb-Arduino_LLC_Arduino_Leonardo-if00$/;"	m
 POSITION_ALL_UP	src/PinneRobot/Motor.h	/^		const static int POSITION_ALL_UP;$/;"	m	class:PinneMotor	typeref:typename:const int
 POSITION_ALL_UP	src/PinneRobot/PinneMotor.cpp	/^const int PinneMotor::POSITION_ALL_UP = 1;$/;"	m	class:PinneMotor	typeref:typename:const int
 POSITION_DEFAULT	src/PinneRobot/Motor.h	/^		const static int POSITION_DEFAULT;$/;"	m	class:RotationMotor	typeref:typename:const int
@@ -154,6 +276,7 @@ POSITION_MIN	src/PinneRobot/Motor.h	/^		const static int POSITION_MIN;$/;"	m	cla
 POSITION_MIN	src/PinneRobot/RotationMotor.cpp	/^const int RotationMotor::POSITION_MIN = 200;\/\/max left$/;"	m	class:RotationMotor	typeref:typename:const int
 POSITION_RIGHT_LIMIT	src/PinneRobot/Motor.h	/^		const static int POSITION_RIGHT_LIMIT;$/;"	m	class:RotationMotor	typeref:typename:const int
 POSITION_RIGHT_LIMIT	src/PinneRobot/RotationMotor.cpp	/^const int RotationMotor::POSITION_RIGHT_LIMIT = RotationMotor::POSITION_MAX;\/\/max right$/;"	m	class:RotationMotor	typeref:typename:const int
+PROJECT	src/PinneRobot/Makefile	/^PROJECT ?=	ThothRobot$/;"	m
 PinneAPIParser	src/PinneRobot/PinneAPIParser.cpp	/^PinneAPIParser::PinneAPIParser(PinneRobot *robot) : _robot(robot),$/;"	f	class:PinneAPIParser
 PinneAPIParser	src/PinneRobot/PinneAPIParser.h	/^class PinneAPIParser$/;"	c
 PinneMotor	src/PinneRobot/Motor.h	/^class PinneMotor$/;"	c
@@ -162,7 +285,10 @@ PinneRobot	README.md	/^# PinneRobot$/;"	c
 PinneRobot	src/PinneRobot/PinneRobot.cpp	/^PinneRobot::PinneRobot()$/;"	f	class:PinneRobot
 PinneRobot	src/PinneRobot/PinneRobot.h	/^class PinneRobot$/;"	c
 RAMP_TABLE_h	src/PinneRobot/kRISE_TABLE.h	/^#define RAMP_TABLE_h$/;"	d
+RESETCMD	src/PinneRobot/Makefile	/^RESETCMD ?=	stty$/;"	m
 RISING_RAMP	src/PinneRobot/SpeedRamping.h	/^		RISING_RAMP,$/;"	e	enum:SpeedRamping::__anon880d42800103
+RM	src/PinneRobot/Makefile	/^RM =		rm -f$/;"	m
+RMDIR	src/PinneRobot/Makefile	/^RMDIR = 	rmdir$/;"	m
 ReadSlackStopSensor	src/PinneRobot/PinneMotor.cpp	/^void PinneMotor::ReadSlackStopSensor()$/;"	f	class:PinneMotor	typeref:typename:void
 ReadTopStopSensor	src/PinneRobot/PinneMotor.cpp	/^void PinneMotor::ReadTopStopSensor()$/;"	f	class:PinneMotor	typeref:typename:void
 Reply	src/PinneRobot/PinneAPI.h	/^static void Reply(const char* str)$/;"	f	typeref:typename:void
@@ -171,6 +297,7 @@ RotationMotor	src/PinneRobot/Motor.h	/^class RotationMotor$/;"	c
 RotationMotor	src/PinneRobot/RotationMotor.cpp	/^RotationMotor::RotationMotor(unsigned char rotationPotmeterPin, L293Driver* driver, address_t ad/;"	f	class:RotationMotor
 SETGET_UNKNOWN	src/PinneRobot/PinneAPI.h	/^	SETGET_UNKNOWN$/;"	e	enum:setGet_t
 SET_MESSAGE	src/PinneRobot/PinneAPI.h	/^	SET_MESSAGE = 0x00,$/;"	e	enum:setGet_t
+SIZE	src/PinneRobot/Makefile	/^SIZE =		$(AVR_TOOLS_PATH)$(AVRPREFIX)size$/;"	m
 SLACK_SENSOR_IN	src/PinneRobot/Motor.h	/^		const static int SLACK_SENSOR_IN;$/;"	m	class:PinneMotor	typeref:typename:const int
 SLACK_SENSOR_IN	src/PinneRobot/PinneMotor.cpp	/^const int PinneMotor::SLACK_SENSOR_IN = 0;$/;"	m	class:PinneMotor	typeref:typename:const int
 SLACK_SENSOR_OUT	src/PinneRobot/Motor.h	/^		const static int SLACK_SENSOR_OUT;$/;"	m	class:PinneMotor	typeref:typename:const int
@@ -187,8 +314,12 @@ SPEED_STOP	src/PinneRobot/Motor.h	/^		const static int SPEED_STOP;$/;"	m	class:R
 SPEED_STOP	src/PinneRobot/MotorDriver.h	/^		const static speed_t SPEED_STOP;$/;"	m	class:VNH5019Driver	typeref:typename:const speed_t
 SPEED_STOP	src/PinneRobot/RotationMotor.cpp	/^const int RotationMotor::SPEED_STOP = 0;$/;"	m	class:RotationMotor	typeref:typename:const int
 SPEED_STOP	src/PinneRobot/VNH5019Driver.cpp	/^const speed_t VNH5019Driver::SPEED_STOP = 0;$/;"	m	class:VNH5019Driver	typeref:typename:const speed_t
+SRC	src/PinneRobot/Makefile	/^SRC =		$(wildcard *.c)$/;"	m
 STOPPED	src/PinneRobot/PinneAPI.h	/^	STOPPED,\/\/Stopped manually$/;"	e	enum:stateChange_t
 STOPPED_AT_TARGET	src/PinneRobot/PinneAPI.h	/^	STOPPED_AT_TARGET,\/\/$/;"	e	enum:stateChange_t
+STTY	src/PinneRobot/Makefile	/^    STTY =	stty -F $(PORT)$/;"	m
+STTY	src/PinneRobot/Makefile	/^    STTY =	stty -f $(PORT)$/;"	m
+SYMBOL_ARGS	src/PinneRobot/Makefile	/^SYMBOL_ARGS =	-n$/;"	m
 SetBrake	src/PinneRobot/L293Driver.cpp	/^void L293Driver::SetBrake(speed_t brake)$/;"	f	class:L293Driver	typeref:typename:void
 SetBrake	src/PinneRobot/PinneMotor.cpp	/^void PinneMotor::SetBrake(int brake)$/;"	f	class:PinneMotor	typeref:typename:void
 SetBrake	src/PinneRobot/RotationMotor.cpp	/^void RotationMotor::SetBrake(int brake)$/;"	f	class:RotationMotor	typeref:typename:void
@@ -230,6 +361,8 @@ Stop	src/PinneRobot/Motor.h	/^		void Stop() { _driver->SetSpeed(SPEED_STOP); };$
 Stop	src/PinneRobot/PinneMotor.cpp	/^void PinneMotor::Stop()$/;"	f	class:PinneMotor	typeref:typename:void
 Stop	src/PinneRobot/SpeedRamping.cpp	/^void SpeedRamping::Stop()$/;"	f	class:SpeedRamping	typeref:typename:void
 TABLE_SIZE	src/PinneRobot/kRISE_TABLE.h	/^static const int TABLE_SIZE = 256;$/;"	v	typeref:typename:const int
+TAREXCL	src/PinneRobot/Makefile	/^TAREXCL=	$(OUTPUT) back build debug$/;"	m
+TARFILE	src/PinneRobot/Makefile	/^TARFILE =	$(PROJECT)-$(VERSION).tar$/;"	m
 TARGET_NONE	src/PinneRobot/Motor.h	/^		const static position_t TARGET_NONE;$/;"	m	class:PinneMotor	typeref:typename:const position_t
 TARGET_NONE	src/PinneRobot/Motor.h	/^		const static position_t TARGET_NONE;$/;"	m	class:RotationMotor	typeref:typename:const position_t
 TARGET_NONE	src/PinneRobot/PinneMotor.cpp	/^const int PinneMotor::TARGET_NONE = 0;$/;"	m	class:PinneMotor	typeref:typename:const int
@@ -242,10 +375,20 @@ TURNING_LEFT	src/PinneRobot/Motor.h	/^		const static int TURNING_LEFT;$/;"	m	cla
 TURNING_LEFT	src/PinneRobot/RotationMotor.cpp	/^const int RotationMotor::TURNING_LEFT = GOING_UP;$/;"	m	class:RotationMotor	typeref:typename:const int
 TURNING_RIGHT	src/PinneRobot/Motor.h	/^		const static int TURNING_RIGHT;$/;"	m	class:RotationMotor	typeref:typename:const int
 TURNING_RIGHT	src/PinneRobot/RotationMotor.cpp	/^const int RotationMotor::TURNING_RIGHT = GOING_DOWN;$/;"	m	class:RotationMotor	typeref:typename:const int
+ULIBASMSRC	src/PinneRobot/Makefile	/^ULIBASMSRC =	$(wildcard $(ULIBDIRS:%=%\/*.S))$/;"	m
+ULIBCXXSRC	src/PinneRobot/Makefile	/^ULIBCXXSRC =	$(wildcard $(ULIBDIRS:%=%\/*.cpp))$/;"	m
+ULIBDIRS	src/PinneRobot/Makefile	/^ULIBDIRS = $(wildcard \\$/;"	m
+ULIBOBJ	src/PinneRobot/Makefile	/^ULIBOBJ =	$(addprefix $(OUTPUT)\/,$(notdir \\$/;"	m
+ULIBSRC	src/PinneRobot/Makefile	/^ULIBSRC =	$(wildcard $(ULIBDIRS:%=%\/*.c))$/;"	m
+UPLOAD_RATE	src/PinneRobot/Makefile	/^UPLOAD_RATE ?=	$(call getboardvar,upload.speed)$/;"	m
+USER_LIBDIR	src/PinneRobot/Makefile	/^USER_LIBDIR ?=	.\/libraries$/;"	m
+USER_LIBS	src/PinneRobot/Makefile	/^USER_LIBS ?=$/;"	m
 UpdateDirection	src/PinneRobot/L293Driver.cpp	/^void L293Driver::UpdateDirection()$/;"	f	class:L293Driver	typeref:typename:void
 UpdateDirection	src/PinneRobot/VNH5019Driver.cpp	/^void VNH5019Driver::UpdateDirection()$/;"	f	class:VNH5019Driver	typeref:typename:void
 UpdateState	src/PinneRobot/PinneMotor.cpp	/^void PinneMotor::UpdateState()$/;"	f	class:PinneMotor	typeref:typename:void
 UpdateState	src/PinneRobot/RotationMotor.cpp	/^void RotationMotor::UpdateState()$/;"	f	class:RotationMotor	typeref:typename:void
+VERSION	src/PinneRobot/Makefile	/^VERSION ?=	1.0$/;"	m
+VID	src/PinneRobot/Makefile	/^VID ?=		$(call getboardvar,build.vid)$/;"	m
 VNH5019Driver	src/PinneRobot/MotorDriver.h	/^class VNH5019Driver: public MotorDriver$/;"	c
 VNH5019Driver	src/PinneRobot/VNH5019Driver.cpp	/^VNH5019Driver::VNH5019Driver(unsigned char INA, unsigned char INB, unsigned char ENDIAG,	unsigne/;"	f	class:VNH5019Driver
 _AbsMinPositionReached	src/PinneRobot/PinneMotor.cpp	/^void PinneMotor::_AbsMinPositionReached()$/;"	f	class:PinneMotor	typeref:typename:void
@@ -326,9 +469,9 @@ _processGetCurrentPositionCommand	src/PinneRobot/PinneAPIParser.cpp	/^void Pinne
 _processGetDirectionCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetDirectionCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processGetEchoMessages	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetEchoMessages()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processGetGoToSpeedRampDownCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetGoToSpeedRampDownCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
-_processGetGoToSpeedRampUpCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetGoToSpeedRampUpCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processGetGoToSpeedScalingCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetGoToSpeedScalingCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processGetMaxPositionCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetMaxPositionCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
+_processGetMeasuredSpeed	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetMeasuredSpeed()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processGetMinPositionCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetMinPositionCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processGetSpeedCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetSpeedCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processGetStateCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processGetStateCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
@@ -339,11 +482,11 @@ _processSetCurrentPositionCommand	src/PinneRobot/PinneAPIParser.cpp	/^void Pinne
 _processSetDirectionCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetDirectionCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processSetEchoMessages	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetEchoMessages()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processSetGoToSpeedRampDownCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetGoToSpeedRampDownCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
-_processSetGoToSpeedRampUpCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetGoToSpeedRampUpCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processSetGoToSpeedScalingCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetGoToSpeedScalingCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processSetGoToTargetCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetGoToTargetCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processSetGotoParkingPosition	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetGotoParkingPosition()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processSetMaxPositionCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetMaxPositionCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
+_processSetMeasuredSpeed	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetMeasuredSpeed()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processSetMinPositionCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetMinPositionCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processSetSpeedCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetSpeedCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
 _processSetStopCommand	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::_processSetStopCommand()$/;"	f	class:PinneAPIParser	typeref:typename:void
@@ -372,10 +515,14 @@ _topStopSensorValue	src/PinneRobot/Motor.h	/^		int _topStopSensorValue;$/;"	m	cl
 _verifyGetCommandChecksum	src/PinneRobot/PinneAPIParser.cpp	/^boolean PinneAPIParser::_verifyGetCommandChecksum(byte inByte)$/;"	f	class:PinneAPIParser	typeref:typename:boolean
 _verifySetCommandChecksum	src/PinneRobot/PinneAPIParser.cpp	/^boolean PinneAPIParser::_verifySetCommandChecksum(byte inByte)$/;"	f	class:PinneAPIParser	typeref:typename:boolean
 address_t	src/PinneRobot/PinneAPI.h	/^enum address_t {$/;"	g
+all	src/PinneRobot/Makefile	/^all:	elf hex eep listing symbol size$/;"	t
 build	ino.ini	/^[build]$/;"	s
+build	src/PinneRobot/Makefile	/^build:	elf hex$/;"	t
 byteType_t	src/PinneRobot/PinneAPI.h	/^enum byteType_t$/;"	g
 cStandard	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "cStandard": "c11",$/;"	s	object:configurations.0
 cStandard	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "cStandard": "c11",$/;"	s	object:configurations.1
+clean	src/PinneRobot/Makefile	/^clean:$/;"	t
+coff	src/PinneRobot/Makefile	/^coff: $(OUTPUT)\/$(PROJECT).elf$/;"	t
 command_t	src/PinneRobot/PinneAPI.h	/^enum command_t$/;"	g
 compilerPath	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "compilerPath": "C:\\\\Strawberry\\\\c\\\\bin\\\\gcc.exe",$/;"	s	object:configurations.0
 compilerPath	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "compilerPath": "C:\\\\Strawberry\\\\c\\\\bin\\\\gcc.exe",$/;"	s	object:configurations.1
@@ -384,12 +531,21 @@ cppStandard	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "cppStand
 cppStandard	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "cppStandard": "c++17",$/;"	s	object:configurations.1
 defines	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "defines": [$/;"	a	object:configurations.0
 defines	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "defines": [$/;"	a	object:configurations.1
+depend	src/PinneRobot/Makefile	/^depend: $(OUTPUT) $(CXXSRCINO)$/;"	t
+dtr	src/PinneRobot/Makefile	/^dtr:$/;"	t
+eep	src/PinneRobot/Makefile	/^eep:	$(OUTPUT) $(OUTPUT)\/$(PROJECT).eep$/;"	t
+elf	src/PinneRobot/Makefile	/^elf:	$(OUTPUT) $(OUTPUT)\/$(PROJECT).elf$/;"	t
 encoderCounter1	src/PinneRobot/PinneMotor.cpp	/^volatile int encoderCounter1 = 0;$/;"	v	typeref:typename:volatile int
 encoderCounter2	src/PinneRobot/PinneMotor.cpp	/^volatile int encoderCounter2 = 0;$/;"	v	typeref:typename:volatile int
 encoderISR1	src/PinneRobot/PinneMotor.cpp	/^void encoderISR1()$/;"	f	typeref:typename:void
 encoderISR2	src/PinneRobot/PinneMotor.cpp	/^void encoderISR2()$/;"	f	typeref:typename:void
 encoderIncrement1	src/PinneRobot/PinneMotor.cpp	/^volatile int encoderIncrement1 = 1;$/;"	v	typeref:typename:volatile int
 encoderIncrement2	src/PinneRobot/PinneMotor.cpp	/^volatile int encoderIncrement2 = 1;$/;"	v	typeref:typename:volatile int
+extcoff	src/PinneRobot/Makefile	/^extcoff: $(OUTPUT)\/$(PROJECT).elf$/;"	t
+extra	src/PinneRobot/Makefile	/^extra:	$(patsubst %,$(OUTPUT)\/$(PROJECT)_2%, .elf .hex .listing .symbol) \\$/;"	t
+getboardvar	src/PinneRobot/Makefile	/^getboardvar = $(shell \\$/;"	m
+help	src/PinneRobot/Makefile	/^help:$/;"	t
+hex	src/PinneRobot/Makefile	/^hex:	$(OUTPUT) $(OUTPUT)\/$(PROJECT).hex$/;"	t
 includePath	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "includePath": [$/;"	a	object:configurations.0
 includePath	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "includePath": [$/;"	a	object:configurations.1
 init	src/PinneRobot/L293Driver.cpp	/^void L293Driver::init()$/;"	f	class:L293Driver	typeref:typename:void
@@ -408,15 +564,27 @@ leftMotor	src/PinneRobot/PinneRobot.h	/^	PinneMotor *leftMotor;$/;"	m	class:Pinn
 leftMotorEncoderInterruptIndex	src/PinneRobot/PinneRobot.cpp	/^const int leftMotorEncoderInterruptIndex = 1;\/\/ digital pin 3 on Leonardo implicitly$/;"	v	typeref:typename:const int
 leftMotorSlackStopSensor	src/PinneRobot/PinneRobot.cpp	/^const int leftMotorSlackStopSensor = A5; \/\/todo: cut trace, was current sense pin$/;"	v	typeref:typename:const int
 leftMotorTopStopSensor	src/PinneRobot/PinneRobot.cpp	/^const int leftMotorTopStopSensor = A0;$/;"	v	typeref:typename:const int
+listing	src/PinneRobot/Makefile	/^listing: $(OUTPUT) $(OUTPUT)\/$(PROJECT).listing$/;"	t
+loop	src/PinneRobot/bin/ThothRobot.cpp	/^void loop()$/;"	f	typeref:typename:void
+lss	src/PinneRobot/Makefile	/^lss:	$(OUTPUT) $(OUTPUT)\/$(PROJECT).lss$/;"	t
+lst	src/PinneRobot/Makefile	/^lst:	$(OUTPUT) $(OUTPUT)\/$(PROJECT).lss$/;"	t
+mkout	src/PinneRobot/Makefile	/^mkout $(OUTPUT):$/;"	t
 model	ino.ini	/^board-model = leonardo$/;"	k	section:build
 model	ino.ini	/^board-model = leonardo$/;"	k	section:upload
 name	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "name": "Arduino",$/;"	s	object:configurations.1
 name	src/PinneRobot/.vscode/c_cpp_properties.json	/^            "name": "Win32",$/;"	s	object:configurations.0
 parseIncomingByte	src/PinneRobot/PinneAPIParser.cpp	/^void PinneAPIParser::parseIncomingByte(byte inByte)$/;"	f	class:PinneAPIParser	typeref:typename:void
 parseMask_t	src/PinneRobot/PinneAPI.h	/^enum parseMask_t {$/;"	g
+parser	src/PinneRobot/bin/ThothRobot.cpp	/^PinneAPIParser *parser;$/;"	v	typeref:typename:PinneAPIParser *
 port	ino.ini	/^serial-port = \/dev\/tty.usbmodem411$/;"	k	section:serial
 port	ino.ini	/^serial-port = \/dev\/tty.usbmodem411$/;"	k	section:upload
 position_t	src/PinneRobot/Motor.h	/^typedef int position_t;$/;"	t	typeref:typename:int
+prjino	src/PinneRobot/Makefile	/^prjino :=	$(findstring $(PROJECT).ino,$(CXXSRCINO))$/;"	m
+prjpde	src/PinneRobot/Makefile	/^prjpde :=	$(findstring $(PROJECT).pde,$(CXXSRCINO))$/;"	m
+reset	src/PinneRobot/Makefile	/^reset: reset_$(RESETCMD)$/;"	t
+reset_perl	src/PinneRobot/Makefile	/^reset_perl:$/;"	t
+reset_python	src/PinneRobot/Makefile	/^reset_python:$/;"	t
+reset_stty	src/PinneRobot/Makefile	/^reset_stty:$/;"	t
 rightDriverENDIAG	src/PinneRobot/PinneRobot.cpp	/^const int rightDriverENDIAG = 12;$/;"	v	typeref:typename:const int
 rightDriverINA	src/PinneRobot/PinneRobot.cpp	/^const int rightDriverINA = 7;$/;"	v	typeref:typename:const int
 rightDriverINB	src/PinneRobot/PinneRobot.cpp	/^const int rightDriverINB = 8;$/;"	v	typeref:typename:const int
@@ -425,6 +593,7 @@ rightMotor	src/PinneRobot/PinneRobot.h	/^	PinneMotor *rightMotor;$/;"	m	class:Pi
 rightMotorEncoderInterruptIndex	src/PinneRobot/PinneRobot.cpp	/^const int rightMotorEncoderInterruptIndex = 0;\/\/ digital pin 2 on Leonardo implicitly$/;"	v	typeref:typename:const int
 rightMotorSlackStopSensor	src/PinneRobot/PinneRobot.cpp	/^const int rightMotorSlackStopSensor = 13;\/\/todo cut trace, was current sense pin$/;"	v	typeref:typename:const int
 rightMotorTopStopSensor	src/PinneRobot/PinneRobot.cpp	/^const int rightMotorTopStopSensor = A1;$/;"	v	typeref:typename:const int
+robot	src/PinneRobot/bin/ThothRobot.cpp	/^PinneRobot *robot;$/;"	v	typeref:typename:PinneRobot *
 rotationDriver1A	src/PinneRobot/PinneRobot.cpp	/^const int rotationDriver1A = A3;$/;"	v	typeref:typename:const int
 rotationDriver2A	src/PinneRobot/PinneRobot.cpp	/^const int rotationDriver2A = A2;$/;"	v	typeref:typename:const int
 rotationDriverPWM	src/PinneRobot/PinneRobot.cpp	/^const int rotationDriverPWM = 5;$/;"	v	typeref:typename:const int
@@ -432,11 +601,20 @@ rotationMotor	src/PinneRobot/PinneRobot.h	/^	RotationMotor *rotationMotor;$/;"	m
 rotationPotmeterPin	src/PinneRobot/PinneRobot.cpp	/^const int rotationPotmeterPin = A4;$/;"	v	typeref:typename:const int
 serial	ino.ini	/^[serial]$/;"	s
 setGet_t	src/PinneRobot/PinneAPI.h	/^enum setGet_t$/;"	g
+setup	src/PinneRobot/bin/ThothRobot.cpp	/^void setup()$/;"	f	typeref:typename:void
+showvars	src/PinneRobot/Makefile	/^showvars:$/;"	t
+showvars2	src/PinneRobot/Makefile	/^showvars2:$/;"	t
+size	src/PinneRobot/Makefile	/^size:$/;"	t
 slackSensorDebounceDelay	src/PinneRobot/PinneMotor.cpp	/^const unsigned long slackSensorDebounceDelay = 350;$/;"	v	typeref:typename:const unsigned long
 speed_t	src/PinneRobot/MotorDriver.h	/^typedef int speed_t;$/;"	t	typeref:typename:int
 stateChange_t	src/PinneRobot/PinneAPI.h	/^enum stateChange_t$/;"	g
+sym	src/PinneRobot/Makefile	/^sym:	$(OUTPUT) $(OUTPUT)\/$(PROJECT).sym$/;"	t
+symbol	src/PinneRobot/Makefile	/^symbol: $(OUTPUT) $(OUTPUT)\/$(PROJECT).symbol$/;"	t
+tar	src/PinneRobot/Makefile	/^tar:	$(TARFILE).xz$/;"	t
 topSensorDebounceDelay	src/PinneRobot/PinneMotor.cpp	/^const unsigned long topSensorDebounceDelay = 50;$/;"	v	typeref:typename:const unsigned long
+up	src/PinneRobot/Makefile	/^upload up: hex reset$/;"	t
 update	src/PinneRobot/PinneRobot.cpp	/^void PinneRobot::update()$/;"	f	class:PinneRobot	typeref:typename:void
 upload	ino.ini	/^[upload]$/;"	s
+upload	src/PinneRobot/Makefile	/^upload up: hex reset$/;"	t
 version	src/PinneRobot/.vscode/c_cpp_properties.json	/^    "version": 4$/;"	n
 ~PinneMotor	src/PinneRobot/Motor.h	/^		~PinneMotor() {};$/;"	f	class:PinneMotor

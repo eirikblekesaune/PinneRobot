@@ -58,8 +58,8 @@ void PinneAPIParser::_parseCommand(byte inByte)
 			case CMD_GOTO_TARGET:
 				_processSetGoToTargetCommand();
 				break;
-			case CMD_GOTO_SPEED_RAMP_UP:
-				_processSetGoToSpeedRampUpCommand();
+			case CMD_MEASURED_SPEED:
+				_processSetMeasuredSpeed();
 				break;
 			case CMD_GOTO_SPEED_RAMP_DOWN:
 				_processSetGoToSpeedRampDownCommand();
@@ -114,8 +114,8 @@ void PinneAPIParser::_parseCommand(byte inByte)
 			case CMD_MAX_POSITION:
 				_processGetMaxPositionCommand();
 				break;
-			case CMD_GOTO_SPEED_RAMP_UP:
-				_processGetGoToSpeedRampUpCommand();
+			case CMD_MEASURED_SPEED:
+				_processGetMeasuredSpeed();
 				break;
 			case CMD_GOTO_SPEED_RAMP_DOWN:
 				_processGetGoToSpeedRampDownCommand();
@@ -651,24 +651,24 @@ void PinneAPIParser::_processSetGoToTargetCommand()
 	}
 }
 
-void PinneAPIParser::_processSetGoToSpeedRampUpCommand()
+void PinneAPIParser::_processSetMeasuredSpeed()
 {
-	int value = _parseDataValue();
-	switch (_currentAddress)
-	{
-	case ADDRESS_LEFT:
-		_robot->leftMotor->SetGoToSpeedRampUp(value);
-		break;
-	case ADDRESS_RIGHT:
-		_robot->rightMotor->SetGoToSpeedRampUp(value);
-		break;
-	case ADDRESS_ROTATION:
-		_robot->rotationMotor->SetGoToSpeedRampUp(value);
-		break;
-	default:
-		DEBUG_PRINT("Unknown address\n");
-		DEBUG_NL;
-	}
+//	int value = _parseDataValue();
+//	switch (_currentAddress)
+//	{
+//	case ADDRESS_LEFT:
+//		_robot->leftMotor->SetGoToSpeedRampUp(value);
+//		break;
+//	case ADDRESS_RIGHT:
+//		_robot->rightMotor->SetGoToSpeedRampUp(value);
+//		break;
+//	case ADDRESS_ROTATION:
+//		_robot->rotationMotor->SetGoToSpeedRampUp(value);
+//		break;
+//	default:
+//		DEBUG_PRINT("Unknown address\n");
+//		DEBUG_NL;
+//	}
 }
 
 void PinneAPIParser::_processSetGoToSpeedRampDownCommand()
@@ -711,20 +711,21 @@ void PinneAPIParser::_processSetGoToSpeedScalingCommand()
 	}
 }
 
-void PinneAPIParser::_processGetGoToSpeedRampUpCommand()
+void PinneAPIParser::_processGetMeasuredSpeed()
 {
 	int value;
 	value = -1;
 	switch (_currentAddress)
 	{
 	case ADDRESS_LEFT:
-		value = _robot->leftMotor->GetGoToSpeedRampUp();
+		value = _robot->leftMotor->GetMeasuredSpeed();
 		break;
 	case ADDRESS_RIGHT:
-		value = _robot->rightMotor->GetGoToSpeedRampUp();
+		value = _robot->rightMotor->GetMeasuredSpeed();
 		break;
 	case ADDRESS_ROTATION:
-		value = _robot->rotationMotor->GetGoToSpeedRampUp();
+		//value = _robot->rotationMotor->GetGoToSpeedRampUp();
+		value = 0;//this motor doesn't measure speed
 		break;
 	default:
 		DEBUG_PRINT("Unknown address\n");

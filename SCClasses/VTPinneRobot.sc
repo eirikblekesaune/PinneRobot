@@ -131,7 +131,7 @@ VTPinneRobotMotor{
 	var <minPosition = 0;
 	var <maxPosition = 4096;
 	var <state = \goingDown;
-	var <speedRampUp = 0;
+	var <measuredSpeed = 0;
 	var <speedRampDown = 0;
 	var <speedScaling = 0;
 	var <stopTime = 0;
@@ -157,7 +157,7 @@ VTPinneRobotMotor{
 			currentPosition: ControlSpec(0, 4096, step: 1),
 			minPosition: ControlSpec(0, 4096, step: 1),
 			maxPosition: ControlSpec(0, 4096, step: 1),
-			speedRampUp: ControlSpec(0, 5000, step: 1, default: 0),
+			measuredSpeed: ControlSpec(0, 5000, step: 1, default: 0),
 			speedRampDown: ControlSpec(0, 5000, step: 1, default: 0),
 			speedScaling: ControlSpec(0.0, 1.0, step: 0.001, default: 0),
 			stopTime: ControlSpec(0, 5000, step:1, default:0),
@@ -173,7 +173,7 @@ VTPinneRobotMotor{
 			'maxPosition': 7,
 			'goToParkingPosition': 9,
 			'goToTargetPosition': 10,
-			'goToSpeedRampUp': 11,
+			'measuredSpeed': 11,
 			'goToSpeedRampDown': 12,
 			'goToSpeedScaling': 13,
 			'echoMessages': 14,
@@ -317,9 +317,10 @@ VTPinneRobotMotor{
 		this.prInvalidateParameter(\goToTargetPosition, duration);
 	}
 
-	speedRampUp_{arg val;
-		speedRampUp = specs.at(\speedRampUp).constrain(val);
-		this.prInvalidateParameter(\speedRampUp, speedRampUp);
+	//TODO:This will not be a setter
+	measuredSpeed_{arg val;
+		measuredSpeed = specs.at(\measuredSpeed).constrain(val);
+		this.prInvalidateParameter(\measuredSpeed, measuredSpeed);
 	}
 
 	speedRampDown_{arg val;
@@ -442,7 +443,7 @@ VTPinneRobotParser{
 			\maxPosition -> 2r1001,
 			\goToParkingPosition -> 2r1010,
 			\goToTargetPosition -> 2r1011,//0x0B
-			\goToSpeedRampUp -> 2r1100,//argument is ramp up percent of halfway point
+			\measuredSpeed -> 2r1100,
 			\goToSpeedRampDown -> 2r1101,//ramp down time will take effect after halfway point
 			\goToSpeedScaling -> 2r1110,
 			\echoMessages -> 2r1111
@@ -569,7 +570,10 @@ VTPinneRobotParser{
 								str["value"]
 							).postln;
 						}, {
-							"INFO: [%]: ".postf(currentAddress);
+							"[%] - INFO: [%/%]: \n".postf(
+								Main.elapsedTime,
+								//serialPort.devicePattern,
+								currentAddress);
 							str.postln;
 						});
 					} {

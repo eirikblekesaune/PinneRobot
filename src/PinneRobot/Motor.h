@@ -54,7 +54,7 @@ class PinneMotor
 		int GetMinPosition() { return static_cast<int>(_minPosition); };
 
 		int GetGoToSpeedScaling() {return static_cast<int>(_speedRamper->GetSpeedScaling() * 1000); };
-		int GetGoToSpeedRampUp() {return static_cast<int>(_speedRamper->GetRampUp()); };
+		int GetMeasuredSpeed();
 		int GetGoToSpeedRampDown() {return static_cast<int>(_speedRamper->GetRampDown()); };
 		int GetStop() {return _stoppingSpeed; };
 
