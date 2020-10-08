@@ -1,0 +1,35 @@
+/home/eirik/git/eirikblekesaune/PinneRobot/src/TeensyTest/Blink/build/core/HardwareSerial.cpp.o: \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/HardwareSerial.cpp \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/HardwareSerial.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/imxrt.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/Stream.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/Print.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/core_id.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/WString.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/avr_functions.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/avr/pgmspace.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/Printable.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/core_pins.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/pins_arduino.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/Arduino.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/WProgram.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/avr/pgmspace.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/avr/interrupt.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/wiring.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/binary.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/avr_emulation.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_serial.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_desc.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_seremu.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_keyboard.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/keylayouts.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_mouse.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_joystick.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_midi.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_rawhid.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_flightsim.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_audio.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/usb_touch.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/WCharacter.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/elapsedMillis.h \
+ /usr/share/arduino/hardware/teensy/avr/cores/teensy4/IntervalTimer.h

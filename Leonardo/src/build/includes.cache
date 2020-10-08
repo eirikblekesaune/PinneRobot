@@ -1,0 +1,42 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/usr/share/arduino/hardware/teensy/avr/cores/teensy4"
+  },
+  {
+    "Sourcefile": "/home/eirik/git/eirikblekesaune/PinneRobot/src/PinneRobot/build/sketch/L293Driver.cpp.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/eirik/git/eirikblekesaune/PinneRobot/src/PinneRobot/build/sketch/PinneAPIParser.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/eirik/git/eirikblekesaune/PinneRobot/src/PinneRobot/build/sketch/PinneMotor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/eirik/git/eirikblekesaune/PinneRobot/src/PinneRobot/build/sketch/PinneRobot.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/eirik/git/eirikblekesaune/PinneRobot/src/PinneRobot/build/sketch/RotationMotor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/eirik/git/eirikblekesaune/PinneRobot/src/PinneRobot/build/sketch/SpeedRamping.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/eirik/git/eirikblekesaune/PinneRobot/src/PinneRobot/build/sketch/VNH5019Driver.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
