@@ -1,0 +1,6 @@
+[submodule "src/PinneRobotTeensy/lib/FNET"]
+	path = src/PinneRobotTeensy/lib/FNET
+	url = https://github.com/vjmuzik/FNET
+[submodule "src/PinneRobotTeensy/lib/NativeEthernet"]
+	path = src/PinneRobotTeensy/lib/NativeEthernet
+	url = https://github.com/vjmuzik/NativeEthernet
