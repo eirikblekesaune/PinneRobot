@@ -1,5 +1,6 @@
 
 src/PinneRobot/bin
 tags
+build/
 
 .DS_Store
