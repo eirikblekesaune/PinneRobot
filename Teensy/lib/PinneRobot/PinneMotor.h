@@ -4,6 +4,7 @@
 #include "VNH5019Driver.h"
 #include "PinneAPI.h"
 #include "SpeedRamping.h"
+#include <OSCMessage.h>
 
 
 typedef int position_t;
@@ -67,6 +68,8 @@ class PinneMotor
 		void ReadSlackStopSensor();
 		void GoToParkingPosition();
 
+		bool RouteOSCMessage(OSCMessage& msg, int addressOffset);
+
 		volatile int* _encoderCounter;
 		volatile int* _encoderIncrement;
 	private:
@@ -104,6 +107,24 @@ class PinneMotor
 		void _CalculateAndSetSpeed();
 		void _SetBlocked(boolean block) {};
 		int _state;
+
+		void _RouteStopMsg(OSCMessage &msg, int addressOffset);
+		void _RouteSpeedMsg(OSCMessage &msg, int addressOffset);
+		void _RouteDirectionMsg(OSCMessage &msg, int addressOffset);
+		void _RouteTargetPositionMsg(OSCMessage &msg, int addressOffset);
+		void _RouteCurrentPositionMsg(OSCMessage &msg, int addressOffset);
+		void _RouteBrakeMsg(OSCMessage &msg, int addressOffset);
+		void _RouteStateChangeMsg(OSCMessage &msg, int addressOffset);
+		void _RouteInfoMsg(OSCMessage &msg, int addressOffset);
+		void _RouteMinPositionMsg(OSCMessage &msg, int addressOffset);
+		void _RouteMaxPositionMsg(OSCMessage &msg, int addressOffset);
+		void _RouteGoToParkingPositionMsg(OSCMessage &msg, int addressOffset);
+		void _RouteGoToTargetPositionMsg(OSCMessage &msg, int addressOffset);
+		void _RouteMeasuredSpeedMsg(OSCMessage &msg, int addressOffset);
+		void _RouteGoToSpeedRampDownMsg(OSCMessage &msg, int addressOffset);
+		void _RouteGoToSpeedScalingMsg(OSCMessage &msg, int addressOffset);
+		void _RouteEchoMessagesMsg(OSCMessage &msg, int addressOffset);
+
 
 		//SpeedRamp
 		SpeedRamping* _speedRamper;

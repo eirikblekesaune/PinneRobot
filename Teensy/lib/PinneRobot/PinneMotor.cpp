@@ -490,3 +490,142 @@ void PinneMotor::SetGoToSpeedScaling(int value)
 {
 	_speedRamper->SetSpeedScaling(static_cast<float>(value) / 1000.0);
 }
+
+
+bool PinneMotor::RouteOSCMessage(OSCMessage& msg, int addressOffset) {
+	Serial.println("\tgot inner OSC motor msg");
+	int oldAddressOffset = addressOffset;
+	bool handled = true;
+	if(addressOffset = msg.match("/speed", addressOffset)) {
+		if(msg.match(":get"), addressOffset) {
+			Serial.print("Current speed: ");
+			Serial.println(this->GetSpeed());
+		} else if(oldAddressOffset == addressOffset) {
+			this->_RouteSpeedMsg(msg, addressOffset);
+			return handled;
+		}
+	}
+	if(addressOffset = msg.match("/direction", addressOffset)) {
+		this->_RouteDirectionMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/stop", addressOffset)) {
+		this->_RouteStopMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/targetPosition", addressOffset)) {
+		this->_RouteTargetPositionMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/currentPosition", addressOffset)) {
+		this->_RouteCurrentPositionMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/brake", addressOffset)) {
+		this->_RouteCurrentPositionMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/stateChange", addressOffset)) {
+		this->_RouteStateChangeMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/info", addressOffset)) {
+		this->_RouteInfoMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/minPosition", addressOffset)) {
+		this->_RouteMinPositionMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/maxPosition", addressOffset)) {
+		this->_RouteMaxPositionMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/goToParkingPosition", addressOffset)) {
+		this->_RouteGoToParkingPositionMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/goToTargetPosition", addressOffset)) {
+		this->_RouteGoToTargetPositionMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/measuredSpeed", addressOffset)) {
+		this->_RouteMeasuredSpeedMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/goToSpeedRampDown", addressOffset)) {
+		this->_RouteGoToSpeedRampDownMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/goToSpeedScaling", addressOffset)) {
+		this->_RouteGoToSpeedScalingMsg(msg, addressOffset);
+		return handled;
+	}
+	if(addressOffset = msg.match("/echoMessages", addressOffset)) {
+		this->_RouteEchoMessagesMsg(msg, addressOffset);
+		return handled;
+	}
+	handled = false;
+	return handled;
+}
+void PinneMotor::_RouteStopMsg(OSCMessage &msg, int addressOffset){
+	if((msg.size() > 0) && (msg.isInt(1)) ) {
+		this->SetStop(msg.getInt(1));
+	} else {
+		this->Stop();
+	}
+}
+void PinneMotor::_RouteSpeedMsg(OSCMessage &msg, int addressOffset){
+	if((msg.size() > 0) && (msg.isInt(1)) ) {
+		int speed = msg.getInt(1);
+		this->SetSpeed(speed);
+	}
+}
+void PinneMotor::_RouteDirectionMsg(OSCMessage &msg, int addressOffset){
+	if((msg.size() > 0) && (msg.isInt(1)) ) {
+		int direction = msg.getInt(1);
+		this->SetDirection(direction);
+	}
+}
+void PinneMotor::_RouteTargetPositionMsg(OSCMessage &msg, int addressOffset){
+	if((msg.size() > 0) && (msg.isInt(1)) ) {
+		int pos = msg.getInt(1);
+		this->SetTargetPosition(pos);
+	}
+}
+void PinneMotor::_RouteCurrentPositionMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteBrakeMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteStateChangeMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteInfoMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteMinPositionMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteMaxPositionMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteGoToParkingPositionMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteMeasuredSpeedMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteGoToSpeedRampDownMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteGoToSpeedScalingMsg(OSCMessage &msg, int addressOffset){
+
+}
+void PinneMotor::_RouteEchoMessagesMsg(OSCMessage &msg, int addressOffset){
+
+}
