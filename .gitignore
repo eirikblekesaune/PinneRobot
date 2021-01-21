@@ -3,3 +3,4 @@ src/PinneRobot/bin
 tags
 
 .DS_Store
+.ccls-cache
