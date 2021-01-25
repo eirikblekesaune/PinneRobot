@@ -3,31 +3,39 @@
 #include <Arduino.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
-#include <SPI.h>	
 #include <OSCBundle.h>
 #include <OSCMessage.h>
+#include <SPI.h>
 #include <map>
 #include <string>
 
-enum command_t
-{
-	CMD_STOP = 0x00,//speed fade out time as argument
-	CMD_SPEED = 0x01,
-	CMD_DIRECTION = 0x02,
-	CMD_TARGET_POSITION = 0x03,
-	CMD_CURRENT_POSITION = 0x04,
-	CMD_BRAKE = 0x05,
-	CMD_STATE_CHANGE = 0x06,
-	CMD_INFO = 0x07,//used for debugging, arbitrary numboer of asci characters
-	CMD_MIN_POSITION = 0x08,
-	CMD_MAX_POSITION = 0x09,
-	CMD_GOTO_PARKING_POSITION = 0x0A,
-	CMD_GOTO_TARGET = 0x0B, //duration after halfway point as argument
-	CMD_MEASURED_SPEED = 0x0C,
-	CMD_GOTO_SPEED_RAMP_DOWN = 0x0D,
-	CMD_GOTO_SPEED_SCALING = 0x0E,
-	CMD_ECHO_MESSAGES = 0x0F,
-	CMD_UNKNOWN
+byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+
+struct PinneSettings {
+  String hostname;
+  int port;
+  String targetHostname;
+  int targetPort;
+};
+
+enum command_t {
+  CMD_STOP = 0x00, // speed fade out time as argument
+  CMD_SPEED = 0x01,
+  CMD_DIRECTION = 0x02,
+  CMD_TARGET_POSITION = 0x03,
+  CMD_CURRENT_POSITION = 0x04,
+  CMD_BRAKE = 0x05,
+  CMD_STATE_CHANGE = 0x06,
+  CMD_INFO = 0x07, // used for debugging, arbitrary numboer of asci characters
+  CMD_MIN_POSITION = 0x08,
+  CMD_MAX_POSITION = 0x09,
+  CMD_GOTO_PARKING_POSITION = 0x0A,
+  CMD_GOTO_TARGET = 0x0B, // duration after halfway point as argument
+  CMD_MEASURED_SPEED = 0x0C,
+  CMD_GOTO_SPEED_RAMP_DOWN = 0x0D,
+  CMD_GOTO_SPEED_SCALING = 0x0E,
+  CMD_ECHO_MESSAGES = 0x0F,
+  CMD_UNKNOWN
 };
 
 enum address_t {
@@ -120,27 +128,30 @@ extern EthernetUDP Udp;
 
 class PinneComm {
 	public:
-		PinneComm(PinneRobot *robot, IPAddress ip, unsigned int inPort, IPAddress outIp, unsigned int outPort);
-		void RouteMsg(OSCBundle &bundle);
+          PinneComm(PinneSettings *settings);
+          void RouteMsg(OSCBundle &bundle);
 
-		void Reply(const char *);
-		void SendMsg(OSCMessage &msg);
-		ReturnGetValue(command_t command, address_t address, int value);
-		void NotifyStateChange(stateChange_t stateChange, address_t address);
-		void DebugUnitPrint(address_t address, const char *);
-		void DebugUnitPrint(address_t address, int val);
-		void DebugPrint( int val );
-		void DebugPrint( float val);
-		void DebugPrint( const char *);
-		void DebugMessagePrint(command_t command, address_t address, setGet_t setGet, int value);
+          void Reply(const char *);
+          void SendMsg(OSCMessage &msg);
+          ReturnGetValue(command_t command, address_t address, int value);
+          void NotifyStateChange(stateChange_t stateChange, address_t address);
+          void DebugUnitPrint(address_t address, const char *);
+          void DebugUnitPrint(address_t address, int val);
+          void DebugPrint(int val);
+          void DebugPrint(float val);
+          void DebugPrint(const char *);
+          void DebugMessagePrint(command_t command, address_t address,
+                                 setGet_t setGet, int value);
+          void msgReceive();
+          void handlePinneMsg(OSCMessage &msg);
 
-	private:
-		PinneRobot *_robot;
-		IPAddress *_ip;
-		unsigned int _inPort;
-		IPAddress *_outIp;
-		unsigned int _outPort;
-}
+        private:
+          EthernetUDP Udp;
+          IPAddress *ip;
+          IPAddress *outIp;
+          unsigned int outPort;
+          unsigned int inPort;
+};
 
 #define DEBUG
 #ifdef DEBUG

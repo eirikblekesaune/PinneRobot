@@ -3,6 +3,10 @@
 #include <map>
 #include <string>
 
+extern EthernetUDP Udp;
+extern IPAddress *ip;
+extern IPAddress *outIp;
+
 static void Reply(const char* str)
 {
 	OSCMessage msg("/reply");
