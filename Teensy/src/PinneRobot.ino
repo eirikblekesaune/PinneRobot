@@ -4,7 +4,6 @@
 #include <OSCBoards.h>
 #include <SD.h>
 #include <SPI.h>
-/* #include <PinneRobot.h> */
 #include <PinneComm.h>
 
 
@@ -35,10 +34,14 @@ unsigned long lastBlinkTime = 0;
 int blinkValue = LOW;
 bool initSuccess = false;
 
+PinneComm *comm;
+
 void setup()
 { 
 	delay(100);
 	pinMode(LED_BUILTIN, OUTPUT);
+	Serial.begin(57600);
+	while(!Serial);
 
 	OSCMessage hello("/booted");
 	if(SD.begin(BUILTIN_SDCARD)) {
@@ -52,6 +55,7 @@ void setup()
 				readLineFromFile(settings_file, 3),
 				readLineFromFile(settings_file, 4).toInt()
 			};
+			comm = new PinneComm(&settings);
 			initSuccess = true;
 		}
 	}
