@@ -124,19 +124,6 @@ const std::map<stateChange_t, std::string> StateChangeMap
 
 extern EthernetUDP Udp;
 
-// get the MAC address from the Teensy registry,
-// as suggested in https://forum.pjrc.com/threads/60857-T4-1-Ethernet-Library
-static void teensyMAC(uint8_t *mac) {
-  uint32_t m1 = HW_OCOTP_MAC1;
-  uint32_t m2 = HW_OCOTP_MAC0;
-  mac[0] = m1 >> 8;
-  mac[1] = m1 >> 0;
-  mac[2] = m2 >> 24;
-  mac[3] = m2 >> 16;
-  mac[4] = m2 >> 8;
-  mac[5] = m2 >> 0;
-}
-
 class PinneComm {
 	public:
           PinneComm(PinneSettings *settings);
@@ -157,7 +144,7 @@ class PinneComm {
           void handlePinneMsg(OSCMessage &msg);
 
         private:
-          const uint8_t *_mac[6];
+          uint8_t *_mac;
           EthernetUDP _Udp;
           IPAddress *_ip;
           IPAddress *_outIp;

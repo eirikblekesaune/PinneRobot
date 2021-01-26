@@ -1,12 +1,20 @@
 #include <PinneComm.h>
 
 PinneComm::PinneComm(PinneSettings *settings) {
-  // get Teensy MAC address
-  uint8_t mac[6];
-  teensyMAC(mac);
-  Serial.println("MAC");
+  // get the MAC address from the Teensy registry,
+  // as suggested in https://forum.pjrc.com/threads/60857-T4-1-Ethernet-Library
+  uint32_t m1 = HW_OCOTP_MAC1;
+  uint32_t m2 = HW_OCOTP_MAC0;
+  _mac = new uint8_t[6];
+  _mac[0] = (uint8_t)(m1 >> 8);
+  _mac[1] = (uint8_t)(m1 >> 0);
+  _mac[2] = (uint8_t)(m2 >> 24);
+  _mac[3] = (uint8_t)(m2 >> 16);
+  _mac[4] = (uint8_t)(m2 >> 8);
+  _mac[5] = (uint8_t)(m2 >> 0);
+
   for (int i = 0; i < 6; i++) {
-    Serial.println(mac[i]);
+    Serial.println(_mac[i]);
   }
 
   // construct IPAddress and port fields
