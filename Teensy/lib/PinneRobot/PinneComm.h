@@ -10,6 +10,7 @@
 #include <string>
 
 struct PinneSettings {
+  String name;
   String hostname;
   int port;
   String targetHostname;
@@ -143,13 +144,22 @@ class PinneComm {
           void msgReceive();
           void handlePinneMsg(OSCMessage &msg);
 
+          uint8_t initResult = 0;
+          enum InitResults : uint8_t {
+            validSettings = 0x00,
+            invalidHostname = 0x01,
+            invalidTargetHostname = 0x02
+          };
+
         private:
+          String _name;
           uint8_t *_mac;
           EthernetUDP _Udp;
           IPAddress *_ip;
-          IPAddress *_outIp;
-          unsigned int _outPort;
-          unsigned int _inPort;
+          unsigned int _port;
+          IPAddress *_targetIp;
+          IPAddress *_broadcastIp;
+          unsigned int _targetPort;
 };
 
 #define DEBUG

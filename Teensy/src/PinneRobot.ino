@@ -41,7 +41,8 @@ void setup()
 	delay(100);
 	pinMode(LED_BUILTIN, OUTPUT);
 	Serial.begin(57600);
-	while(!Serial);
+	/* while(!Serial); */
+	delay(1000);
 
 	OSCMessage hello("/booted");
 	if(SD.begin(BUILTIN_SDCARD)) {
@@ -50,13 +51,20 @@ void setup()
 		settings_file = SD.open("pinne.txt", FILE_READ);
 		if(settings_file) {
 			PinneSettings settings = {
+				readLineFromFile(settings_file, 0),
 				readLineFromFile(settings_file, 1),
 				readLineFromFile(settings_file, 2).toInt(),
 				readLineFromFile(settings_file, 3),
 				readLineFromFile(settings_file, 4).toInt()
 			};
 			comm = new PinneComm(&settings);
-			initSuccess = true;
+			if(comm->initResult == comm->validSettings) {
+				initSuccess = true;
+			} else {
+				Serial.print("Invalid settings: ");
+				Serial.print(comm->initResult);
+				Serial.println();
+			}
 		}
 	}
 
@@ -76,7 +84,7 @@ void loop()
 		lastBlinkTime = millis();
 	} 
 	if(initSuccess) {
-		/* msgReceive(); */
+		comm->msgReceive();
 		delay(LOOP_UPDATE_RATE);
 	}
 }

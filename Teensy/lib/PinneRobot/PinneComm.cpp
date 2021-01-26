@@ -13,13 +13,43 @@ PinneComm::PinneComm(PinneSettings *settings) {
   _mac[4] = (uint8_t)(m2 >> 8);
   _mac[5] = (uint8_t)(m2 >> 0);
 
-  for (int i = 0; i < 6; i++) {
-    Serial.println(_mac[i]);
-  }
+  _name = settings->name;
 
   // construct IPAddress and port fields
+  _ip = new IPAddress();
+  if (!_ip->fromString(settings->hostname)) {
+    initResult |= invalidHostname;
+  }
+  _port = settings->port;
+
+  _targetIp = new IPAddress();
+  if (!_targetIp->fromString(settings->targetHostname)) {
+    initResult |= invalidTargetHostname;
+  }
+  _targetPort = settings->targetPort;
+  _broadcastIp = new IPAddress(255, 255, 255, 255);
+
   // start Enthernet and Udp
-  //
+  Ethernet.begin(_mac, *_ip);
+  _Udp.begin(_port);
+  // small delay to allow it to init
+  delay(200);
+  OSCMessage *msg;
+  if (initResult == validSettings) {
+    msg = new OSCMessage("/hello");
+  } else {
+    msg = new OSCMessage("/initFailed");
+  }
+  msg->add(settings->name.c_str());
+  msg->add(settings->hostname.c_str());
+  msg->add(settings->port);
+  msg->add(settings->targetHostname.c_str());
+  msg->add(settings->targetPort);
+  _Udp.beginPacket(*_broadcastIp, _targetPort);
+  msg->send(_Udp);
+  _Udp.endPacket();
+  msg->empty();
+  free(msg);
 }
 
 void PinneComm::Reply(const char *) {}
@@ -43,15 +73,16 @@ void PinneComm::DebugPrint( const char *) {}
 void PinneComm::DebugMessagePrint(command_t command, address_t address, setGet_t setGet, int value) {}
 
 void PinneComm::msgReceive() {
-  /* OSCMessage msg; */
-  /* int size; */
-  /* if ((size = Udp.parsePacket()) > 0) { */
-  /*   while (size--) */
-  /*     msg.fill(Udp.read()); */
-  /*   if (!msg.hasError()) { */
-  /*     /1* msg.route("/pinne", this->handlePinneMsg); *1/ */
-  /*   } */
-  /* } */
+  OSCMessage msg;
+  int size;
+  if ((size = _Udp.parsePacket()) > 0) {
+    while (size--)
+      msg.fill(_Udp.read());
+    if (!msg.hasError()) {
+      Serial.println("Got msg");
+      /* msg.route("/pinne", this->handlePinneMsg); */
+    }
+  }
 }
 
 void PinneComm::handlePinneMsg(OSCMessage &msg) {
