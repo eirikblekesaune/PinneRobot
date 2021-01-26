@@ -1,8 +1,6 @@
 #ifndef DCMotorDriver_h
 #define DCMotorDriver_h
-
 #include <Arduino.h>
-#include "PinneAPI.h"
 
 typedef int speed_t;
 

@@ -49,12 +49,10 @@ PinneComm::PinneComm(PinneSettings *settings) {
   msg->send(_Udp);
   _Udp.endPacket();
   msg->empty();
-  free(msg);
+  /* free(msg); */
 }
 
 void PinneComm::Reply(const char *) {}
-
-void PinneComm::SendMsg(OSCMessage &msg) {}
 
 void PinneComm::ReturnGetValue(command_t command, address_t address, int value) {}
 
@@ -70,6 +68,13 @@ void PinneComm::DebugPrint( float val) {}
 
 void PinneComm::DebugPrint( const char *) {}
 
+void PinneComm::SendOSCMessage(OSCMessage &msg) {
+  _Udp.beginPacket(*_targetIp, _targetPort);
+  msg.send(_Udp);
+  _Udp.endPacket();
+  Serial.println("heisannQ");
+}
+
 void PinneComm::DebugMessagePrint(command_t command, address_t address, setGet_t setGet, int value) {}
 
 void PinneComm::msgReceive() {
@@ -79,19 +84,14 @@ void PinneComm::msgReceive() {
     while (size--)
       msg.fill(_Udp.read());
     if (!msg.hasError()) {
-      Serial.println("Got msg");
-      /* msg.route("/pinne", this->handlePinneMsg); */
+      /* Serial.println("Got msg"); */
+      int offset = msg.match("/pinne", 0);
+
+      if (offset) {
+        _robot->routeOSC(msg, offset);
+      } else {
+        Serial.println("Unmatched OSc message");
+      }
     }
   }
-}
-
-void PinneComm::handlePinneMsg(OSCMessage &msg) {
-  /* OSCMessage reply("/helloMyeLove"); */
-  /* reply.add(99); */
-  /* reply.add(88.88888); */
-  /* reply.add("hello"); */
-  /* Udp.beginPacket(*outIp, outPort); */
-  /* reply.send(Udp); */
-  /* Udp.endPacket(); */
-  /* reply.empty(); */
 }

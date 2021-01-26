@@ -1,10 +1,11 @@
 #ifndef PINNE_COMM_H
 #define PINNE_COMM_H
 #include <Arduino.h>
-#include <Ethernet.h>
-#include <EthernetUdp.h>
+#include <NativeEthernet.h>
+#include <NativeEthernetUdp.h>
+#include <OSCBoards.h>
 #include <OSCBundle.h>
-#include <OSCMessage.h>
+#include <PinneRobot.h>
 #include <SPI.h>
 #include <map>
 #include <string>
@@ -17,7 +18,7 @@ struct PinneSettings {
   int targetPort;
 };
 
-enum command_t {
+enum command_t : uint8_t {
   CMD_STOP = 0x00, // speed fade out time as argument
   CMD_SPEED = 0x01,
   CMD_DIRECTION = 0x02,
@@ -37,49 +38,46 @@ enum command_t {
   CMD_UNKNOWN
 };
 
-enum address_t {
-	ADDRESS_LEFT = 0x00,
-	ADDRESS_RIGHT = 0x10,
-	ADDRESS_ROTATION = 0x20,
-	ADDRESS_GLOBAL = 0x30,
-	ADDRESS_UNKNOWN
+enum address_t : uint8_t {
+  ADDRESS_LEFT = 0x00,
+  ADDRESS_RIGHT = 0x10,
+  ADDRESS_ROTATION = 0x20,
+  ADDRESS_GLOBAL = 0x30,
+  ADDRESS_UNKNOWN
 };
 
-enum setGet_t
-{
-	SET_MESSAGE = 0x00,
-	GET_MESSAGE = 0x40,
-	SETGET_UNKNOWN
+enum setGet_t : uint8_t {
+  SET_MESSAGE = 0x00,
+  GET_MESSAGE = 0x40,
+  SETGET_UNKNOWN
 };
 
-enum byteType_t
-{
-	BYTE_COMMAND = 0x80,
-	BYTE_DATA = 0x00,
-	BYTE_UNKNOWN
+enum byteType_t : uint8_t {
+  BYTE_COMMAND = 0x80,
+  BYTE_DATA = 0x00,
+  BYTE_UNKNOWN
 };
 
-enum parseMask_t {
-	PARSE_MASK_MESSAGE_TYPE = 0x80,//command byte of data byte
-	PARSE_MASK_SETGET = 0x40,//setter or getter
-	PARSE_MASK_ADDRESS = 0x30,//which motor is address
-	PARSE_MASK_COMMAND = 0x0F,
-	PARSE_MASK_UNKNOWN
+enum parseMask_t : uint8_t {
+  PARSE_MASK_MESSAGE_TYPE = 0x80, // command byte of data byte
+  PARSE_MASK_SETGET = 0x40,       // setter or getter
+  PARSE_MASK_ADDRESS = 0x30,      // which motor is address
+  PARSE_MASK_COMMAND = 0x0F,
+  PARSE_MASK_UNKNOWN
 };
 
-enum stateChange_t
-{
-	STOPPED,//Stopped manually
-	GOING_DOWN,//direction set to up
-	GOING_UP,//directiom set to down
-	STOPPED_AT_TARGET,//
-	GOING_TO_TARGET,
-	BLOCKED_BY_TOP_SENSOR,//The stop sensor was hit
-	BLOCKED_BY_SLACK_SENSOR,
-	BLOCKED_BY_MIN_POSITION,//Position counter is below range
-	BLOCKED_BY_MAX_POSITION,//Position counter is above range
-	BLOCKED_BY_ABS_MIN_POSITION,//
-	DRIVER_FAULT//Something is wrong with the driver itself
+enum stateChange_t : uint8_t {
+  STOPPED,           // Stopped manually
+  GOING_DOWN,        // direction set to up
+  GOING_UP,          // directiom set to down
+  STOPPED_AT_TARGET, //
+  GOING_TO_TARGET,
+  BLOCKED_BY_TOP_SENSOR, // The stop sensor was hit
+  BLOCKED_BY_SLACK_SENSOR,
+  BLOCKED_BY_MIN_POSITION,     // Position counter is below range
+  BLOCKED_BY_MAX_POSITION,     // Position counter is above range
+  BLOCKED_BY_ABS_MIN_POSITION, //
+  DRIVER_FAULT                 // Something is wrong with the driver itself
 };
 
 const std::map<command_t, std::string> CommandMap {
@@ -124,6 +122,7 @@ const std::map<stateChange_t, std::string> StateChangeMap
 };
 
 extern EthernetUDP Udp;
+class PinneRobot;
 
 class PinneComm {
 	public:
@@ -131,7 +130,7 @@ class PinneComm {
           void RouteMsg(OSCBundle &bundle);
 
           void Reply(const char *);
-          void SendMsg(OSCMessage &msg);
+          void SendOSCMessage(OSCMessage &msg);
           void ReturnGetValue(command_t command, address_t address, int value);
           void NotifyStateChange(stateChange_t stateChange, address_t address);
           void DebugUnitPrint(address_t address, const char *);
@@ -151,6 +150,9 @@ class PinneComm {
             invalidTargetHostname = 0x02
           };
 
+          void routeOSC(OSCMessage &msg, int initial_offset);
+          void setRobot(PinneRobot *robot) { _robot = robot; };
+
         private:
           String _name;
           uint8_t *_mac;
@@ -160,6 +162,7 @@ class PinneComm {
           IPAddress *_targetIp;
           IPAddress *_broadcastIp;
           unsigned int _targetPort;
+          PinneRobot *_robot;
 };
 
 #define DEBUG

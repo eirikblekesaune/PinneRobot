@@ -5,6 +5,7 @@
 #include <SD.h>
 #include <SPI.h>
 #include <PinneComm.h>
+#include <PinneRobot.h>
 
 
 const int LOOP_UPDATE_RATE = 10;
@@ -35,14 +36,15 @@ int blinkValue = LOW;
 bool initSuccess = false;
 
 PinneComm *comm;
+PinneRobot *robot;
 
 void setup()
 { 
 	delay(100);
 	pinMode(LED_BUILTIN, OUTPUT);
 	Serial.begin(57600);
-	/* while(!Serial); */
-	delay(1000);
+	while(!Serial);
+	/* delay(1000); */
 
 	OSCMessage hello("/booted");
 	if(SD.begin(BUILTIN_SDCARD)) {
@@ -59,6 +61,9 @@ void setup()
 			};
 			comm = new PinneComm(&settings);
 			if(comm->initResult == comm->validSettings) {
+				robot = new PinneRobot(comm);
+				robot->init();
+				comm->setRobot(robot);
 				initSuccess = true;
 			} else {
 				Serial.print("Invalid settings: ");
@@ -85,6 +90,6 @@ void loop()
 	} 
 	if(initSuccess) {
 		comm->msgReceive();
-		delay(LOOP_UPDATE_RATE);
+		/* delay(LOOP_UPDATE_RATE); */
 	}
 }

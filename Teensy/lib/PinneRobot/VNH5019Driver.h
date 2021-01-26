@@ -2,8 +2,7 @@
 #define VNH5019Driver_h
 
 #include <Arduino.h>
-#include "PinneAPI.h"
-#include "DCMotorDriver.h"
+#include <DCMotorDriver.h>
 
 //The main task for the driver is to set the proper pins
 //It clip values to within ranges, but it doesn't take the motors state into account.
