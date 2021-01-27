@@ -14,9 +14,12 @@ PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
   _maxPosition = POSITION_DEFAULT_MAX;
   _targetPosition = TARGET_NONE;
   _currentPosition = POSITION_ALL_UP;
+  _state = STOPPED;
 }
 
 void PinneMotor::init() {
+  pinMode(_encoderInterruptPinA, INPUT_PULLUP);
+  pinMode(_encoderInterruptPinB, INPUT_PULLUP);
   _encoder = new Encoder(_encoderInterruptPinA, _encoderInterruptPinB);
   pinMode(_topStopSensorPin, INPUT);
   pinMode(_slackStopSensorPin, INPUT);
@@ -46,7 +49,6 @@ void PinneMotor::SetStop(int value) {
 }
 
 void PinneMotor::SetSpeed(int speed) {
-  Serial.println("SetSpeed");
   if (speed <= 0) {
     Stop();
   } else {
@@ -316,15 +318,19 @@ void PinneMotor::SetMaxPosition(position_t maxPosition) {
   _maxPosition = min(maxPosition, POSITION_DEFAULT_MAX);
 }
 
-void PinneMotor::GoToParkingPosition() {
+void PinneMotor::GoToParkingPosition(int speed) {
   // Check if already at top and do parking only if the sensor is out
   _topStopSensorValue = digitalRead(_topStopSensorPin);
   if (_topStopSensorValue == TOP_SENSOR_OUT) {
     // fake the currentPosition to default max
     SetCurrentPosition(POSITION_DEFAULT_MAX);
     SetDirection(DIRECTION_UP);
-    SetSpeed(VNH5019Driver::SPEED_MAX / 4);
+    SetSpeed(speed);
   }
+}
+
+void PinneMotor::GoToParkingPosition() {
+  GoToParkingPosition(VNH5019Driver::SPEED_MAX / 4);
 }
 
 void PinneMotor::GoToTargetPosition(position_t value) {
@@ -357,11 +363,9 @@ void PinneMotor::SetGoToSpeedScaling(int value) {
 }
 
 bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
-  Serial.println("got inner OSC motor msg");
   int offset;
   offset = msg.match("/speed", initialOffset);
   if (offset) {
-    Serial.println("/speed routed");
     this->_RouteSpeedMsg(msg, offset + initialOffset);
     return true;
   }
@@ -393,11 +397,6 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
   offset = msg.match("/stateChange", initialOffset);
   if (offset) {
     this->_RouteStateChangeMsg(msg, offset + initialOffset);
-    return true;
-  }
-  offset = msg.match("/info", initialOffset);
-  if (offset) {
-    this->_RouteInfoMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/minPosition", initialOffset);
@@ -450,6 +449,7 @@ void PinneMotor::_RouteStopMsg(OSCMessage &msg, int initialOffset) {
     this->Stop();
   }
 }
+
 void PinneMotor::_RouteSpeedMsg(OSCMessage &msg, int initialOffset) {
   if ((msg.size() > 0) && (msg.isInt(0))) {
     int speed = msg.getInt(0);
@@ -462,8 +462,8 @@ void PinneMotor::_RouteSpeedMsg(OSCMessage &msg, int initialOffset) {
     }
   }
 }
+
 void PinneMotor::_RouteDirectionMsg(OSCMessage &msg, int initialOffset) {
-  Serial.println("Direction routing");
   if (msg.size() > 0) {
     direction_t direction;
     if (msg.isInt(0)) {
@@ -493,26 +493,109 @@ void PinneMotor::_RouteDirectionMsg(OSCMessage &msg, int initialOffset) {
     }
   }
 }
+
 void PinneMotor::_RouteTargetPositionMsg(OSCMessage &msg, int initialOffset) {
-  if ((msg.size() > 0) && (msg.isInt(1))) {
-    int pos = msg.getInt(1);
+  if ((msg.size() > 0) && (msg.isInt(0))) {
+    int pos = msg.getInt(0);
     this->SetTargetPosition(pos);
+  } else {
+    if (_comm->HasQueryAddress(msg, initialOffset)) {
+      OSCMessage replyMsg("/");
+      replyMsg.add(GetTargetPosition());
+      _comm->ReturnQueryValue(CMD_TARGET_POSITION, _address, replyMsg);
+    }
   }
 }
-void PinneMotor::_RouteCurrentPositionMsg(OSCMessage &msg, int initialOffset) {}
-void PinneMotor::_RouteBrakeMsg(OSCMessage &msg, int initialOffset) {}
-void PinneMotor::_RouteStateChangeMsg(OSCMessage &msg, int initialOffset) {}
-void PinneMotor::_RouteInfoMsg(OSCMessage &msg, int initialOffset) {}
-void PinneMotor::_RouteMinPositionMsg(OSCMessage &msg, int initialOffset) {}
-void PinneMotor::_RouteMaxPositionMsg(OSCMessage &msg, int initialOffset) {}
+
+void PinneMotor::_RouteCurrentPositionMsg(OSCMessage &msg, int initialOffset) {
+  if ((msg.size() > 0) && (msg.isInt(0))) {
+    int pos = msg.getInt(0);
+    this->SetCurrentPosition(static_cast<position_t>(pos));
+  } else {
+    if (_comm->HasQueryAddress(msg, initialOffset)) {
+      OSCMessage replyMsg("/");
+      replyMsg.add(static_cast<int>(GetCurrentPosition()));
+      _comm->ReturnQueryValue(CMD_CURRENT_POSITION, _address, replyMsg);
+    }
+  }
+}
+
+void PinneMotor::_RouteBrakeMsg(OSCMessage &msg, int initialOffset) {
+  if ((msg.size() > 0) && (msg.isInt(0))) {
+    int speed = msg.getInt(0);
+    this->SetBrake(speed);
+  } else {
+    if (_comm->HasQueryAddress(msg, initialOffset)) {
+      OSCMessage replyMsg("/");
+      replyMsg.add(GetBrake());
+      _comm->ReturnQueryValue(CMD_BRAKE, _address, replyMsg);
+    }
+  }
+}
+
+void PinneMotor::_RouteStateChangeMsg(OSCMessage &msg, int initialOffset) {
+  if (_comm->HasQueryAddress(msg, initialOffset)) {
+    OSCMessage replyMsg("/");
+    String stateStr = String(StateChangeMap.at(_state));
+    replyMsg.add(stateStr.c_str());
+    _comm->ReturnQueryValue(CMD_STATE_CHANGE, _address, replyMsg);
+  }
+}
+
+void PinneMotor::_RouteMinPositionMsg(OSCMessage &msg, int initialOffset) {
+  if ((msg.size() > 0) && (msg.isInt(0))) {
+    int pos = msg.getInt(0);
+    this->SetMinPosition(pos);
+  } else {
+    if (_comm->HasQueryAddress(msg, initialOffset)) {
+      OSCMessage replyMsg("/");
+      replyMsg.add(GetMinPosition());
+      _comm->ReturnQueryValue(CMD_MIN_POSITION, _address, replyMsg);
+    }
+  }
+}
+
+void PinneMotor::_RouteMaxPositionMsg(OSCMessage &msg, int initialOffset) {
+  if ((msg.size() > 0) && (msg.isInt(0))) {
+    int pos = msg.getInt(0);
+    this->SetMaxPosition(pos);
+  } else {
+    if (_comm->HasQueryAddress(msg, initialOffset)) {
+      OSCMessage replyMsg("/");
+      replyMsg.add(GetMaxPosition());
+      _comm->ReturnQueryValue(CMD_MAX_POSITION, _address, replyMsg);
+    }
+  }
+}
+
 void PinneMotor::_RouteGoToParkingPositionMsg(OSCMessage &msg,
-                                              int initialOffset) {}
+                                              int initialOffset) {
+  if ((msg.size() > 0) && (msg.isInt(0))) {
+    this->GoToParkingPosition(msg.getInt(0));
+  } else {
+    this->GoToParkingPosition();
+  }
+}
+
 void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
-                                             int initialOffset) {}
-void PinneMotor::_RouteMeasuredSpeedMsg(OSCMessage &msg, int initialOffset) {}
+                                             int initialOffset) {
+  if ((msg.size() > 0) && (msg.isInt(0))) {
+    this->GoToTargetPosition(msg.getInt(0));
+  }
+}
+
+void PinneMotor::_RouteMeasuredSpeedMsg(OSCMessage &msg, int initialOffset) {
+  if (_comm->HasQueryAddress(msg, initialOffset)) {
+    OSCMessage replyMsg("/");
+    replyMsg.add(GetMeasuredSpeed());
+    _comm->ReturnQueryValue(CMD_MEASURED_SPEED, _address, replyMsg);
+  }
+}
+
 void PinneMotor::_RouteGoToSpeedRampDownMsg(OSCMessage &msg,
                                             int initialOffset) {}
-void PinneMotor::_RouteGoToSpeedScalingMsg(OSCMessage &msg, int initialOffset) {
 
+void PinneMotor::_RouteGoToSpeedScalingMsg(OSCMessage &msg, int initialOffset) {
 }
+
 void PinneMotor::_RouteEchoMessagesMsg(OSCMessage &msg, int initialOffset) {}

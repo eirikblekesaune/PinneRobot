@@ -11,6 +11,7 @@
 //
 enum address_t : uint8_t;
 enum direction_t : uint8_t;
+enum stateChange_t : uint8_t;
 typedef long position_t;
 class PinneComm;
 
@@ -71,6 +72,7 @@ class PinneMotor
           void UpdateState();
           void ReadTopStopSensor();
           void ReadSlackStopSensor();
+          void GoToParkingPosition(int speed);
           void GoToParkingPosition();
 
           bool routeOSC(OSCMessage &msg, int initialOffset);
@@ -112,7 +114,7 @@ class PinneMotor
           void _UpdateSpeedRamp();
           void _CalculateAndSetSpeed();
           void _SetBlocked(bool block){};
-          int _state;
+          stateChange_t _state;
 
           void _RouteStopMsg(OSCMessage &msg, int initialOffset);
           void _RouteSpeedMsg(OSCMessage &msg, int initialOffset);
@@ -121,7 +123,6 @@ class PinneMotor
           void _RouteCurrentPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteBrakeMsg(OSCMessage &msg, int initialOffset);
           void _RouteStateChangeMsg(OSCMessage &msg, int initialOffset);
-          void _RouteInfoMsg(OSCMessage &msg, int initialOffset);
           void _RouteMinPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteMaxPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteGoToParkingPositionMsg(OSCMessage &msg, int initialOffset);

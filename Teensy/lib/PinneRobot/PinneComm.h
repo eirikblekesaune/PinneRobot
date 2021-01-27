@@ -19,52 +19,36 @@ struct PinneSettings {
 };
 
 enum command_t : uint8_t {
-  CMD_STOP = 0x00, // speed fade out time as argument
-  CMD_SPEED = 0x01,
-  CMD_DIRECTION = 0x02,
-  CMD_TARGET_POSITION = 0x03,
-  CMD_CURRENT_POSITION = 0x04,
-  CMD_BRAKE = 0x05,
-  CMD_STATE_CHANGE = 0x06,
-  CMD_INFO = 0x07, // used for debugging, arbitrary numboer of asci characters
-  CMD_MIN_POSITION = 0x08,
-  CMD_MAX_POSITION = 0x09,
-  CMD_GOTO_PARKING_POSITION = 0x0A,
-  CMD_GOTO_TARGET = 0x0B, // duration after halfway point as argument
-  CMD_MEASURED_SPEED = 0x0C,
-  CMD_GOTO_SPEED_RAMP_DOWN = 0x0D,
-  CMD_GOTO_SPEED_SCALING = 0x0E,
-  CMD_ECHO_MESSAGES = 0x0F,
+  CMD_STOP,
+  CMD_SPEED,
+  CMD_DIRECTION,
+  CMD_TARGET_POSITION,
+  CMD_CURRENT_POSITION,
+  CMD_BRAKE,
+  CMD_STATE_CHANGE,
+  CMD_INFO,
+  CMD_MIN_POSITION,
+  CMD_MAX_POSITION,
+  CMD_GOTO_PARKING_POSITION,
+  CMD_GOTO_TARGET,
+  CMD_MEASURED_SPEED,
+  CMD_GOTO_SPEED_RAMP_DOWN,
+  CMD_GOTO_SPEED_SCALING,
+  CMD_ECHO_MESSAGES,
   CMD_UNKNOWN
 };
 
 enum address_t : uint8_t {
-  ADDRESS_A = 0x00,
-  ADDRESS_B = 0x10,
-  ADDRESS_ROTATION = 0x20,
-  ADDRESS_GLOBAL = 0x30,
+  ADDRESS_A,
+  ADDRESS_B,
+  ADDRESS_ROTATION,
+  ADDRESS_GLOBAL,
   ADDRESS_UNKNOWN
 };
 
-enum setGet_t : uint8_t {
-  SET_MESSAGE = 0x00,
-  GET_MESSAGE = 0x40,
-  SETGET_UNKNOWN
-};
+enum setGet_t : uint8_t { SET_MESSAGE, GET_MESSAGE, SETGET_UNKNOWN };
 
-enum byteType_t : uint8_t {
-  BYTE_COMMAND = 0x80,
-  BYTE_DATA = 0x00,
-  BYTE_UNKNOWN
-};
-
-enum parseMask_t : uint8_t {
-  PARSE_MASK_MESSAGE_TYPE = 0x80, // command byte of data byte
-  PARSE_MASK_SETGET = 0x40,       // setter or getter
-  PARSE_MASK_ADDRESS = 0x30,      // which motor is address
-  PARSE_MASK_COMMAND = 0x0F,
-  PARSE_MASK_UNKNOWN
-};
+enum byteType_t : uint8_t { BYTE_COMMAND, BYTE_DATA, BYTE_UNKNOWN };
 
 enum direction_t : uint8_t { DIRECTION_DOWN = 0x00, DIRECTION_UP = 0x01 };
 

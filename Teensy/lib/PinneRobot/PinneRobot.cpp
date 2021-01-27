@@ -76,11 +76,12 @@ void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   bool handled = false;
   offset = msg.match("/motorA", initialOffset);
   if (offset) {
-    Serial.print("/motorA: ");
+    Serial.println("/motorA: ");
     motorA->routeOSC(msg, offset + initialOffset);
   }
   offset = msg.match("/motorB", initialOffset);
   if (offset) {
+    Serial.println("/motorB: ");
     motorB->routeOSC(msg, offset);
   }
 }
