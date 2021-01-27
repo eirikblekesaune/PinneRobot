@@ -46,6 +46,7 @@ void PinneMotor::SetStop(int value) {
 }
 
 void PinneMotor::SetSpeed(int speed) {
+  Serial.println("SetSpeed");
   if (speed <= 0) {
     Stop();
   } else {
@@ -57,9 +58,9 @@ void PinneMotor::SetSpeed(int speed) {
 
 int PinneMotor::GetMeasuredSpeed() { return 123; }
 
-void PinneMotor::SetDirection(int direction) {
+void PinneMotor::SetDirection(direction_t direction) {
   if (GetDirection() != direction) {
-    int dir;
+    direction_t dir;
     _driver->SetDirection(direction);
     dir = GetDirection();
     if (dir == DIRECTION_DOWN) {
@@ -74,7 +75,7 @@ void PinneMotor::SetDirection(int direction) {
 
 boolean PinneMotor::IsBlocked() {
   if (_state >= BLOCKED_BY_TOP_SENSOR) {
-    int direction = GetDirection();
+    direction_t direction = GetDirection();
     switch (_state) {
     case BLOCKED_BY_MIN_POSITION:
     case BLOCKED_BY_TOP_SENSOR:
@@ -118,7 +119,7 @@ void PinneMotor::UpdateState() {
     } else if (currPosition > GetMaxPosition()) {
       _MaxPositionReached();
     } else {
-      int direction = GetDirection();
+      direction_t direction = GetDirection();
       if (direction == DIRECTION_DOWN) {
         if ((_targetPosition != TARGET_NONE) &&
             (currPosition > _targetPosition)) {
@@ -200,7 +201,7 @@ void PinneMotor::_TopStopSensorIn() {
 }
 
 void PinneMotor::_TopStopSensorOut() {
-  int direction;
+  direction_t direction;
   direction = GetDirection();
   if (direction == DIRECTION_DOWN) {
     _GoingDown();
@@ -216,7 +217,7 @@ void PinneMotor::_SlackStopSensorOut() {
 }
 
 void PinneMotor::_SlackStopSensorIn() {
-  int direction;
+  direction_t direction;
   direction = GetDirection();
   if (direction == DIRECTION_DOWN) {
     _GoingDown();
@@ -360,103 +361,136 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
   int offset;
   offset = msg.match("/speed", initialOffset);
   if (offset) {
-    this->_RouteSpeedMsg(msg, initialOffset);
+    Serial.println("/speed routed");
+    this->_RouteSpeedMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/direction", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteDirectionMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteDirectionMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/stop", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteStopMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteStopMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/targetPosition", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteTargetPositionMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteTargetPositionMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/currentPosition", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteCurrentPositionMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteCurrentPositionMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/brake", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteCurrentPositionMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteCurrentPositionMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/stateChange", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteStateChangeMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteStateChangeMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/info", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteInfoMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteInfoMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/minPosition", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteMinPositionMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteMinPositionMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/maxPosition", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteMaxPositionMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteMaxPositionMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/goToParkingPosition", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteGoToParkingPositionMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteGoToParkingPositionMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/goToTargetPosition", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteGoToTargetPositionMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteGoToTargetPositionMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/measuredSpeed", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteMeasuredSpeedMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteMeasuredSpeedMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/goToSpeedRampDown", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteGoToSpeedRampDownMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteGoToSpeedRampDownMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/goToSpeedScaling", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteGoToSpeedScalingMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteGoToSpeedScalingMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/echoMessages", initialOffset);
-  if (offset > initialOffset) {
-    this->_RouteEchoMessagesMsg(msg, initialOffset);
+  if (offset) {
+    this->_RouteEchoMessagesMsg(msg, offset + initialOffset);
     return true;
   }
   return false;
 }
+
 void PinneMotor::_RouteStopMsg(OSCMessage &msg, int initialOffset) {
-  if ((msg.size() > 0) && (msg.isInt(1))) {
-    this->SetStop(msg.getInt(1));
+  if ((msg.size() > 0) && (msg.isInt(0))) {
+    this->SetStop(msg.getInt(0));
   } else {
     this->Stop();
   }
 }
 void PinneMotor::_RouteSpeedMsg(OSCMessage &msg, int initialOffset) {
-  if ((msg.size() > 0) && (msg.isInt(1))) {
-    int speed = msg.getInt(1);
+  if ((msg.size() > 0) && (msg.isInt(0))) {
+    int speed = msg.getInt(0);
     this->SetSpeed(speed);
+  } else {
+    if (_comm->HasQueryAddress(msg, initialOffset)) {
+      OSCMessage replyMsg("/");
+      replyMsg.add(GetSpeed());
+      _comm->ReturnQueryValue(CMD_SPEED, _address, replyMsg);
+    }
   }
 }
 void PinneMotor::_RouteDirectionMsg(OSCMessage &msg, int initialOffset) {
-  if ((msg.size() > 0) && (msg.isInt(1))) {
-    int direction = msg.getInt(1);
-    this->SetDirection(direction);
+  Serial.println("Direction routing");
+  if (msg.size() > 0) {
+    direction_t direction;
+    if (msg.isInt(0)) {
+      direction = static_cast<direction_t>(msg.getInt(0));
+      this->SetDirection(direction);
+    } else if (msg.isString(0)) {
+      char dirStr[8];
+      msg.getString(0, dirStr, 8);
+      if (strcmp(dirStr, "up") == 0) {
+        direction = DIRECTION_UP;
+        this->SetDirection(direction);
+      } else if (strcmp(dirStr, "down") == 0) {
+        direction = DIRECTION_DOWN;
+        this->SetDirection(direction);
+      }
+    }
+  } else {
+    if (_comm->HasQueryAddress(msg, initialOffset)) {
+      direction_t dir = GetDirection();
+      OSCMessage replyMsg("/");
+      if (dir == DIRECTION_DOWN) {
+        replyMsg.add("down");
+      } else if (dir == DIRECTION_UP) {
+        replyMsg.add("up");
+      }
+      _comm->ReturnQueryValue(CMD_DIRECTION, _address, replyMsg);
+    }
   }
 }
 void PinneMotor::_RouteTargetPositionMsg(OSCMessage &msg, int initialOffset) {

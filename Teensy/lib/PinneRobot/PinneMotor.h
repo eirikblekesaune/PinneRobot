@@ -10,6 +10,7 @@
 // todo: implement private inheritance of PID in motor classes
 //
 enum address_t : uint8_t;
+enum direction_t : uint8_t;
 typedef long position_t;
 class PinneComm;
 
@@ -20,8 +21,6 @@ class PinneMotor
                      int encoderInterruptPinA, int encoderInterruptPinB,
                      VNH5019Driver *driver, address_t address, PinneComm *comm);
           //		enum DIRECTION { DIRECTION_DOWN, DIRECTION_UP };
-          const int DIRECTION_DOWN = 0;
-          const int DIRECTION_UP = 1;
           const int TOP_SENSOR_IN = 0;
           const int TOP_SENSOR_OUT = 1;
           const int SLACK_SENSOR_IN = 0;
@@ -37,7 +36,7 @@ class PinneMotor
 
           void SetStop(int value);
           void SetSpeed(int speed);
-          void SetDirection(int direction);
+          void SetDirection(direction_t direction);
           void SetTargetPosition(position_t pos);
           void SetCurrentPosition(position_t pos);
           void SetBrake(int brake);
@@ -48,8 +47,8 @@ class PinneMotor
           void SetGoToSpeedRampDown(int value);
 
           int GetSpeed() { return static_cast<int>(_driver->GetSpeed()); };
-          int GetDirection() {
-            return static_cast<int>(_driver->GetDirection());
+          direction_t GetDirection() {
+            return static_cast<direction_t>(_driver->GetDirection());
           };
           position_t GetTargetPosition() { return _targetPosition; };
           position_t GetCurrentPosition();

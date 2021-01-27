@@ -19,8 +19,8 @@ void VNH5019Driver::init()
 {
 	pinMode(_INA,OUTPUT);
 	pinMode(_INB,OUTPUT);
-	pinMode(_PWM,OUTPUT);
-	pinMode(_ENDIAG,INPUT);
+        pinMode(_ENDIAG, INPUT);
+        pinMode(_PWM,OUTPUT);
 	#if defined(__AVR_ATmega168__)|| defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32U4__)
 	// Timer 1 configuration
 	// prescaler: clockI/O / 1
@@ -66,14 +66,13 @@ void VNH5019Driver::SetSpeed(speed_t speed)
 	}
 }
 
-void VNH5019Driver::SetDirection(int direction)
-{
-	if(direction < 0)
-		direction = 0;
-	if(direction > 1)
-		direction = 1;
-	_direction = direction;
-	UpdateDirection();
+void VNH5019Driver::SetDirection(uint8_t direction) {
+  if (direction < 0)
+    direction = 0;
+  if (direction > 1)
+    direction = 1;
+  _direction = direction;
+  UpdateDirection();
 }
 
 void VNH5019Driver::UpdateDirection()

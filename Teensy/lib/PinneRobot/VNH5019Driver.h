@@ -21,14 +21,14 @@ class VNH5019Driver: public DCMotorDriver
 		unsigned char GetFault();
 		void init();
 		void SetSpeed(speed_t speed);
-		void SetDirection(int direction);
-		void SetBrake(speed_t brake);
-		void UpdateDirection();
+                void SetDirection(uint8_t direction);
+                void SetBrake(speed_t brake);
+                void UpdateDirection();
 	private:
 		unsigned char _INA;
 		unsigned char _INB;
-		unsigned char _PWM;
-		unsigned char _ENDIAG;
+                unsigned char _ENDIAG;
+                unsigned char _PWM;
 };
 
 #endif

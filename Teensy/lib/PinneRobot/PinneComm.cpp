@@ -56,6 +56,27 @@ void PinneComm::Reply(const char *) {}
 
 void PinneComm::ReturnGetValue(command_t command, address_t address, int value) {}
 
+void PinneComm::ReturnQueryValue(command_t command, address_t address,
+                                 OSCMessage &replyMsg) {
+  String replyAddress = String();
+  replyAddress.reserve(64);
+  replyAddress.append("/pinne/");
+  replyAddress.append(AddressMap.at(address));
+  replyAddress.append("/");
+  replyAddress.append(CommandMap.at(command));
+  replyAddress.append("/:reply");
+  replyMsg.setAddress(replyAddress.c_str());
+  _Udp.beginPacket(*_targetIp, _targetPort);
+  replyMsg.send(_Udp);
+  _Udp.endPacket();
+}
+
+bool PinneComm::HasQueryAddress(OSCMessage &msg, int initialOffset) {
+  int offset;
+  offset = msg.match("/:query", initialOffset);
+  return offset > 0;
+}
+
 void PinneComm::NotifyStateChange(stateChange_t stateChange, address_t address) {}
 
 void PinneComm::DebugUnitPrint(address_t address, const char *) {}
@@ -72,7 +93,6 @@ void PinneComm::SendOSCMessage(OSCMessage &msg) {
   _Udp.beginPacket(*_targetIp, _targetPort);
   msg.send(_Udp);
   _Udp.endPacket();
-  Serial.println("heisannQ");
 }
 
 void PinneComm::DebugMessagePrint(command_t command, address_t address, setGet_t setGet, int value) {}
@@ -84,9 +104,7 @@ void PinneComm::msgReceive() {
     while (size--)
       msg.fill(_Udp.read());
     if (!msg.hasError()) {
-      /* Serial.println("Got msg"); */
       int offset = msg.match("/pinne", 0);
-
       if (offset) {
         _robot->routeOSC(msg, offset);
       } else {

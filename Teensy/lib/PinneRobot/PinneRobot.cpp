@@ -27,10 +27,10 @@ PinneRobot::PinneRobot(PinneComm *comm) : _comm(comm) {
 
   motorA = new PinneMotor(
       motorATopStopSensor, motorASlackStopSensor, motorAEncoderInterruptPinA,
-      motorAEncoderInterruptPinB, driverA_, ADDRESS_LEFT, _comm);
+      motorAEncoderInterruptPinB, driverA_, ADDRESS_A, _comm);
   motorB = new PinneMotor(
       motorBTopStopSensor, motorBSlackStopSensor, motorBEncoderInterruptPinA,
-      motorBEncoderInterruptPinB, driverB_, ADDRESS_RIGHT, _comm);
+      motorBEncoderInterruptPinB, driverB_, ADDRESS_B, _comm);
 }
 
 void PinneRobot::init()
@@ -77,7 +77,7 @@ void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   offset = msg.match("/motorA", initialOffset);
   if (offset) {
     Serial.print("/motorA: ");
-    motorA->routeOSC(msg, offset);
+    motorA->routeOSC(msg, offset + initialOffset);
   }
   offset = msg.match("/motorB", initialOffset);
   if (offset) {
