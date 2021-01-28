@@ -7,7 +7,6 @@
 #include <PinneComm.h>
 #include <PinneRobot.h>
 
-
 const int LOOP_UPDATE_RATE = 10;
 
 String readLineFromFile(File& file, int lineNum) {
@@ -42,10 +41,10 @@ void setup()
 { 
 	delay(100);
 	pinMode(LED_BUILTIN, OUTPUT);
+	analogWriteResolution(12);
 	Serial.begin(57600);
-	while(!Serial);
-	/* delay(1000); */
-
+	/* while(!Serial); */
+	delay(1000);
 	OSCMessage hello("/booted");
 	if(SD.begin(BUILTIN_SDCARD)) {
 		hello.add("yes");
@@ -72,7 +71,6 @@ void setup()
 			}
 		}
 	}
-
 	if(initSuccess) {
 		blinkInterval = 1000;
 	} else {
@@ -90,6 +88,7 @@ void loop()
 	} 
 	if(initSuccess) {
 		comm->msgReceive();
+		robot->update();
 		/* delay(LOOP_UPDATE_RATE); */
 	}
 }

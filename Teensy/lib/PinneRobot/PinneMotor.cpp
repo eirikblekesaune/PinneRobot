@@ -20,9 +20,9 @@ PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
 void PinneMotor::init() {
   pinMode(_encoderInterruptPinA, INPUT_PULLUP);
   pinMode(_encoderInterruptPinB, INPUT_PULLUP);
-  _encoder = new Encoder(_encoderInterruptPinA, _encoderInterruptPinB);
-  pinMode(_topStopSensorPin, INPUT);
-  pinMode(_slackStopSensorPin, INPUT);
+  _encoder = new Encoder(_encoderInterruptPinB, _encoderInterruptPinA);
+  pinMode(_topStopSensorPin, INPUT_PULLUP);
+  pinMode(_slackStopSensorPin, INPUT_PULLUP);
   _driver->init();
   _driver->SetDirection(DIRECTION_UP);
   SetDirection(DIRECTION_DOWN);
@@ -108,7 +108,7 @@ boolean PinneMotor::IsBlocked() {
 // Stop motor if needed
 void PinneMotor::UpdateState() {
   ReadTopStopSensor();
-  // ReadSlackStopSensor();//not using the slack sensor anymore
+  ReadSlackStopSensor(); // not using the slack sensor anymore
   if ((_state == BLOCKED_BY_TOP_SENSOR) ||
       (_state == BLOCKED_BY_SLACK_SENSOR)) { // sensors have priority over
                                              // position lilmits

@@ -8,6 +8,7 @@
 
 class PinneComm;
 class PinneMotor;
+typedef long position_t;
 
 class PinneRobot {
 public:
@@ -21,8 +22,8 @@ public:
 
 private:
   unsigned long _lastPositionUpdate;
-  int _lastAPositionSent;
-  int _lastBPositionSent;
+  position_t _lastAPositionSent;
+  position_t _lastBPositionSent;
   PinneComm *_comm;
 };
 

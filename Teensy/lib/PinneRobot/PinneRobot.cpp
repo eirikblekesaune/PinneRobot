@@ -1,23 +1,23 @@
 #include <PinneRobot.h>
 
 //pin connections
-const int driverA_PWM = 0;
-const int driverA_INA = 11;
-const int driverA_INB = 6;
-const int motorASlackStopSensor = A5;
-const int driverA_ENDIAG = 9;
-const int motorAEncoderInterruptPinA = 2;
-const int motorAEncoderInterruptPinB = 3;
-const int motorATopStopSensor = A0;
+const int driverA_PWM = 2;
+const int driverA_INA = 4;
+const int driverA_INB = 5;
+const int driverA_ENDIAG = 8;
+const int motorATopStopSensor = 24;
+const int motorASlackStopSensor = 25;
+const int motorAEncoderInterruptPinA = 26;
+const int motorAEncoderInterruptPinB = 27;
 
-const int driverB_PWM = 1;
-const int driverB_INA = 7;
-const int driverB_INB = 8;
-const int motorBSlackStopSensor = 13;
-const int driverB_ENDIAG = 12;
-const int motorBEncoderInterruptPinA = 4;
-const int motorBEncoderInterruptPinB = 5;
-const int motorBTopStopSensor = A1;
+const int driverB_PWM = 3;
+const int driverB_INA = 6;
+const int driverB_INB = 7;
+const int driverB_ENDIAG = 9;
+const int motorBTopStopSensor = 28;
+const int motorBSlackStopSensor = 29;
+const int motorBEncoderInterruptPinA = 30;
+const int motorBEncoderInterruptPinB = 31;
 
 PinneRobot::PinneRobot(PinneComm *comm) : _comm(comm) {
   VNH5019Driver *driverA_ =
@@ -35,8 +35,8 @@ PinneRobot::PinneRobot(PinneComm *comm) : _comm(comm) {
 
 void PinneRobot::init()
 {
-  /* motorA->init(); */
-  /* motorB->init(); */
+  motorA->init();
+  motorB->init();
   _lastPositionUpdate = millis();
   _lastAPositionSent = -1; // -1 for forcing init update
   _lastBPositionSent = -1;
@@ -44,25 +44,26 @@ void PinneRobot::init()
 
 void PinneRobot::update()
 {
-  /* motorA->UpdateState(); */
-  /* motorB->UpdateState(); */
-  /* if((millis() - _lastPositionUpdate) > 50) */
-  /* { */
-  /* 	// DebugPrint("hello"); */
-  /* 	int pos = motorA->GetCurrentPosition(); */
-  /* 	if(_lastAPositionSent != pos) */
-  /* 	{ */
-  /* 		ReturnGetValue(CMD_CURRENT_POSITION, ADDRESS_LEFT, pos); */
-  /* 		_lastAPositionSent = pos; */
-  /* 	} */
-  /* 	pos = motorB->GetCurrentPosition(); */
-  /* 	if(_lastBPositionSent != pos) */
-  /* 	{ */
-  /* 		ReturnGetValue(CMD_CURRENT_POSITION, ADDRESS_RIGHT, pos); */
-  /* 		_lastBPositionSent = pos; */
-  /* 	} */
-  /* 	_lastPositionUpdate = millis(); */
-  /* } */
+  motorA->UpdateState();
+  motorB->UpdateState();
+  if ((millis() - _lastPositionUpdate) > 50) {
+    // DebugPrint("hello");
+    position_t pos = motorA->GetCurrentPosition();
+    if (_lastAPositionSent != pos) {
+      OSCMessage msg("/pinne/motorA/currentPosition");
+      msg.add(pos);
+      _comm->SendOSCMessage(msg);
+      _lastAPositionSent = pos;
+    }
+    pos = motorB->GetCurrentPosition();
+    if (_lastBPositionSent != pos) {
+      OSCMessage msg("/pinne/motorB/currentPosition");
+      msg.add(pos);
+      _comm->SendOSCMessage(msg);
+      _lastBPositionSent = pos;
+    }
+    _lastPositionUpdate = millis();
+  }
 }
 
 void PinneRobot::GoToParkingPosition()
@@ -82,6 +83,6 @@ void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   offset = msg.match("/motorB", initialOffset);
   if (offset) {
     Serial.println("/motorB: ");
-    motorB->routeOSC(msg, offset);
+    motorB->routeOSC(msg, offset + initialOffset);
   }
 }
