@@ -16,8 +16,8 @@ const int driverB_INB = 7;
 const int driverB_ENDIAG = 9;
 const int motorBTopStopSensor = 28;
 const int motorBSlackStopSensor = 29;
-const int motorBEncoderInterruptPinA = 30;
-const int motorBEncoderInterruptPinB = 31;
+const int motorBEncoderInterruptPinA = 31;
+const int motorBEncoderInterruptPinB = 30;
 
 PinneRobot::PinneRobot(PinneComm *comm) : _comm(comm) {
   VNH5019Driver *driverA_ =

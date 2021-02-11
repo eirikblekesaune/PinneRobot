@@ -18,6 +18,14 @@ struct PinneSettings {
   int targetPort;
 };
 
+struct PinneSettingsRaw {
+  char name[16];
+  char hostname[16];
+  int port;
+  char targetHostname[16];
+  int targetPort;
+};
+
 enum command_t : uint8_t {
   CMD_STOP,
   CMD_SPEED,
