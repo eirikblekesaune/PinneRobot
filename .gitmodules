@@ -4,3 +4,6 @@
 [submodule "src/PinneRobotTeensy/lib/NativeEthernet"]
 	path = Teensy/lib/NativeEthernet
 	url = https://github.com/vjmuzik/NativeEthernet
+[submodule "Teensy/lib/FastFloatPID"]
+	path = Teensy/lib/FastFloatPID
+	url = git@github.com:macaba/FastFloatPID.git

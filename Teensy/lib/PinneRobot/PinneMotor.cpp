@@ -1,5 +1,4 @@
-#include "PinneMotor.h"
-
+#include <PinneMotor.h>
 
 PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
                        int encoderInterruptPinA, int encoderInterruptPinB,
@@ -14,6 +13,8 @@ PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
   _maxPosition = POSITION_DEFAULT_MAX;
   _targetPosition = TARGET_NONE;
   _currentPosition = POSITION_ALL_UP;
+  _measuredSpeed = 0.0;
+  _speedometerInterval = 20;
   _state = STOPPED;
 }
 
@@ -23,17 +24,38 @@ void PinneMotor::init() {
   _encoder = new Encoder(_encoderInterruptPinB, _encoderInterruptPinA);
   pinMode(_topStopSensorPin, INPUT_PULLUP);
   pinMode(_slackStopSensorPin, INPUT_PULLUP);
+  _topStopButton = new Bounce(_topStopSensorPin, 5);
+  _slackStopButton = new Bounce(_slackStopSensorPin, 200);
+
+  _speedometerInterval = 20;
+  _speedometerMetro = new Metro(_speedometerInterval);
+  _kp = 2.0;
+  _ki = 5.0;
+  _kd = 1.0;
+
+  _speedPID = new FastFloatPID(&_measuredSpeed, &_speedPID_output,
+                               &_targetSpeed, _kp, _ki, _kd, P_ON_M, DIRECT);
+
+  _speedPID->SetSampleTime(static_cast<float>(_speedometerInterval) / 1000.0);
+  _speedPID->SetOutputLimits(_driver->SPEED_MIN, _driver->SPEED_MAX);
+
   _driver->init();
   _driver->SetDirection(DIRECTION_UP);
   SetDirection(DIRECTION_DOWN);
   Stop();
   _blocked = false;
   _topStopSensorValue = digitalRead(_topStopSensorPin);
-  if (_topStopSensorValue == TOP_SENSOR_IN)
+  if (_topStopSensorValue == TOP_SENSOR_IN) {
     _TopStopSensorIn();
+  } else if (_topStopSensorValue == TOP_SENSOR_OUT) {
+    _TopStopSensorOut();
+  }
   _slackStopSensorValue = digitalRead(_slackStopSensorPin);
-  if (_slackStopSensorValue == SLACK_SENSOR_OUT)
+  if (_slackStopSensorValue == SLACK_SENSOR_OUT) {
     _SlackStopSensorOut();
+  } else if (_slackStopSensorValue == SLACK_SENSOR_IN) {
+    _SlackStopSensorIn();
+  }
 
   _speedRamper = new SpeedRamping(VNH5019Driver::SPEED_MAX * 0.115,
                                   VNH5019Driver::SPEED_MAX);
@@ -58,7 +80,7 @@ void PinneMotor::SetSpeed(int speed) {
   }
 }
 
-int PinneMotor::GetMeasuredSpeed() { return 123; }
+float PinneMotor::GetMeasuredSpeed() { return _measuredSpeed; }
 
 void PinneMotor::SetDirection(direction_t direction) {
   if (GetDirection() != direction) {
@@ -75,7 +97,7 @@ void PinneMotor::SetDirection(direction_t direction) {
   }
 }
 
-boolean PinneMotor::IsBlocked() {
+bool PinneMotor::IsBlocked() {
   if (_state >= BLOCKED_BY_TOP_SENSOR) {
     direction_t direction = GetDirection();
     switch (_state) {
@@ -108,13 +130,14 @@ boolean PinneMotor::IsBlocked() {
 // Stop motor if needed
 void PinneMotor::UpdateState() {
   ReadTopStopSensor();
-  ReadSlackStopSensor(); // not using the slack sensor anymore
+  ReadSlackStopSensor();
+  _UpdateSpeedometer();
   if ((_state == BLOCKED_BY_TOP_SENSOR) ||
       (_state == BLOCKED_BY_SLACK_SENSOR)) { // sensors have priority over
                                              // position lilmits
 
   } else {
-    position_t currPosition = _encoder->read();
+    position_t currPosition = GetCurrentPosition();
     position_t minPosition = GetMinPosition();
     if (currPosition < minPosition) {
       _MinPositionReached();
@@ -149,6 +172,15 @@ void PinneMotor::UpdateState() {
   }
 }
 
+void PinneMotor::_UpdateSpeedometer() {
+  if (_speedometerMetro->check() == 1) {
+    float prevSpeed = _measuredSpeed;
+    position_t currentPosition = GetCurrentPosition();
+    _measuredSpeed = ((currentPosition - _prevPosition) + prevSpeed) * 0.5;
+    _prevPosition = currentPosition;
+  }
+}
+
 void PinneMotor::_UpdateSpeedRamp() {
   if (_speedRamper->Calculate(GetCurrentPosition())) {
     int newSpeed;
@@ -158,41 +190,29 @@ void PinneMotor::_UpdateSpeedRamp() {
 }
 
 void PinneMotor::ReadTopStopSensor() {
-  int newReading;
-  newReading = digitalRead(_topStopSensorPin);
-  if (newReading != _lastTopSensorReading) {
-    _lastTopSensorReadTime = millis();
+  _topStopButton->update();
+  if (_topStopButton->fallingEdge()) {
+    // pin is pulled LOW when button is pressed
+    _topStopSensorValue = TOP_SENSOR_IN;
+    _TopStopSensorIn();
+  } else if (_topStopButton->risingEdge()) {
+    // pin is pulled HIGH when button is released
+    _topStopSensorValue = TOP_SENSOR_OUT;
+    _TopStopSensorOut();
   }
-  if ((millis() - _lastTopSensorReadTime) > topSensorDebounceDelay) {
-    if (newReading != _topStopSensorValue) {
-      _topStopSensorValue = newReading;
-      if (_topStopSensorValue == TOP_SENSOR_IN) {
-        _TopStopSensorIn();
-      } else if (_topStopSensorValue == TOP_SENSOR_OUT) {
-        _TopStopSensorOut();
-      }
-    }
-  }
-  _lastTopSensorReading = newReading;
 }
 
 void PinneMotor::ReadSlackStopSensor() {
-  int newReading;
-  newReading = digitalRead(_slackStopSensorPin);
-  if (newReading != _lastSlackSensorReading) {
-    _lastSlackSensorReadTime = millis();
+  _slackStopButton->update();
+  if (_slackStopButton->fallingEdge()) {
+    // pin is pulled HIGH when button is pressed
+    _slackStopSensorValue = SLACK_SENSOR_OUT;
+    _SlackStopSensorOut();
+  } else if (_slackStopButton->risingEdge()) {
+    // pin is pulled LOW when button is released
+    _slackStopSensorValue = SLACK_SENSOR_IN;
+    _SlackStopSensorIn();
   }
-  if ((millis() - _lastSlackSensorReadTime) > slackSensorDebounceDelay) {
-    if (newReading != _slackStopSensorValue) {
-      _slackStopSensorValue = newReading;
-      if (_slackStopSensorValue == SLACK_SENSOR_IN) {
-        _SlackStopSensorIn();
-      } else if (_topStopSensorValue == SLACK_SENSOR_OUT) {
-        _SlackStopSensorOut();
-      }
-    }
-  }
-  _lastSlackSensorReading = newReading;
 }
 
 void PinneMotor::_TopStopSensorIn() {
@@ -302,6 +322,8 @@ void PinneMotor::SetTargetPosition(position_t targetPosition) {
   }
 }
 
+void PinneMotor::SetTargetSpeed(float value) { _targetSpeed = value; }
+
 void PinneMotor::SetCurrentPosition(position_t currentPosition) {
   currentPosition =
       constrain(currentPosition, GetMinPosition(), GetMaxPosition());
@@ -331,6 +353,12 @@ void PinneMotor::GoToParkingPosition(int speed) {
 
 void PinneMotor::GoToParkingPosition() {
   GoToParkingPosition(VNH5019Driver::SPEED_MAX / 4);
+}
+
+void PinneMotor::GoToTargetPosition() {
+  if (GetTargetPosition() != TARGET_NONE) {
+    _GoingToTarget();
+  }
 }
 
 void PinneMotor::GoToTargetPosition(position_t value) {
@@ -437,6 +465,11 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
   offset = msg.match("/echoMessages", initialOffset);
   if (offset) {
     this->_RouteEchoMessagesMsg(msg, offset + initialOffset);
+    return true;
+  }
+  offset = msg.match("/pidParameters", initialOffset);
+  if (offset) {
+    this->_RoutePIDParametersMsg(msg, offset + initialOffset);
     return true;
   }
   return false;
@@ -579,8 +612,8 @@ void PinneMotor::_RouteGoToParkingPositionMsg(OSCMessage &msg,
 
 void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
                                              int initialOffset) {
-  if ((msg.size() > 0) && (msg.isInt(0))) {
-    this->GoToTargetPosition(msg.getInt(0));
+  if (msg.size() == 0) {
+    this->GoToTargetPosition();
   }
 }
 
@@ -599,3 +632,17 @@ void PinneMotor::_RouteGoToSpeedScalingMsg(OSCMessage &msg, int initialOffset) {
 }
 
 void PinneMotor::_RouteEchoMessagesMsg(OSCMessage &msg, int initialOffset) {}
+
+void PinneMotor::_RoutePIDParametersMsg(OSCMessage &msg, int initialOffset) {
+  if (msg.size() == 3) {
+    _kp = static_cast<int32_t>(msg.getInt(0));
+    _ki = static_cast<int32_t>(msg.getInt(1));
+    _kd = static_cast<int32_t>(msg.getInt(2));
+  } else if (_comm->HasQueryAddress(msg, initialOffset)) {
+    OSCMessage replyMsg("/");
+    replyMsg.add(_kp);
+    replyMsg.add(_ki);
+    replyMsg.add(_kd);
+    _comm->ReturnQueryValue(CMD_PID_PARAMETERS, _address, replyMsg);
+  }
+}

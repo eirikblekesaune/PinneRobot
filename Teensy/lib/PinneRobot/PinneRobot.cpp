@@ -46,24 +46,26 @@ void PinneRobot::update()
 {
   motorA->UpdateState();
   motorB->UpdateState();
-  if ((millis() - _lastPositionUpdate) > 50) {
-    // DebugPrint("hello");
-    position_t pos = motorA->GetCurrentPosition();
-    if (_lastAPositionSent != pos) {
-      OSCMessage msg("/pinne/motorA/currentPosition");
-      msg.add(pos);
-      _comm->SendOSCMessage(msg);
-      _lastAPositionSent = pos;
-    }
-    pos = motorB->GetCurrentPosition();
-    if (_lastBPositionSent != pos) {
-      OSCMessage msg("/pinne/motorB/currentPosition");
-      msg.add(pos);
-      _comm->SendOSCMessage(msg);
-      _lastBPositionSent = pos;
-    }
-    _lastPositionUpdate = millis();
+  /* OSCMessage msg("/measuredSpeed"); */
+  /* msg.add(motorA->GetMeasuredSpeed()); */
+  /* _comm->SendOSCMessage(msg); */
+  position_t pos = motorA->GetCurrentPosition();
+  if (_lastAPositionSent != pos) {
+    OSCMessage msg("/pinne/motorA/currentPosition");
+    msg.add(pos);
+    msg.add(motorA->GetMeasuredSpeed());
+    _comm->SendOSCMessage(msg);
+    _lastAPositionSent = pos;
   }
+  pos = motorB->GetCurrentPosition();
+  if (_lastBPositionSent != pos) {
+    OSCMessage msg("/pinne/motorB/currentPosition");
+    msg.add(pos);
+    msg.add(motorB->GetMeasuredSpeed());
+    _comm->SendOSCMessage(msg);
+    _lastBPositionSent = pos;
+  }
+  _lastPositionUpdate = millis();
 }
 
 void PinneRobot::GoToParkingPosition()
@@ -77,12 +79,10 @@ void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   bool handled = false;
   offset = msg.match("/motorA", initialOffset);
   if (offset) {
-    Serial.println("/motorA: ");
     motorA->routeOSC(msg, offset + initialOffset);
   }
   offset = msg.match("/motorB", initialOffset);
   if (offset) {
-    Serial.println("/motorB: ");
     motorB->routeOSC(msg, offset + initialOffset);
   }
 }

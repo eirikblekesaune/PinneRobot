@@ -1,7 +1,10 @@
-#ifndef MOTOR_H
-#define MOTOR_H
+#ifndef PINNE_MOTOR_H
+#define PINNE_MOTOR_H
 #include <Arduino.h>
+#include <Bounce.h>
 #include <Encoder.h>
+#include <FastFloatPID.h>
+#include <Metro.h>
 #include <OSCMessage.h>
 #include <PinneComm.h>
 #include <SpeedRamping.h>
@@ -22,10 +25,10 @@ class PinneMotor
                      int encoderInterruptPinA, int encoderInterruptPinB,
                      VNH5019Driver *driver, address_t address, PinneComm *comm);
           //		enum DIRECTION { DIRECTION_DOWN, DIRECTION_UP };
-          const int TOP_SENSOR_IN = 0;
-          const int TOP_SENSOR_OUT = 1;
-          const int SLACK_SENSOR_IN = 0;
-          const int SLACK_SENSOR_OUT = 1;
+          const int TOP_SENSOR_IN = 1;
+          const int TOP_SENSOR_OUT = 0;
+          const int SLACK_SENSOR_IN = 1;
+          const int SLACK_SENSOR_OUT = 0;
           const position_t POSITION_ALL_UP = 1;
           const position_t POSITION_DEFAULT_MAX = 4096;
           const position_t TARGET_NONE = 0;
@@ -39,6 +42,7 @@ class PinneMotor
           void SetSpeed(int speed);
           void SetDirection(direction_t direction);
           void SetTargetPosition(position_t pos);
+          void SetTargetSpeed(float value);
           void SetCurrentPosition(position_t pos);
           void SetBrake(int brake);
           void SetMaxPosition(position_t maxPos);
@@ -60,13 +64,14 @@ class PinneMotor
           int GetGoToSpeedScaling() {
             return static_cast<int>(_speedRamper->GetSpeedScaling() * 1000);
           };
-          int GetMeasuredSpeed();
+          float GetMeasuredSpeed();
           int GetGoToSpeedRampDown() {
             return static_cast<int>(_speedRamper->GetRampDown());
           };
           int GetStop() { return _stoppingSpeed; };
 
           void GoToTargetPosition(position_t value);
+          void GoToTargetPosition();
 
           bool IsBlocked();
           void UpdateState();
@@ -80,6 +85,8 @@ class PinneMotor
         private:
           int _topStopSensorPin;
           int _slackStopSensorPin;
+          Bounce *_topStopButton;
+          Bounce *_slackStopButton;
           int _encoderInterruptPinA;
           int _encoderInterruptPinB;
           VNH5019Driver *_driver;
@@ -91,12 +98,20 @@ class PinneMotor
           position_t _targetPosition;
           Encoder *_encoder;
 
+          FastFloatPID *_speedPID;
+          float _measuredSpeed;
+          Metro *_speedometerMetro;
+          position_t _prevPosition;
+          float _targetSpeed;
+          float _speedPID_output;
+          float _kp;
+          float _ki;
+          float _kd;
+          void _UpdateSpeedometer();
+          int _speedometerInterval;
+
           int _topStopSensorValue;
           int _slackStopSensorValue;
-          unsigned long _lastTopSensorReadTime;
-          int _lastTopSensorReading;
-          unsigned long _lastSlackSensorReadTime;
-          int _lastSlackSensorReading;
           bool _blocked;
           int _stoppingSpeed;
           void _GoingUp();
@@ -120,6 +135,7 @@ class PinneMotor
           void _RouteSpeedMsg(OSCMessage &msg, int initialOffset);
           void _RouteDirectionMsg(OSCMessage &msg, int initialOffset);
           void _RouteTargetPositionMsg(OSCMessage &msg, int initialOffset);
+          void _RouteTargetSpeedMsg(OSCMessage &msg, int initialOffset);
           void _RouteCurrentPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteBrakeMsg(OSCMessage &msg, int initialOffset);
           void _RouteStateChangeMsg(OSCMessage &msg, int initialOffset);
@@ -131,6 +147,7 @@ class PinneMotor
           void _RouteGoToSpeedRampDownMsg(OSCMessage &msg, int initialOffset);
           void _RouteGoToSpeedScalingMsg(OSCMessage &msg, int initialOffset);
           void _RouteEchoMessagesMsg(OSCMessage &msg, int initialOffset);
+          void _RoutePIDParametersMsg(OSCMessage &msg, int initialOffset);
 
           // SpeedRamp
           SpeedRamping *_speedRamper;

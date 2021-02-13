@@ -43,6 +43,7 @@ enum command_t : uint8_t {
   CMD_GOTO_SPEED_RAMP_DOWN,
   CMD_GOTO_SPEED_SCALING,
   CMD_ECHO_MESSAGES,
+  CMD_PID_PARAMETERS,
   CMD_UNKNOWN
 };
 
@@ -93,7 +94,8 @@ const std::map<command_t, String> CommandMap{
     {CMD_MEASURED_SPEED, "measuredSpeed"},
     {CMD_GOTO_SPEED_RAMP_DOWN, "goToSpeedRampDown"},
     {CMD_GOTO_SPEED_SCALING, "goToSpeedScaling"},
-    {CMD_ECHO_MESSAGES, "echoMessages"}};
+    {CMD_ECHO_MESSAGES, "echoMessages"},
+    {CMD_PID_PARAMETERS, "pidParameters"}};
 
 const std::map<address_t, String> AddressMap{{ADDRESS_A, "motorA"},
                                              {ADDRESS_B, "motorB"},
