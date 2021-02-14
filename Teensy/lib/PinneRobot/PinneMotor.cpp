@@ -2,19 +2,21 @@
 
 PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
                        int encoderInterruptPinA, int encoderInterruptPinB,
-                       VNH5019Driver *driver, address_t address,
-                       PinneComm *comm)
+                       int currentSensePin, VNH5019Driver *driver,
+                       address_t address, PinneComm *comm)
     : _topStopSensorPin(topStopSensorPin),
       _slackStopSensorPin(slackStopSensorPin),
       _encoderInterruptPinA(encoderInterruptPinA),
-      _encoderInterruptPinB(encoderInterruptPinB), _driver(driver),
-      _address(address), _comm(comm) {
+      _encoderInterruptPinB(encoderInterruptPinB),
+      _currentSensePin(currentSensePin), _driver(driver), _address(address),
+      _comm(comm) {
   _minPosition = POSITION_ALL_UP;
   _maxPosition = POSITION_DEFAULT_MAX;
   _targetPosition = TARGET_NONE;
+  _targetSpeed = 0.81;
   _currentPosition = POSITION_ALL_UP;
+  _prevPosition = _currentPosition;
   _measuredSpeed = 0.0;
-  _speedometerInterval = 20;
   _state = STOPPED;
 }
 
@@ -24,20 +26,26 @@ void PinneMotor::init() {
   _encoder = new Encoder(_encoderInterruptPinB, _encoderInterruptPinA);
   pinMode(_topStopSensorPin, INPUT_PULLUP);
   pinMode(_slackStopSensorPin, INPUT_PULLUP);
+  pinMode(_currentSensePin, INPUT);
+  SetMotorControlMode(CONTROL_MODE_MANUAL);
+  _measuredCurrent = static_cast<float>(analogRead(_currentSensePin));
   _topStopButton = new Bounce(_topStopSensorPin, 5);
   _slackStopButton = new Bounce(_slackStopSensorPin, 200);
 
-  _speedometerInterval = 20;
+  _speedometerInterval = 50;
   _speedometerMetro = new Metro(_speedometerInterval);
   _kp = 2.0;
   _ki = 5.0;
   _kd = 1.0;
 
-  _speedPID = new FastFloatPID(&_measuredSpeed, &_speedPID_output,
-                               &_targetSpeed, _kp, _ki, _kd, P_ON_M, DIRECT);
+  _torquePID = new FastFloatPID(&_measuredCurrent, &_torquePID_output,
+                                &_targetSpeed, _kp, _ki, _kd, P_ON_M, DIRECT);
 
-  _speedPID->SetSampleTime(static_cast<float>(_speedometerInterval) / 1000.0);
-  _speedPID->SetOutputLimits(_driver->SPEED_MIN, _driver->SPEED_MAX);
+  _torquePID->SetOutputLimits(_driver->SPEED_MIN, 1000);
+  _torquePID->SetSampleTime(static_cast<float>(_speedometerInterval));
+  /* _speedPID->SetSampleTime(static_cast<float>(_speedometerInterval) /
+   * 1000.0); */
+  /* _speedPID->SetOutputLimits(_driver->SPEED_MIN, _driver->SPEED_MAX); */
 
   _driver->init();
   _driver->SetDirection(DIRECTION_UP);
@@ -132,6 +140,7 @@ void PinneMotor::UpdateState() {
   ReadTopStopSensor();
   ReadSlackStopSensor();
   _UpdateSpeedometer();
+  _UpdateCurrentSense();
   if ((_state == BLOCKED_BY_TOP_SENSOR) ||
       (_state == BLOCKED_BY_SLACK_SENSOR)) { // sensors have priority over
                                              // position lilmits
@@ -144,41 +153,67 @@ void PinneMotor::UpdateState() {
     } else if (currPosition > GetMaxPosition()) {
       _MaxPositionReached();
     } else {
-      direction_t direction = GetDirection();
-      if (direction == DIRECTION_DOWN) {
-        if ((_targetPosition != TARGET_NONE) &&
-            (currPosition > _targetPosition)) {
-          _TargetReached();
-        } else {
-          if (_state == GOING_TO_TARGET) {
-            _UpdateSpeedRamp();
-          } else {
-            _GoingDown();
-          }
-        }
-      } else {
-        if ((_targetPosition != TARGET_NONE) &&
-            (currPosition < _targetPosition)) {
-          _TargetReached();
-        } else {
-          if (_state == GOING_TO_TARGET) {
-            _UpdateSpeedRamp();
-          } else {
-            _GoingUp();
-          }
-        }
-      }
+      switch (_motorControlMode) {
+      case CONTROL_MODE_MANUAL:
+        this->_ManualModeUpdate();
+        break;
+      case CONTROL_MODE_TARGET_POSITION:
+        this->_TargetPositionModeUpdate();
+        break;
+      case CONTROL_MODE_TARGET_SPEED:
+        this->_TargetSpeedModeUpdate();
+        break;
+      };
     }
   }
 }
 
+void PinneMotor::_ManualModeUpdate() {
+  direction_t direction = GetDirection();
+  if (direction == DIRECTION_DOWN) {
+    _GoingDown();
+  } else {
+    _GoingUp();
+  }
+}
+
+void PinneMotor::_TargetPositionModeUpdate() {
+  position_t currPosition = GetCurrentPosition();
+  direction_t direction = GetDirection();
+  if (direction == DIRECTION_DOWN) {
+    if ((_targetPosition != TARGET_NONE) && (currPosition > _targetPosition)) {
+      _TargetReached();
+    }
+  } else {
+    if ((_targetPosition != TARGET_NONE) && (currPosition < _targetPosition)) {
+      _TargetReached();
+    }
+  }
+}
+
+void PinneMotor::_TargetSpeedModeUpdate() {
+  _torquePID->Compute();
+  this->SetSpeed(static_cast<int>(_torquePID_output));
+  OSCMessage msg("/torquePID");
+  msg.add(this->GetSpeed());
+  msg.add(this->GetCurrentPosition());
+  msg.add(_measuredSpeed);
+  msg.add(_measuredCurrent);
+  _comm->SendOSCMessage(msg);
+}
+
 void PinneMotor::_UpdateSpeedometer() {
   if (_speedometerMetro->check() == 1) {
-    float prevSpeed = _measuredSpeed;
+    double prevSpeed = _measuredSpeed;
     position_t currentPosition = GetCurrentPosition();
-    _measuredSpeed = ((currentPosition - _prevPosition) + prevSpeed) * 0.5;
+    _measuredSpeed = (currentPosition - _prevPosition) * 0.1;
+    _measuredSpeed = _measuredSpeed + (prevSpeed * 0.9);
     _prevPosition = currentPosition;
   }
+}
+
+void PinneMotor::_UpdateCurrentSense() {
+  _measuredCurrent = static_cast<float>(analogRead(_currentSensePin));
 }
 
 void PinneMotor::_UpdateSpeedRamp() {
@@ -337,7 +372,8 @@ void PinneMotor::SetMinPosition(position_t minPosition) {
 }
 
 void PinneMotor::SetMaxPosition(position_t maxPosition) {
-  _maxPosition = min(maxPosition, POSITION_DEFAULT_MAX);
+  /* _maxPosition = min(maxPosition, POSITION_DEFAULT_MAX); */
+  _maxPosition = maxPosition;
 }
 
 void PinneMotor::GoToParkingPosition(int speed) {
@@ -390,6 +426,33 @@ void PinneMotor::SetGoToSpeedScaling(int value) {
   _speedRamper->SetSpeedScaling(static_cast<float>(value) / 1000.0);
 }
 
+void PinneMotor::SetMotorControlMode(controlMode_t mode) {
+  if (mode != _motorControlMode) {
+    controlMode_t prevMode = _motorControlMode;
+    _motorControlMode = mode;
+
+    switch (prevMode) {
+    case CONTROL_MODE_MANUAL:
+      break;
+    case CONTROL_MODE_TARGET_POSITION:
+      break;
+    case CONTROL_MODE_TARGET_SPEED:
+      _torquePID->SetMode(MANUAL);
+      break;
+    }
+
+    switch (_motorControlMode) {
+    case CONTROL_MODE_MANUAL:
+      break;
+    case CONTROL_MODE_TARGET_POSITION:
+      break;
+    case CONTROL_MODE_TARGET_SPEED:
+      _torquePID->SetMode(AUTOMATIC);
+      break;
+    }
+  }
+}
+
 bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
   int offset;
   offset = msg.match("/speed", initialOffset);
@@ -410,6 +473,11 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
   offset = msg.match("/targetPosition", initialOffset);
   if (offset) {
     this->_RouteTargetPositionMsg(msg, offset + initialOffset);
+    return true;
+  }
+  offset = msg.match("/targetSpeed", initialOffset);
+  if (offset) {
+    this->_RouteTargetSpeedMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/currentPosition", initialOffset);
@@ -470,6 +538,11 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
   offset = msg.match("/pidParameters", initialOffset);
   if (offset) {
     this->_RoutePIDParametersMsg(msg, offset + initialOffset);
+    return true;
+  }
+  offset = msg.match("/motorControlMode", initialOffset);
+  if (offset) {
+    this->_RouteMotorControlModeMsg(msg, offset + initialOffset);
     return true;
   }
   return false;
@@ -536,6 +609,19 @@ void PinneMotor::_RouteTargetPositionMsg(OSCMessage &msg, int initialOffset) {
       OSCMessage replyMsg("/");
       replyMsg.add(GetTargetPosition());
       _comm->ReturnQueryValue(CMD_TARGET_POSITION, _address, replyMsg);
+    }
+  }
+}
+
+void PinneMotor::_RouteTargetSpeedMsg(OSCMessage &msg, int initialOffset) {
+  if ((msg.size() > 0) && (msg.isFloat(0))) {
+    float pos = msg.getFloat(0);
+    this->SetTargetSpeed(pos);
+  } else {
+    if (_comm->HasQueryAddress(msg, initialOffset)) {
+      OSCMessage replyMsg("/");
+      replyMsg.add(GetTargetSpeed());
+      _comm->ReturnQueryValue(CMD_TARGET_SPEED, _address, replyMsg);
     }
   }
 }
@@ -635,9 +721,10 @@ void PinneMotor::_RouteEchoMessagesMsg(OSCMessage &msg, int initialOffset) {}
 
 void PinneMotor::_RoutePIDParametersMsg(OSCMessage &msg, int initialOffset) {
   if (msg.size() == 3) {
-    _kp = static_cast<int32_t>(msg.getInt(0));
-    _ki = static_cast<int32_t>(msg.getInt(1));
-    _kd = static_cast<int32_t>(msg.getInt(2));
+    _kp = msg.getFloat(0);
+    _ki = msg.getFloat(1);
+    _kd = msg.getFloat(2);
+    _torquePID->SetTunings(_kp, _ki, _kd);
   } else if (_comm->HasQueryAddress(msg, initialOffset)) {
     OSCMessage replyMsg("/");
     replyMsg.add(_kp);
@@ -645,4 +732,33 @@ void PinneMotor::_RoutePIDParametersMsg(OSCMessage &msg, int initialOffset) {
     replyMsg.add(_kd);
     _comm->ReturnQueryValue(CMD_PID_PARAMETERS, _address, replyMsg);
   }
+}
+
+void PinneMotor::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
+  if (msg.size() > 0) {
+    if (msg.isString(0)) {
+      char dirStr[16];
+      msg.getString(0, dirStr, 16);
+      if (strcmp(dirStr, "manual") == 0) {
+        this->SetMotorControlMode(CONTROL_MODE_MANUAL);
+      } else if (strcmp(dirStr, "targetPosition") == 0) {
+        this->SetMotorControlMode(CONTROL_MODE_TARGET_POSITION);
+      } else if (strcmp(dirStr, "targetSpeed") == 0) {
+        this->SetMotorControlMode(CONTROL_MODE_TARGET_SPEED);
+      }
+    }
+    } else {
+      if (_comm->HasQueryAddress(msg, initialOffset)) {
+        controlMode_t mode = GetMotorControlMode();
+        OSCMessage replyMsg("/");
+        if (mode == CONTROL_MODE_MANUAL) {
+          replyMsg.add("manual");
+        } else if (mode == CONTROL_MODE_TARGET_POSITION) {
+          replyMsg.add("targetPosition");
+        } else if (mode == CONTROL_MODE_TARGET_SPEED) {
+          replyMsg.add("targetSpeed");
+        }
+        _comm->ReturnQueryValue(CMD_MOTOR_CONTROL_MODE, _address, replyMsg);
+      }
+    }
 }

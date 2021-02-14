@@ -9,6 +9,7 @@ const int motorATopStopSensor = 24;
 const int motorASlackStopSensor = 25;
 const int motorAEncoderInterruptPinA = 26;
 const int motorAEncoderInterruptPinB = 27;
+const int motorACurrentSensePin = A0;
 
 const int driverB_PWM = 3;
 const int driverB_INA = 6;
@@ -18,6 +19,7 @@ const int motorBTopStopSensor = 28;
 const int motorBSlackStopSensor = 29;
 const int motorBEncoderInterruptPinA = 31;
 const int motorBEncoderInterruptPinB = 30;
+const int motorBCurrentSensePin = A1;
 
 PinneRobot::PinneRobot(PinneComm *comm) : _comm(comm) {
   VNH5019Driver *driverA_ =
@@ -25,12 +27,14 @@ PinneRobot::PinneRobot(PinneComm *comm) : _comm(comm) {
   VNH5019Driver *driverB_ =
       new VNH5019Driver(driverB_INA, driverB_INB, driverB_ENDIAG, driverB_PWM);
 
-  motorA = new PinneMotor(
-      motorATopStopSensor, motorASlackStopSensor, motorAEncoderInterruptPinA,
-      motorAEncoderInterruptPinB, driverA_, ADDRESS_A, _comm);
-  motorB = new PinneMotor(
-      motorBTopStopSensor, motorBSlackStopSensor, motorBEncoderInterruptPinA,
-      motorBEncoderInterruptPinB, driverB_, ADDRESS_B, _comm);
+  motorA =
+      new PinneMotor(motorATopStopSensor, motorASlackStopSensor,
+                     motorAEncoderInterruptPinA, motorAEncoderInterruptPinB,
+                     motorACurrentSensePin, driverA_, ADDRESS_A, _comm);
+  motorB =
+      new PinneMotor(motorBTopStopSensor, motorBSlackStopSensor,
+                     motorBEncoderInterruptPinA, motorBEncoderInterruptPinB,
+                     motorBCurrentSensePin, driverB_, ADDRESS_B, _comm);
 }
 
 void PinneRobot::init()
@@ -47,24 +51,27 @@ void PinneRobot::update()
   motorA->UpdateState();
   motorB->UpdateState();
   /* OSCMessage msg("/measuredSpeed"); */
-  /* msg.add(motorA->GetMeasuredSpeed()); */
+  /* msg.add(motorB->GetSpeed()); */
+  /* msg.add(motorB->GetCurrentPosition()); */
+  /* msg.add(motorB->GetMeasuredSpeed()); */
+  /* msg.add(motorB->GetCurrentSense()); */
   /* _comm->SendOSCMessage(msg); */
-  position_t pos = motorA->GetCurrentPosition();
-  if (_lastAPositionSent != pos) {
-    OSCMessage msg("/pinne/motorA/currentPosition");
-    msg.add(pos);
-    msg.add(motorA->GetMeasuredSpeed());
-    _comm->SendOSCMessage(msg);
-    _lastAPositionSent = pos;
-  }
-  pos = motorB->GetCurrentPosition();
-  if (_lastBPositionSent != pos) {
-    OSCMessage msg("/pinne/motorB/currentPosition");
-    msg.add(pos);
-    msg.add(motorB->GetMeasuredSpeed());
-    _comm->SendOSCMessage(msg);
-    _lastBPositionSent = pos;
-  }
+  /* position_t pos = motorA->GetCurrentPosition(); */
+  /* if (_lastAPositionSent != pos) { */
+  /*   OSCMessage msg("/pinne/motorA/currentPosition"); */
+  /*   msg.add(pos); */
+  /*   msg.add(motorA->GetMeasuredSpeed()); */
+  /*   _comm->SendOSCMessage(msg); */
+  /*   _lastAPositionSent = pos; */
+  /* } */
+  /* pos = motorB->GetCurrentPosition(); */
+  /* if (_lastBPositionSent != pos) { */
+  /*   OSCMessage msg("/pinne/motorB/currentPosition"); */
+  /*   msg.add(pos); */
+  /*   msg.add(motorB->GetMeasuredSpeed()); */
+  /*   _comm->SendOSCMessage(msg); */
+  /*   _lastBPositionSent = pos; */
+  /* } */
   _lastPositionUpdate = millis();
 }
 

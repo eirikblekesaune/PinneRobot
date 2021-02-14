@@ -15,6 +15,7 @@
 enum address_t : uint8_t;
 enum direction_t : uint8_t;
 enum stateChange_t : uint8_t;
+enum controlMode_t : uint8_t;
 typedef long position_t;
 class PinneComm;
 
@@ -23,7 +24,8 @@ class PinneMotor
 	public:
           PinneMotor(int topStopSensorPin, int slackStopSensorPin,
                      int encoderInterruptPinA, int encoderInterruptPinB,
-                     VNH5019Driver *driver, address_t address, PinneComm *comm);
+                     int currentSensePin, VNH5019Driver *driver,
+                     address_t address, PinneComm *comm);
           //		enum DIRECTION { DIRECTION_DOWN, DIRECTION_UP };
           const int TOP_SENSOR_IN = 1;
           const int TOP_SENSOR_OUT = 0;
@@ -56,15 +58,20 @@ class PinneMotor
             return static_cast<direction_t>(_driver->GetDirection());
           };
           position_t GetTargetPosition() { return _targetPosition; };
+          float GetTargetSpeed() { return _targetSpeed; };
           position_t GetCurrentPosition();
           int GetBrake() { return static_cast<int>(_driver->GetBrake()); };
           position_t GetMaxPosition() { return _maxPosition; };
           position_t GetMinPosition() { return _minPosition; };
 
+          controlMode_t GetMotorControlMode() { return _motorControlMode; };
+          void SetMotorControlMode(controlMode_t mode);
+
           int GetGoToSpeedScaling() {
             return static_cast<int>(_speedRamper->GetSpeedScaling() * 1000);
           };
           float GetMeasuredSpeed();
+          int GetCurrentSense() { return static_cast<int>(_measuredCurrent); };
           int GetGoToSpeedRampDown() {
             return static_cast<int>(_speedRamper->GetRampDown());
           };
@@ -89,6 +96,7 @@ class PinneMotor
           Bounce *_slackStopButton;
           int _encoderInterruptPinA;
           int _encoderInterruptPinB;
+          int _currentSensePin;
           VNH5019Driver *_driver;
           address_t _address;
           PinneComm *_comm;
@@ -97,17 +105,20 @@ class PinneMotor
           position_t _currentPosition;
           position_t _targetPosition;
           Encoder *_encoder;
+          controlMode_t _motorControlMode;
 
-          FastFloatPID *_speedPID;
-          float _measuredSpeed;
+          FastFloatPID *_torquePID;
           Metro *_speedometerMetro;
           position_t _prevPosition;
           float _targetSpeed;
-          float _speedPID_output;
+          float _torquePID_output;
           float _kp;
           float _ki;
           float _kd;
+          double _measuredSpeed;
           void _UpdateSpeedometer();
+          void _UpdateCurrentSense();
+          float _measuredCurrent;
           int _speedometerInterval;
 
           int _topStopSensorValue;
@@ -125,6 +136,9 @@ class PinneMotor
           void _MinPositionReached();
           void _MaxPositionReached();
           void _GoingToTarget();
+          void _ManualModeUpdate();
+          void _TargetPositionModeUpdate();
+          void _TargetSpeedModeUpdate();
 
           void _UpdateSpeedRamp();
           void _CalculateAndSetSpeed();
@@ -148,6 +162,7 @@ class PinneMotor
           void _RouteGoToSpeedScalingMsg(OSCMessage &msg, int initialOffset);
           void _RouteEchoMessagesMsg(OSCMessage &msg, int initialOffset);
           void _RoutePIDParametersMsg(OSCMessage &msg, int initialOffset);
+          void _RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset);
 
           // SpeedRamp
           SpeedRamping *_speedRamper;

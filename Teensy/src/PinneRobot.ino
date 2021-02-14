@@ -86,9 +86,9 @@ void setup()
 	pinMode(LED_BUILTIN, OUTPUT);
 	pinMode(readSettingsFromSDCardPin, INPUT_PULLUP);
 	analogWriteResolution(12);
-	Serial.begin(57600);
+	/* Serial.begin(57600); */
 	delay(1000);
-	while(!Serial);
+	/* while(!Serial); */
 	Serial.println("Hello my friend~!");
 	//if an SD card is inserted we will read the settings from the inserted SD card
 	//from the file 'pinne.txt'.

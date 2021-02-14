@@ -44,6 +44,8 @@ enum command_t : uint8_t {
   CMD_GOTO_SPEED_SCALING,
   CMD_ECHO_MESSAGES,
   CMD_PID_PARAMETERS,
+  CMD_MOTOR_CONTROL_MODE,
+  CMD_TARGET_SPEED,
   CMD_UNKNOWN
 };
 
@@ -53,6 +55,12 @@ enum address_t : uint8_t {
   ADDRESS_ROTATION,
   ADDRESS_GLOBAL,
   ADDRESS_UNKNOWN
+};
+
+enum controlMode_t : uint8_t {
+  CONTROL_MODE_MANUAL,
+  CONTROL_MODE_TARGET_POSITION,
+  CONTROL_MODE_TARGET_SPEED
 };
 
 enum setGet_t : uint8_t { SET_MESSAGE, GET_MESSAGE, SETGET_UNKNOWN };
@@ -78,11 +86,17 @@ enum stateChange_t : uint8_t {
   DRIVER_FAULT                 // Something is wrong with the driver itself
 };
 
+const std::map<controlMode_t, String> ControlModeMap{
+    {CONTROL_MODE_MANUAL, "manual"},
+    {CONTROL_MODE_TARGET_POSITION, "targetPosition"},
+    {CONTROL_MODE_TARGET_SPEED, "targetSpeed"}};
+
 const std::map<command_t, String> CommandMap{
     {CMD_STOP, "stop"},
     {CMD_SPEED, "speed"},
     {CMD_DIRECTION, "direction"},
     {CMD_TARGET_POSITION, "targetPosition"},
+    {CMD_TARGET_SPEED, "targetSpeed"},
     {CMD_CURRENT_POSITION, "currentPosition"},
     {CMD_BRAKE, "brake"},
     {CMD_STATE_CHANGE, "stateChange"},
@@ -95,7 +109,8 @@ const std::map<command_t, String> CommandMap{
     {CMD_GOTO_SPEED_RAMP_DOWN, "goToSpeedRampDown"},
     {CMD_GOTO_SPEED_SCALING, "goToSpeedScaling"},
     {CMD_ECHO_MESSAGES, "echoMessages"},
-    {CMD_PID_PARAMETERS, "pidParameters"}};
+    {CMD_PID_PARAMETERS, "pidParameters"},
+    {CMD_MOTOR_CONTROL_MODE, "motorControlMode"}};
 
 const std::map<address_t, String> AddressMap{{ADDRESS_A, "motorA"},
                                              {ADDRESS_B, "motorB"},
