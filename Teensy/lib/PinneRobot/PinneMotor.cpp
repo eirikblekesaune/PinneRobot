@@ -455,6 +455,11 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
 
 bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
   int offset;
+  offset = msg.match("/bipolarSpeed", initialOffset);
+  if (offset) {
+    this->_RouteBipolarSpeedMsg(msg, offset + initialOffset);
+    return true;
+  }
   offset = msg.match("/speed", initialOffset);
   if (offset) {
     this->_RouteSpeedMsg(msg, offset + initialOffset);
@@ -761,4 +766,21 @@ void PinneMotor::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
         _comm->ReturnQueryValue(CMD_MOTOR_CONTROL_MODE, _address, replyMsg);
       }
     }
+}
+
+void PinneMotor::_RouteBipolarSpeedMsg(OSCMessage &msg, int initialOffset) {
+  if (msg.size() > 0) {
+    if (msg.isInt(0)) {
+      int bp = msg.getInt(0);
+      if (bp == 0) {
+        this->SetSpeed(0);
+      } else if (bp > 0) {
+        this->SetDirection(DIRECTION_UP);
+        this->SetSpeed(bp);
+      } else {
+        this->SetDirection(DIRECTION_DOWN);
+        this->SetSpeed(abs(bp));
+      }
+    }
+  }
 }

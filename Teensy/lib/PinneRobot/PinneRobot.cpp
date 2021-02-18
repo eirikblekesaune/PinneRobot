@@ -41,7 +41,6 @@ void PinneRobot::init()
 {
   motorA->init();
   motorB->init();
-  _lastPositionUpdate = millis();
   _lastAPositionSent = -1; // -1 for forcing init update
   _lastBPositionSent = -1;
 }
@@ -56,23 +55,22 @@ void PinneRobot::update()
   /* msg.add(motorB->GetMeasuredSpeed()); */
   /* msg.add(motorB->GetCurrentSense()); */
   /* _comm->SendOSCMessage(msg); */
-  /* position_t pos = motorA->GetCurrentPosition(); */
-  /* if (_lastAPositionSent != pos) { */
-  /*   OSCMessage msg("/pinne/motorA/currentPosition"); */
-  /*   msg.add(pos); */
-  /*   msg.add(motorA->GetMeasuredSpeed()); */
-  /*   _comm->SendOSCMessage(msg); */
-  /*   _lastAPositionSent = pos; */
-  /* } */
-  /* pos = motorB->GetCurrentPosition(); */
-  /* if (_lastBPositionSent != pos) { */
-  /*   OSCMessage msg("/pinne/motorB/currentPosition"); */
-  /*   msg.add(pos); */
-  /*   msg.add(motorB->GetMeasuredSpeed()); */
-  /*   _comm->SendOSCMessage(msg); */
-  /*   _lastBPositionSent = pos; */
-  /* } */
-  _lastPositionUpdate = millis();
+  position_t pos = motorA->GetCurrentPosition();
+  if (_lastAPositionSent != pos) {
+    OSCMessage msg("/pinne/motorA/currentPosition");
+    msg.add(pos);
+    msg.add(motorA->GetMeasuredSpeed());
+    _comm->SendOSCMessage(msg);
+    _lastAPositionSent = pos;
+  }
+  pos = motorB->GetCurrentPosition();
+  if (_lastBPositionSent != pos) {
+    OSCMessage msg("/pinne/motorB/currentPosition");
+    msg.add(pos);
+    msg.add(motorB->GetMeasuredSpeed());
+    _comm->SendOSCMessage(msg);
+    _lastBPositionSent = pos;
+  }
 }
 
 void PinneRobot::GoToParkingPosition()

@@ -163,6 +163,7 @@ class PinneMotor
           void _RouteEchoMessagesMsg(OSCMessage &msg, int initialOffset);
           void _RoutePIDParametersMsg(OSCMessage &msg, int initialOffset);
           void _RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset);
+          void _RouteBipolarSpeedMsg(OSCMessage &msg, int initialOffset);
 
           // SpeedRamp
           SpeedRamping *_speedRamper;

@@ -21,7 +21,6 @@ public:
   void routeOSC(OSCMessage &msg, int initialOffset);
 
 private:
-  unsigned long _lastPositionUpdate;
   position_t _lastAPositionSent;
   position_t _lastBPositionSent;
   PinneComm *_comm;
