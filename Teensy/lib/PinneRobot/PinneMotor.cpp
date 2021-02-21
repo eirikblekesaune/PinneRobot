@@ -27,7 +27,7 @@ void PinneMotor::init() {
   pinMode(_topStopSensorPin, INPUT_PULLUP);
   pinMode(_slackStopSensorPin, INPUT_PULLUP);
   pinMode(_currentSensePin, INPUT);
-  SetMotorControlMode(CONTROL_MODE_MANUAL);
+  SetMotorControlMode(CONTROL_MODE_PWM);
   _measuredCurrent = static_cast<float>(analogRead(_currentSensePin));
   _topStopButton = new Bounce(_topStopSensorPin, 5);
   _slackStopButton = new Bounce(_slackStopSensorPin, 200);
@@ -60,26 +60,23 @@ void PinneMotor::init() {
   } else if (_slackStopSensorValue == SLACK_SENSOR_IN) {
     _SlackStopSensorIn();
   }
-
-  _speedRamper = new SpeedRamping(VNH5019Driver::SPEED_MAX * 0.115,
-                                  VNH5019Driver::SPEED_MAX);
 }
 
 position_t PinneMotor::GetCurrentPosition() { return _encoder->read(); };
 
-void PinneMotor::Stop() { _driver->SetSpeed(VNH5019Driver::SPEED_STOP); }
+void PinneMotor::Stop() { _driver->SetPWM(VNH5019Driver::SPEED_STOP); }
 
 void PinneMotor::SetStop(int value) {
   _stoppingSpeed = constrain(value, 0, 5000);
-  _driver->SetSpeed(VNH5019Driver::SPEED_STOP);
+  _driver->SetPWM(VNH5019Driver::SPEED_STOP);
 }
 
-void PinneMotor::SetSpeed(int speed) {
+void PinneMotor::SetPWM(int speed) {
   if (speed <= 0) {
     Stop();
   } else {
     if (!IsBlocked()) {
-      _driver->SetSpeed(speed);
+      _driver->SetPWM(speed);
     }
   }
 }
@@ -150,8 +147,8 @@ void PinneMotor::UpdateState() {
       _MaxPositionReached();
     } else {
       switch (_motorControlMode) {
-      case CONTROL_MODE_MANUAL:
-        this->_ManualModeUpdate();
+      case CONTROL_MODE_PWM:
+        this->_PWMModeUpdate();
         break;
       case CONTROL_MODE_TARGET_POSITION:
         this->_TargetPositionModeUpdate();
@@ -164,7 +161,7 @@ void PinneMotor::UpdateState() {
   }
 }
 
-void PinneMotor::_ManualModeUpdate() {
+void PinneMotor::_PWMModeUpdate() {
   direction_t direction = GetDirection();
   if (direction == DIRECTION_DOWN) {
     _GoingDown();
@@ -189,7 +186,7 @@ void PinneMotor::_TargetPositionModeUpdate() {
 
 void PinneMotor::_TargetSpeedModeUpdate() {
   _speedPID->Compute();
-  this->SetSpeed(static_cast<int>(_targetSpeedPIDOutput));
+  this->SetPWM(static_cast<int>(_targetSpeedPIDOutput));
   /* OSCMessage msg("/PID"); */
   /* msg.add(_targetSpeedPIDOutput); */
   /* _comm->SendOSCMessage(msg); */
@@ -208,14 +205,6 @@ void PinneMotor::_UpdateSpeedometer() {
 
 void PinneMotor::_UpdateCurrentSense() {
   _measuredCurrent = static_cast<float>(analogRead(_currentSensePin));
-}
-
-void PinneMotor::_UpdateSpeedRamp() {
-  if (_speedRamper->Calculate(GetCurrentPosition())) {
-    int newSpeed;
-    newSpeed = _speedRamper->GetCurrentValue();
-    SetSpeed(newSpeed);
-  }
 }
 
 void PinneMotor::ReadTopStopSensor() {
@@ -377,7 +366,7 @@ void PinneMotor::GoToParkingPosition(int speed) {
     // fake the currentPosition to default max
     SetCurrentPosition(POSITION_DEFAULT_MAX);
     SetDirection(DIRECTION_UP);
-    SetSpeed(speed);
+    SetPWM(speed);
   }
 }
 
@@ -394,7 +383,6 @@ void PinneMotor::GoToTargetPosition() {
 void PinneMotor::GoToTargetPosition(position_t value) {
   if (value > 0) {
     if (GetTargetPosition() != TARGET_NONE) {
-      _speedRamper->Start(GetCurrentPosition(), GetTargetPosition(), value);
       _GoingToTarget();
     }
   } else {
@@ -408,25 +396,13 @@ void PinneMotor::GoToTargetPosition(position_t value) {
   }
 }
 
-void PinneMotor::SetGoToSpeedRampUp(int value) {
-  _speedRamper->SetRampUp(static_cast<float>(value));
-}
-
-void PinneMotor::SetGoToSpeedRampDown(int value) {
-  _speedRamper->SetRampDown(static_cast<float>(value));
-}
-
-void PinneMotor::SetGoToSpeedScaling(int value) {
-  _speedRamper->SetSpeedScaling(static_cast<float>(value) / 1000.0);
-}
-
 void PinneMotor::SetMotorControlMode(controlMode_t mode) {
   if (mode != _motorControlMode) {
     controlMode_t prevMode = _motorControlMode;
     _motorControlMode = mode;
 
     switch (prevMode) {
-    case CONTROL_MODE_MANUAL:
+    case CONTROL_MODE_PWM:
       break;
     case CONTROL_MODE_TARGET_POSITION:
       break;
@@ -436,7 +412,7 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
     }
 
     switch (_motorControlMode) {
-    case CONTROL_MODE_MANUAL:
+    case CONTROL_MODE_PWM:
       break;
     case CONTROL_MODE_TARGET_POSITION:
       break;
@@ -449,19 +425,9 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
 
 bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
   int offset;
-  offset = msg.match("/bipolarSpeed", initialOffset);
+  offset = msg.match("/bipolarPWM", initialOffset);
   if (offset) {
-    this->_RouteBipolarSpeedMsg(msg, offset + initialOffset);
-    return true;
-  }
-  offset = msg.match("/speed", initialOffset);
-  if (offset) {
-    this->_RouteSpeedMsg(msg, offset + initialOffset);
-    return true;
-  }
-  offset = msg.match("/direction", initialOffset);
-  if (offset) {
-    this->_RouteDirectionMsg(msg, offset + initialOffset);
+    this->_RouteBipolarPWMMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/stop", initialOffset);
@@ -474,7 +440,7 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
     this->_RouteTargetPositionMsg(msg, offset + initialOffset);
     return true;
   }
-  offset = msg.match("/targetSpeed", initialOffset);
+  offset = msg.match("/bipolarTargetSpeed", initialOffset);
   if (offset) {
     this->_RouteTargetSpeedMsg(msg, offset + initialOffset);
     return true;
@@ -519,16 +485,6 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
     this->_RouteMeasuredSpeedMsg(msg, offset + initialOffset);
     return true;
   }
-  offset = msg.match("/goToSpeedRampDown", initialOffset);
-  if (offset) {
-    this->_RouteGoToSpeedRampDownMsg(msg, offset + initialOffset);
-    return true;
-  }
-  offset = msg.match("/goToSpeedScaling", initialOffset);
-  if (offset) {
-    this->_RouteGoToSpeedScalingMsg(msg, offset + initialOffset);
-    return true;
-  }
   offset = msg.match("/echoMessages", initialOffset);
   if (offset) {
     this->_RouteEchoMessagesMsg(msg, offset + initialOffset);
@@ -550,14 +506,22 @@ void PinneMotor::_RouteStopMsg(OSCMessage &msg, int initialOffset) {
   }
 }
 
-void PinneMotor::_RouteSpeedMsg(OSCMessage &msg, int initialOffset) {
+void PinneMotor::_RouteBipolarPWMMsg(OSCMessage &msg, int initialOffset) {
   if ((msg.size() > 0) && (msg.isInt(0))) {
-    int speed = msg.getInt(0);
-    this->SetSpeed(speed);
+    int bp = msg.getInt(0);
+    if (bp == 0) {
+      this->SetPWM(0);
+    } else if (bp > 0) {
+      this->SetDirection(DIRECTION_UP);
+      this->SetPWM(bp);
+    } else {
+      this->SetDirection(DIRECTION_DOWN);
+      this->SetPWM(abs(bp));
+    }
   } else {
     if (_comm->HasQueryAddress(msg, initialOffset)) {
       OSCMessage replyMsg("/");
-      replyMsg.add(GetSpeed());
+      replyMsg.add(GetPWM());
       _comm->ReturnQueryValue(CMD_SPEED, _address, replyMsg);
     }
   }
@@ -705,12 +669,6 @@ void PinneMotor::_RouteMeasuredSpeedMsg(OSCMessage &msg, int initialOffset) {
   }
 }
 
-void PinneMotor::_RouteGoToSpeedRampDownMsg(OSCMessage &msg,
-                                            int initialOffset) {}
-
-void PinneMotor::_RouteGoToSpeedScalingMsg(OSCMessage &msg, int initialOffset) {
-}
-
 void PinneMotor::_RouteEchoMessagesMsg(OSCMessage &msg, int initialOffset) {}
 
 void PinneMotor::_RoutePIDParametersMsg(OSCMessage &msg, int initialOffset) {
@@ -729,19 +687,3 @@ void PinneMotor::_RoutePIDParametersMsg(OSCMessage &msg, int initialOffset) {
   }
 }
 
-void PinneMotor::_RouteBipolarSpeedMsg(OSCMessage &msg, int initialOffset) {
-  if (msg.size() > 0) {
-    if (msg.isInt(0)) {
-      int bp = msg.getInt(0);
-      if (bp == 0) {
-        this->SetSpeed(0);
-      } else if (bp > 0) {
-        this->SetDirection(DIRECTION_UP);
-        this->SetSpeed(bp);
-      } else {
-        this->SetDirection(DIRECTION_DOWN);
-        this->SetSpeed(abs(bp));
-      }
-    }
-  }
-}

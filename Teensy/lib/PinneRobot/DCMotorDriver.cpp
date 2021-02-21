@@ -1,11 +1,7 @@
 #include <DCMotorDriver.h>
 
-speed_t DCMotorDriver::GetSpeed() {
-	return _speed;
-}
+pwm_t DCMotorDriver::GetPWM() { return _pwm; }
 
 uint8_t DCMotorDriver::GetDirection() { return _direction; }
 
-speed_t DCMotorDriver::GetBrake() {
-	return _brake;
-}
+pwm_t DCMotorDriver::GetBrake() { return _brake; }

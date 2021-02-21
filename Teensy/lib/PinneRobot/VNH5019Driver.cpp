@@ -4,16 +4,15 @@
 
 #include <VNH5019Driver.h>
 
-const speed_t VNH5019Driver::SPEED_STOP = 0;
-const speed_t VNH5019Driver::SPEED_MIN = 0;
-const speed_t VNH5019Driver::SPEED_MAX = 4095;
-const speed_t VNH5019Driver::BRAKE_NONE = 0;
-const speed_t VNH5019Driver::BRAKE_FULL = 4095;
+const pwm_t VNH5019Driver::SPEED_STOP = 0;
+const pwm_t VNH5019Driver::SPEED_MIN = 0;
+const pwm_t VNH5019Driver::SPEED_MAX = 4095;
+const pwm_t VNH5019Driver::BRAKE_NONE = 0;
+const pwm_t VNH5019Driver::BRAKE_FULL = 4095;
 
-VNH5019Driver::VNH5019Driver(unsigned char INA, unsigned char INB, unsigned char ENDIAG,	unsigned char PWM)
-	 : _INA(INA), _INB(INB), _ENDIAG(ENDIAG), _PWM(PWM)
-{
-}
+VNH5019Driver::VNH5019Driver(unsigned char INA, unsigned char INB,
+                             unsigned char ENDIAG, unsigned char PWM)
+    : _INA(INA), _INB(INB), _ENDIAG(ENDIAG), _PWM(PWM) {}
 
 void VNH5019Driver::init()
 {
@@ -23,29 +22,25 @@ void VNH5019Driver::init()
         pinMode(_PWM, OUTPUT);
         analogWriteFrequency(_PWM, 36621);
 
-        SetSpeed(0);
+        SetPWM(0);
         SetDirection(0);
 }
 
-void VNH5019Driver::SetSpeed(speed_t speed)
-{
-  if (speed < 0) {
-    speed = 0;
+void VNH5019Driver::SetPWM(pwm_t pwm) {
+  if (pwm < 0) {
+    pwm = 0;
   }
-  if (speed > SPEED_MAX) { // Max PWM dutycycle
-    speed = SPEED_MAX;
+  if (pwm > SPEED_MAX) { // Max PWM dutycycle
+    pwm = SPEED_MAX;
   }
-        Serial.print("Speed: ");
-        Serial.println(speed);
-        _speed = speed;
-        analogWrite(_PWM, speed);
-        if (speed == 0)
-	{
-		digitalWrite(_INA, LOW);	 // Make the motor coast no
-		digitalWrite(_INB, LOW);	 // matter which direction it is spinning.
-	} else {
-		UpdateDirection();
-	}
+  _pwm = pwm;
+  analogWrite(_PWM, pwm);
+  if (pwm == 0) {
+    digitalWrite(_INA, LOW); // Make the motor coast no
+    digitalWrite(_INB, LOW); // matter which direction it is spinning.
+  } else {
+    UpdateDirection();
+  }
 }
 
 void VNH5019Driver::SetDirection(uint8_t direction) {
@@ -71,16 +66,15 @@ void VNH5019Driver::UpdateDirection()
 	}
 }
 
-void VNH5019Driver::SetBrake(speed_t brake)
-{
-	if (brake < 0)
-		brake = 0;
-	if (brake > SPEED_MAX)	// Max brake
-		brake = SPEED_MAX;
-	digitalWrite(_INA, LOW);
-	digitalWrite(_INB, LOW);
-	_brake = brake;
-        analogWrite(_PWM, brake);
+void VNH5019Driver::SetBrake(pwm_t brake) {
+  if (brake < 0)
+    brake = 0;
+  if (brake > SPEED_MAX) // Max brake
+    brake = SPEED_MAX;
+  digitalWrite(_INA, LOW);
+  digitalWrite(_INB, LOW);
+  _brake = brake;
+  analogWrite(_PWM, brake);
 }
 
 unsigned char VNH5019Driver::GetFault()

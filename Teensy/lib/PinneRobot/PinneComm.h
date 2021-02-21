@@ -58,7 +58,7 @@ enum address_t : uint8_t {
 };
 
 enum controlMode_t : uint8_t {
-  CONTROL_MODE_MANUAL,
+  CONTROL_MODE_PWM,
   CONTROL_MODE_TARGET_POSITION,
   CONTROL_MODE_TARGET_SPEED
 };
@@ -87,14 +87,13 @@ enum stateChange_t : uint8_t {
 };
 
 const std::map<controlMode_t, String> ControlModeMap{
-    {CONTROL_MODE_MANUAL, "manual"},
+    {CONTROL_MODE_PWM, "pwm"},
     {CONTROL_MODE_TARGET_POSITION, "targetPosition"},
     {CONTROL_MODE_TARGET_SPEED, "targetSpeed"}};
 
 const std::map<command_t, String> CommandMap{
     {CMD_STOP, "stop"},
-    {CMD_SPEED, "speed"},
-    {CMD_DIRECTION, "direction"},
+    {CMD_SPEED, "bipolarPWM"},
     {CMD_TARGET_POSITION, "targetPosition"},
     {CMD_TARGET_SPEED, "targetSpeed"},
     {CMD_CURRENT_POSITION, "currentPosition"},
@@ -106,8 +105,6 @@ const std::map<command_t, String> CommandMap{
     {CMD_GOTO_PARKING_POSITION, "goToParkingPosition"},
     {CMD_GOTO_TARGET, "goToTarget"},
     {CMD_MEASURED_SPEED, "measuredSpeed"},
-    {CMD_GOTO_SPEED_RAMP_DOWN, "goToSpeedRampDown"},
-    {CMD_GOTO_SPEED_SCALING, "goToSpeedScaling"},
     {CMD_ECHO_MESSAGES, "echoMessages"},
     {CMD_PID_PARAMETERS, "pidParameters"},
     {CMD_MOTOR_CONTROL_MODE, "motorControlMode"}};

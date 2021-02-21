@@ -35,7 +35,7 @@ PinneRobot::PinneRobot(PinneComm *comm) : _comm(comm) {
       new PinneMotor(motorBTopStopSensor, motorBSlackStopSensor,
                      motorBEncoderInterruptPinA, motorBEncoderInterruptPinB,
                      motorBCurrentSensePin, driverB_, ADDRESS_B, _comm);
-  SetMotorControlMode(CONTROL_MODE_MANUAL);
+  SetMotorControlMode(CONTROL_MODE_PWM);
 }
 
 void PinneRobot::init()
@@ -50,20 +50,14 @@ void PinneRobot::update()
 {
   motorA->UpdateState();
   motorB->UpdateState();
-  /* OSCMessage msg("/measuredSpeed"); */
-  /* msg.add(motorB->GetSpeed()); */
-  /* msg.add(motorB->GetCurrentPosition()); */
-  /* msg.add(motorB->GetMeasuredSpeed()); */
-  /* msg.add(motorB->GetCurrentSense()); */
-  /* _comm->SendOSCMessage(msg); */
   position_t posA = motorA->GetCurrentPosition();
   position_t posB = motorB->GetCurrentPosition();
   if (_lastAPositionSent != posA || (_lastBPositionSent != posB)) {
     OSCMessage msg("/pinne/currentPosition");
     msg.add(posA);
     msg.add(posB);
-    msg.add(motorA->GetSpeed());
-    msg.add(motorB->GetSpeed());
+    msg.add(motorA->GetPWM());
+    msg.add(motorB->GetPWM());
     msg.add(motorA->GetMeasuredSpeed());
     msg.add(motorB->GetMeasuredSpeed());
     _comm->SendOSCMessage(msg);
@@ -106,8 +100,8 @@ void PinneRobot::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
     if (msg.isString(0)) {
       char dirStr[16];
       msg.getString(0, dirStr, 16);
-      if (strcmp(dirStr, "manual") == 0) {
-        this->SetMotorControlMode(CONTROL_MODE_MANUAL);
+      if (strcmp(dirStr, "pwm") == 0) {
+        this->SetMotorControlMode(CONTROL_MODE_PWM);
       } else if (strcmp(dirStr, "targetPosition") == 0) {
         this->SetMotorControlMode(CONTROL_MODE_TARGET_POSITION);
       } else if (strcmp(dirStr, "targetSpeed") == 0) {
@@ -118,8 +112,8 @@ void PinneRobot::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
     if (_comm->HasQueryAddress(msg, initialOffset)) {
       controlMode_t mode = GetMotorControlMode();
       OSCMessage replyMsg("/");
-      if (mode == CONTROL_MODE_MANUAL) {
-        replyMsg.add("manual");
+      if (mode == CONTROL_MODE_PWM) {
+        replyMsg.add("pwm");
       } else if (mode == CONTROL_MODE_TARGET_POSITION) {
         replyMsg.add("targetPosition");
       } else if (mode == CONTROL_MODE_TARGET_SPEED) {

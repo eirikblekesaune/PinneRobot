@@ -7,7 +7,6 @@
 #include <OSCMessage.h>
 #include <PID_v1.h>
 #include <PinneComm.h>
-#include <SpeedRamping.h>
 #include <VNH5019Driver.h>
 
 // todo: implement private inheritance of PID in motor classes
@@ -44,7 +43,7 @@ class PinneMotor
           void Stop();
 
           void SetStop(int value);
-          void SetSpeed(int speed);
+          void SetPWM(int speed);
           void SetDirection(direction_t direction);
           void SetTargetPosition(position_t pos);
           void SetTargetSpeed(float value);
@@ -52,11 +51,8 @@ class PinneMotor
           void SetBrake(int brake);
           void SetMaxPosition(position_t maxPos);
           void SetMinPosition(position_t minPos);
-          void SetGoToSpeedScaling(int value);
-          void SetGoToSpeedRampUp(int value);
-          void SetGoToSpeedRampDown(int value);
 
-          int GetSpeed() { return static_cast<int>(_driver->GetSpeed()); };
+          int GetPWM() { return static_cast<int>(_driver->GetPWM()); };
           direction_t GetDirection() {
             return static_cast<direction_t>(_driver->GetDirection());
           };
@@ -70,14 +66,8 @@ class PinneMotor
           controlMode_t GetMotorControlMode() { return _motorControlMode; };
           void SetMotorControlMode(controlMode_t mode);
 
-          int GetGoToSpeedScaling() {
-            return static_cast<int>(_speedRamper->GetSpeedScaling() * 1000);
-          };
           float GetMeasuredSpeed();
           int GetCurrentSense() { return static_cast<int>(_measuredCurrent); };
-          int GetGoToSpeedRampDown() {
-            return static_cast<int>(_speedRamper->GetRampDown());
-          };
           int GetStop() { return _stoppingSpeed; };
 
           void GoToTargetPosition(position_t value);
@@ -136,17 +126,15 @@ class PinneMotor
           void _MinPositionReached();
           void _MaxPositionReached();
           void _GoingToTarget();
-          void _ManualModeUpdate();
+          void _PWMModeUpdate();
           void _TargetPositionModeUpdate();
           void _TargetSpeedModeUpdate();
 
-          void _UpdateSpeedRamp();
-          void _CalculateAndSetSpeed();
           void _SetBlocked(bool block){};
           stateChange_t _state;
 
           void _RouteStopMsg(OSCMessage &msg, int initialOffset);
-          void _RouteSpeedMsg(OSCMessage &msg, int initialOffset);
+          void _RouteBipolarPWMMsg(OSCMessage &msg, int initialOffset);
           void _RouteDirectionMsg(OSCMessage &msg, int initialOffset);
           void _RouteTargetPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteTargetSpeedMsg(OSCMessage &msg, int initialOffset);
@@ -158,14 +146,8 @@ class PinneMotor
           void _RouteGoToParkingPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteGoToTargetPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteMeasuredSpeedMsg(OSCMessage &msg, int initialOffset);
-          void _RouteGoToSpeedRampDownMsg(OSCMessage &msg, int initialOffset);
-          void _RouteGoToSpeedScalingMsg(OSCMessage &msg, int initialOffset);
           void _RouteEchoMessagesMsg(OSCMessage &msg, int initialOffset);
           void _RoutePIDParametersMsg(OSCMessage &msg, int initialOffset);
-          void _RouteBipolarSpeedMsg(OSCMessage &msg, int initialOffset);
-
-          // SpeedRamp
-          SpeedRamping *_speedRamper;
 };
 
 #endif
