@@ -7,3 +7,6 @@
 [submodule "Teensy/lib/FastFloatPID"]
 	path = Teensy/lib/FastFloatPID
 	url = git@github.com:macaba/FastFloatPID.git
+[submodule "Teensy/lib/Arduino-PID-Library"]
+	path = Teensy/lib/Arduino-PID-Library
+	url = git@github.com:br3ttb/Arduino-PID-Library.git

@@ -71,6 +71,18 @@ void PinneComm::ReturnQueryValue(command_t command, address_t address,
   _Udp.endPacket();
 }
 
+void PinneComm::ReturnQueryValue(command_t command, OSCMessage &replyMsg) {
+  String replyAddress = String();
+  replyAddress.reserve(64);
+  replyAddress.append("/pinne/");
+  replyAddress.append(CommandMap.at(command));
+  replyAddress.append("/:reply");
+  replyMsg.setAddress(replyAddress.c_str());
+  _Udp.beginPacket(*_targetIp, _targetPort);
+  replyMsg.send(_Udp);
+  _Udp.endPacket();
+}
+
 bool PinneComm::HasQueryAddress(OSCMessage &msg, int initialOffset) {
   int offset;
   offset = msg.match("/:query", initialOffset);

@@ -143,6 +143,7 @@ class PinneComm {
           void ReturnGetValue(command_t command, address_t address, int value);
           void ReturnQueryValue(command_t command, address_t address,
                                 OSCMessage &replyMsg);
+          void ReturnQueryValue(command_t command, OSCMessage &replyMsg);
           bool HasQueryAddress(OSCMessage &msg, int initialOffset);
           void NotifyStateChange(stateChange_t stateChange, address_t address);
           void DebugUnitPrint(address_t address, const char *);

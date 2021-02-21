@@ -3,9 +3,9 @@
 #include <Arduino.h>
 #include <Bounce.h>
 #include <Encoder.h>
-#include <FastFloatPID.h>
 #include <Metro.h>
 #include <OSCMessage.h>
+#include <PID_v1.h>
 #include <PinneComm.h>
 #include <SpeedRamping.h>
 #include <VNH5019Driver.h>
@@ -16,7 +16,10 @@ enum address_t : uint8_t;
 enum direction_t : uint8_t;
 enum stateChange_t : uint8_t;
 enum controlMode_t : uint8_t;
-typedef long position_t;
+typedef int position_t;
+#define PID_CLASS PID
+typedef double pidvalue_t;
+
 class PinneComm;
 
 class PinneMotor
@@ -58,7 +61,7 @@ class PinneMotor
             return static_cast<direction_t>(_driver->GetDirection());
           };
           position_t GetTargetPosition() { return _targetPosition; };
-          float GetTargetSpeed() { return _targetSpeed; };
+          float GetTargetSpeed() { return _targetSpeedPIDInput; };
           position_t GetCurrentPosition();
           int GetBrake() { return static_cast<int>(_driver->GetBrake()); };
           position_t GetMaxPosition() { return _maxPosition; };
@@ -107,19 +110,16 @@ class PinneMotor
           Encoder *_encoder;
           controlMode_t _motorControlMode;
 
-          FastFloatPID *_torquePID;
+          PID_CLASS *_speedPID;
+          int _speedometerInterval;
           Metro *_speedometerMetro;
           position_t _prevPosition;
-          float _targetSpeed;
-          float _torquePID_output;
-          float _kp;
-          float _ki;
-          float _kd;
-          double _measuredSpeed;
+          pidvalue_t _targetSpeedPIDInput;
+          pidvalue_t _targetSpeedPIDOutput;
+          pidvalue_t _measuredSpeed;
           void _UpdateSpeedometer();
           void _UpdateCurrentSense();
           float _measuredCurrent;
-          int _speedometerInterval;
 
           int _topStopSensorValue;
           int _slackStopSensorValue;
@@ -162,7 +162,6 @@ class PinneMotor
           void _RouteGoToSpeedScalingMsg(OSCMessage &msg, int initialOffset);
           void _RouteEchoMessagesMsg(OSCMessage &msg, int initialOffset);
           void _RoutePIDParametersMsg(OSCMessage &msg, int initialOffset);
-          void _RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset);
           void _RouteBipolarSpeedMsg(OSCMessage &msg, int initialOffset);
 
           // SpeedRamp

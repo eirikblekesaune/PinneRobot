@@ -35,6 +35,7 @@ PinneRobot::PinneRobot(PinneComm *comm) : _comm(comm) {
       new PinneMotor(motorBTopStopSensor, motorBSlackStopSensor,
                      motorBEncoderInterruptPinA, motorBEncoderInterruptPinB,
                      motorBCurrentSensePin, driverB_, ADDRESS_B, _comm);
+  SetMotorControlMode(CONTROL_MODE_MANUAL);
 }
 
 void PinneRobot::init()
@@ -55,21 +56,19 @@ void PinneRobot::update()
   /* msg.add(motorB->GetMeasuredSpeed()); */
   /* msg.add(motorB->GetCurrentSense()); */
   /* _comm->SendOSCMessage(msg); */
-  position_t pos = motorA->GetCurrentPosition();
-  if (_lastAPositionSent != pos) {
-    OSCMessage msg("/pinne/motorA/currentPosition");
-    msg.add(pos);
+  position_t posA = motorA->GetCurrentPosition();
+  position_t posB = motorB->GetCurrentPosition();
+  if (_lastAPositionSent != posA || (_lastBPositionSent != posB)) {
+    OSCMessage msg("/pinne/currentPosition");
+    msg.add(posA);
+    msg.add(posB);
+    msg.add(motorA->GetSpeed());
+    msg.add(motorB->GetSpeed());
     msg.add(motorA->GetMeasuredSpeed());
-    _comm->SendOSCMessage(msg);
-    _lastAPositionSent = pos;
-  }
-  pos = motorB->GetCurrentPosition();
-  if (_lastBPositionSent != pos) {
-    OSCMessage msg("/pinne/motorB/currentPosition");
-    msg.add(pos);
     msg.add(motorB->GetMeasuredSpeed());
     _comm->SendOSCMessage(msg);
-    _lastBPositionSent = pos;
+    _lastAPositionSent = posA;
+    _lastBPositionSent = posB;
   }
 }
 
@@ -77,6 +76,12 @@ void PinneRobot::GoToParkingPosition()
 {
   /* motorA->GoToParkingPosition(); */
   /* motorB->GoToParkingPosition(); */
+}
+
+void PinneRobot::SetMotorControlMode(controlMode_t mode) {
+  _motorControlMode = mode;
+  motorA->SetMotorControlMode(_motorControlMode);
+  motorB->SetMotorControlMode(_motorControlMode);
 }
 
 void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
@@ -89,5 +94,38 @@ void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   offset = msg.match("/motorB", initialOffset);
   if (offset) {
     motorB->routeOSC(msg, offset + initialOffset);
+  }
+  offset = msg.match("/motorControlMode", initialOffset);
+  if (offset) {
+    this->_RouteMotorControlModeMsg(msg, offset + initialOffset);
+  }
+}
+
+void PinneRobot::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
+  if (msg.size() > 0) {
+    if (msg.isString(0)) {
+      char dirStr[16];
+      msg.getString(0, dirStr, 16);
+      if (strcmp(dirStr, "manual") == 0) {
+        this->SetMotorControlMode(CONTROL_MODE_MANUAL);
+      } else if (strcmp(dirStr, "targetPosition") == 0) {
+        this->SetMotorControlMode(CONTROL_MODE_TARGET_POSITION);
+      } else if (strcmp(dirStr, "targetSpeed") == 0) {
+        this->SetMotorControlMode(CONTROL_MODE_TARGET_SPEED);
+      }
+    }
+  } else {
+    if (_comm->HasQueryAddress(msg, initialOffset)) {
+      controlMode_t mode = GetMotorControlMode();
+      OSCMessage replyMsg("/");
+      if (mode == CONTROL_MODE_MANUAL) {
+        replyMsg.add("manual");
+      } else if (mode == CONTROL_MODE_TARGET_POSITION) {
+        replyMsg.add("targetPosition");
+      } else if (mode == CONTROL_MODE_TARGET_SPEED) {
+        replyMsg.add("targetSpeed");
+      }
+      _comm->ReturnQueryValue(CMD_MOTOR_CONTROL_MODE, replyMsg);
+    }
   }
 }
