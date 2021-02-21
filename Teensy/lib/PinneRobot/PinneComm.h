@@ -28,7 +28,7 @@ struct PinneSettingsRaw {
 
 enum command_t : uint8_t {
   CMD_STOP,
-  CMD_SPEED,
+  CMD_BIPOLAR_PWM,
   CMD_DIRECTION,
   CMD_TARGET_POSITION,
   CMD_CURRENT_POSITION,
@@ -40,12 +40,10 @@ enum command_t : uint8_t {
   CMD_GOTO_PARKING_POSITION,
   CMD_GOTO_TARGET,
   CMD_MEASURED_SPEED,
-  CMD_GOTO_SPEED_RAMP_DOWN,
-  CMD_GOTO_SPEED_SCALING,
   CMD_ECHO_MESSAGES,
   CMD_PID_PARAMETERS,
   CMD_MOTOR_CONTROL_MODE,
-  CMD_TARGET_SPEED,
+  CMD_BIPOLAR_TARGET_SPEED,
   CMD_UNKNOWN
 };
 
@@ -93,9 +91,9 @@ const std::map<controlMode_t, String> ControlModeMap{
 
 const std::map<command_t, String> CommandMap{
     {CMD_STOP, "stop"},
-    {CMD_SPEED, "bipolarPWM"},
+    {CMD_BIPOLAR_PWM, "bipolarPWM"},
     {CMD_TARGET_POSITION, "targetPosition"},
-    {CMD_TARGET_SPEED, "targetSpeed"},
+    {CMD_BIPOLAR_TARGET_SPEED, "bipolarTargetSpeed"},
     {CMD_CURRENT_POSITION, "currentPosition"},
     {CMD_BRAKE, "brake"},
     {CMD_STATE_CHANGE, "stateChange"},

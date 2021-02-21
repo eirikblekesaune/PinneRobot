@@ -39,8 +39,7 @@ void PinneMotor::init() {
       new PID_CLASS(&_measuredSpeed, &_targetSpeedPIDOutput,
                     &_targetSpeedPIDInput, 2.0, 50.0, 10.0, P_ON_M, DIRECT);
 
-  _speedPID->SetOutputLimits(static_cast<double>(_driver->SPEED_MIN),
-                             static_cast<double>(1000));
+  _speedPID->SetOutputLimits(-1000.0, 1000.0);
   _speedPID->SetSampleTime(_speedometerInterval);
 
   _driver->init();
@@ -64,20 +63,39 @@ void PinneMotor::init() {
 
 position_t PinneMotor::GetCurrentPosition() { return _encoder->read(); };
 
-void PinneMotor::Stop() { _driver->SetPWM(VNH5019Driver::SPEED_STOP); }
-
-void PinneMotor::SetStop(int value) {
-  _stoppingSpeed = constrain(value, 0, 5000);
-  _driver->SetPWM(VNH5019Driver::SPEED_STOP);
+void PinneMotor::Stop() {
+  switch (_motorControlMode) {
+  case CONTROL_MODE_PWM:
+    this->SetPWM(0);
+    break;
+  case CONTROL_MODE_TARGET_SPEED:
+    this->SetBipolarTargetSpeed(0.0);
+    break;
+  case CONTROL_MODE_TARGET_POSITION:
+    this->SetPWM(0);
+    break;
+  }
 }
 
 void PinneMotor::SetPWM(int speed) {
   if (speed <= 0) {
-    Stop();
+    _driver->SetPWM(0);
   } else {
     if (!IsBlocked()) {
       _driver->SetPWM(speed);
     }
+  }
+}
+
+void PinneMotor::SetBipolarPWM(int bp) {
+  if (bp == 0) {
+    this->SetPWM(0);
+  } else if (bp > 0) {
+    this->SetDirection(DIRECTION_DOWN);
+    this->SetPWM(bp);
+  } else {
+    this->SetDirection(DIRECTION_UP);
+    this->SetPWM(abs(bp));
   }
 }
 
@@ -186,10 +204,13 @@ void PinneMotor::_TargetPositionModeUpdate() {
 
 void PinneMotor::_TargetSpeedModeUpdate() {
   _speedPID->Compute();
-  this->SetPWM(static_cast<int>(_targetSpeedPIDOutput));
-  /* OSCMessage msg("/PID"); */
-  /* msg.add(_targetSpeedPIDOutput); */
-  /* _comm->SendOSCMessage(msg); */
+  this->SetBipolarPWM(static_cast<int>(_targetSpeedPIDOutput));
+  /* static Metro metro(100); */
+  /* if (metro.check() == 1) { */
+  /*   OSCMessage msg("/PID"); */
+  /*   msg.add(_targetSpeedPIDOutput); */
+  /*   _comm->SendOSCMessage(msg); */
+  /* } */
 }
 
 void PinneMotor::_UpdateSpeedometer() {
@@ -340,7 +361,9 @@ void PinneMotor::SetTargetPosition(position_t targetPosition) {
   }
 }
 
-void PinneMotor::SetTargetSpeed(float value) { _targetSpeedPIDInput = value; }
+void PinneMotor::SetBipolarTargetSpeed(float value) {
+  _targetSpeedPIDInput = value;
+}
 
 void PinneMotor::SetCurrentPosition(position_t currentPosition) {
   currentPosition =
@@ -499,30 +522,24 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
 }
 
 void PinneMotor::_RouteStopMsg(OSCMessage &msg, int initialOffset) {
-  if ((msg.size() > 0) && (msg.isInt(0))) {
-    this->SetStop(msg.getInt(0));
-  } else {
     this->Stop();
-  }
 }
 
 void PinneMotor::_RouteBipolarPWMMsg(OSCMessage &msg, int initialOffset) {
   if ((msg.size() > 0) && (msg.isInt(0))) {
-    int bp = msg.getInt(0);
-    if (bp == 0) {
-      this->SetPWM(0);
-    } else if (bp > 0) {
-      this->SetDirection(DIRECTION_UP);
-      this->SetPWM(bp);
-    } else {
-      this->SetDirection(DIRECTION_DOWN);
-      this->SetPWM(abs(bp));
+    if (_motorControlMode == CONTROL_MODE_PWM) {
+      int bp = msg.getInt(0);
+      this->SetBipolarPWM(bp);
     }
   } else {
     if (_comm->HasQueryAddress(msg, initialOffset)) {
+      int bpPWM = GetPWM();
+      if (GetDirection() == DIRECTION_UP) {
+        bpPWM = -bpPWM;
+      }
       OSCMessage replyMsg("/");
       replyMsg.add(GetPWM());
-      _comm->ReturnQueryValue(CMD_SPEED, _address, replyMsg);
+      _comm->ReturnQueryValue(CMD_BIPOLAR_PWM, _address, replyMsg);
     }
   }
 }
@@ -574,12 +591,12 @@ void PinneMotor::_RouteTargetPositionMsg(OSCMessage &msg, int initialOffset) {
 void PinneMotor::_RouteTargetSpeedMsg(OSCMessage &msg, int initialOffset) {
   if ((msg.size() > 0) && (msg.isFloat(0))) {
     float pos = msg.getFloat(0);
-    this->SetTargetSpeed(pos);
+    this->SetBipolarTargetSpeed(pos);
   } else {
     if (_comm->HasQueryAddress(msg, initialOffset)) {
       OSCMessage replyMsg("/");
-      replyMsg.add(GetTargetSpeed());
-      _comm->ReturnQueryValue(CMD_TARGET_SPEED, _address, replyMsg);
+      replyMsg.add(GetBipolarTargetSpeed());
+      _comm->ReturnQueryValue(CMD_BIPOLAR_TARGET_SPEED, _address, replyMsg);
     }
   }
 }

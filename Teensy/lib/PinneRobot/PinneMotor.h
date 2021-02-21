@@ -44,9 +44,10 @@ class PinneMotor
 
           void SetStop(int value);
           void SetPWM(int speed);
+          void SetBipolarPWM(int speed);
           void SetDirection(direction_t direction);
           void SetTargetPosition(position_t pos);
-          void SetTargetSpeed(float value);
+          void SetBipolarTargetSpeed(float value);
           void SetCurrentPosition(position_t pos);
           void SetBrake(int brake);
           void SetMaxPosition(position_t maxPos);
@@ -57,7 +58,7 @@ class PinneMotor
             return static_cast<direction_t>(_driver->GetDirection());
           };
           position_t GetTargetPosition() { return _targetPosition; };
-          float GetTargetSpeed() { return _targetSpeedPIDInput; };
+          float GetBipolarTargetSpeed() { return _targetSpeedPIDInput; };
           position_t GetCurrentPosition();
           int GetBrake() { return static_cast<int>(_driver->GetBrake()); };
           position_t GetMaxPosition() { return _maxPosition; };
@@ -68,7 +69,6 @@ class PinneMotor
 
           float GetMeasuredSpeed();
           int GetCurrentSense() { return static_cast<int>(_measuredCurrent); };
-          int GetStop() { return _stoppingSpeed; };
 
           void GoToTargetPosition(position_t value);
           void GoToTargetPosition();
