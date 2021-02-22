@@ -74,8 +74,6 @@ enum stateChange_t : uint8_t {
   STOPPED,           // Stopped manually
   GOING_DOWN,        // direction set to up
   GOING_UP,          // directiom set to down
-  STOPPED_AT_TARGET, //
-  GOING_TO_TARGET,
   BLOCKED_BY_TOP_SENSOR, // The stop sensor was hit
   BLOCKED_BY_SLACK_SENSOR,
   BLOCKED_BY_MIN_POSITION,     // Position counter is below range
@@ -116,8 +114,6 @@ const std::map<stateChange_t, String> StateChangeMap{
     {STOPPED, "stopped"},
     {GOING_DOWN, "going_down"},
     {GOING_UP, "going_up"},
-    {STOPPED_AT_TARGET, "stopped_at_target"},
-    {GOING_TO_TARGET, "going_to_target"},
     {BLOCKED_BY_TOP_SENSOR, "blocked_by_top_sensor"},
     {BLOCKED_BY_SLACK_SENSOR, "blocked_by_slack_sensor"},
     {BLOCKED_BY_MIN_POSITION, "blocked_by_min_position"},

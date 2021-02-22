@@ -13,7 +13,7 @@ PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
   _minPosition = POSITION_ALL_UP;
   _maxPosition = POSITION_DEFAULT_MAX;
   _targetPosition = TARGET_NONE;
-  _targetSpeedPIDInput = 0.0;
+  _targetSpeedPIDSetpoint = 0.0;
   _currentPosition = POSITION_ALL_UP;
   _prevPosition = _currentPosition;
   _measuredSpeed = 0.0;
@@ -37,10 +37,12 @@ void PinneMotor::init() {
 
   _speedPID =
       new PID_CLASS(&_measuredSpeed, &_targetSpeedPIDOutput,
-                    &_targetSpeedPIDInput, 2.0, 50.0, 10.0, P_ON_M, DIRECT);
+                    &_targetSpeedPIDSetpoint, 2.0, 1000.0, 1.0, P_ON_M, DIRECT);
 
-  _speedPID->SetOutputLimits(-1000.0, 1000.0);
+  _speedPID->SetOutputLimits(-_driver->SPEED_MAX, _driver->SPEED_MAX);
   _speedPID->SetSampleTime(_speedometerInterval);
+  _targetSpeedStopThreshold = 0.1;
+  _targetSpeedState = TARGET_SPEED_STOPPED;
 
   _driver->init();
   _driver->SetDirection(DIRECTION_UP);
@@ -147,45 +149,58 @@ bool PinneMotor::IsBlocked() {
 
 // Read all sensor values and check positions
 // Stop motor if needed
-void PinneMotor::UpdateState() {
+
+void PinneMotor::Update() {
   ReadTopStopSensor();
   ReadSlackStopSensor();
+  CheckPositionLimits();
   _UpdateSpeedometer();
   _UpdateCurrentSense();
-  if ((_state == BLOCKED_BY_TOP_SENSOR) ||
-      (_state == BLOCKED_BY_SLACK_SENSOR)) { // sensors have priority over
-                                             // position lilmits
+  this->UpdateState();
+  switch (_motorControlMode) {
+  case CONTROL_MODE_PWM:
+    this->_PWMModeUpdate();
+    break;
+  case CONTROL_MODE_TARGET_POSITION:
+    this->_TargetPositionModeUpdate();
+    break;
+  case CONTROL_MODE_TARGET_SPEED:
+    this->_TargetSpeedModeUpdate();
+    break;
+  };
+}
 
-  } else {
-    position_t currPosition = GetCurrentPosition();
-    position_t minPosition = GetMinPosition();
-    if (currPosition < minPosition) {
-      _MinPositionReached();
-    } else if (currPosition > GetMaxPosition()) {
-      _MaxPositionReached();
+void PinneMotor::UpdateState() {
+  if (_state < BLOCKED_BY_TOP_SENSOR) {
+    if (GetPWM() == 0) {
+      _Stopped();
     } else {
-      switch (_motorControlMode) {
-      case CONTROL_MODE_PWM:
-        this->_PWMModeUpdate();
-        break;
-      case CONTROL_MODE_TARGET_POSITION:
-        this->_TargetPositionModeUpdate();
-        break;
-      case CONTROL_MODE_TARGET_SPEED:
-        this->_TargetSpeedModeUpdate();
-        break;
-      };
+      direction_t direction = GetDirection();
+      if (direction == DIRECTION_DOWN) {
+        _GoingDown();
+      } else {
+        _GoingUp();
+      }
     }
   }
 }
 
-void PinneMotor::_PWMModeUpdate() {
-  direction_t direction = GetDirection();
-  if (direction == DIRECTION_DOWN) {
-    _GoingDown();
+void PinneMotor::CheckPositionLimits() {
+  position_t currPosition = GetCurrentPosition();
+  position_t minPosition = GetMinPosition();
+  if ((_state == BLOCKED_BY_TOP_SENSOR) ||
+      (_state == BLOCKED_BY_SLACK_SENSOR)) {
+
   } else {
-    _GoingUp();
+    if (currPosition < minPosition) {
+      _MinPositionReached();
+    } else if (currPosition > GetMaxPosition()) {
+      _MaxPositionReached();
+    };
   }
+}
+
+void PinneMotor::_PWMModeUpdate() {
 }
 
 void PinneMotor::_TargetPositionModeUpdate() {
@@ -204,7 +219,35 @@ void PinneMotor::_TargetPositionModeUpdate() {
 
 void PinneMotor::_TargetSpeedModeUpdate() {
   _speedPID->Compute();
-  this->SetBipolarPWM(static_cast<int>(_targetSpeedPIDOutput));
+  if (IsBlocked()) {
+    if (_targetSpeedState != TARGET_SPEED_STOPPED) {
+      _targetSpeedState = TARGET_SPEED_STOPPED;
+      /* _speedPID->SetMode(MANUAL); */
+      this->SetBipolarPWM(0);
+    }
+  }
+  if ((_targetSpeedPIDSetpoint < _targetSpeedStopThreshold) &&
+      (_targetSpeedPIDSetpoint > -_targetSpeedStopThreshold)) {
+    if (_targetSpeedState != TARGET_SPEED_STOPPED) {
+      /* _speedPID->SetMode(MANUAL); */
+      this->SetBipolarPWM(0);
+      _targetSpeedState = TARGET_SPEED_STOPPED;
+    }
+  } else {
+    if (_targetSpeedPIDSetpoint >= _targetSpeedStopThreshold) {
+      if (_targetSpeedState != TARGET_SPEED_GOING_DOWN) {
+        _targetSpeedState = TARGET_SPEED_GOING_DOWN;
+        /* _speedPID->SetMode(AUTOMATIC); */
+      }
+    } else {
+      if (_targetSpeedState != TARGET_SPEED_GOING_UP) {
+        _targetSpeedState = TARGET_SPEED_GOING_UP;
+        /* _speedPID->SetMode(AUTOMATIC); */
+      }
+    }
+    /* _speedPID->Compute(); */
+    this->SetBipolarPWM(static_cast<int>(_targetSpeedPIDOutput));
+  }
   /* static Metro metro(100); */
   /* if (metro.check() == 1) { */
   /*   OSCMessage msg("/PID"); */
@@ -287,56 +330,53 @@ void PinneMotor::_SlackStopSensorIn() {
   }
 }
 
+void PinneMotor::_Stopped() {
+  if (_state != STOPPED) {
+    _state = STOPPED;
+    _comm->NotifyStateChange(STOPPED, _address);
+  }
+}
+
 void PinneMotor::_GoingUp() {
   if (_state != GOING_UP) {
-    _comm->NotifyStateChange(GOING_UP, _address);
     _state = GOING_UP;
+    _comm->NotifyStateChange(GOING_UP, _address);
   }
 }
 
 void PinneMotor::_GoingDown() {
   if (_state != GOING_DOWN) {
-    _comm->NotifyStateChange(GOING_DOWN, _address);
     _state = GOING_DOWN;
+    _comm->NotifyStateChange(GOING_DOWN, _address);
   }
 }
 
 void PinneMotor::_AbsMinPositionReached() {
   if (_state != BLOCKED_BY_ABS_MIN_POSITION) {
     Stop();
-    _comm->NotifyStateChange(BLOCKED_BY_ABS_MIN_POSITION, _address);
     _state = BLOCKED_BY_ABS_MIN_POSITION;
+    _comm->NotifyStateChange(BLOCKED_BY_ABS_MIN_POSITION, _address);
   }
 }
 
 void PinneMotor::_MinPositionReached() {
   if (_state != BLOCKED_BY_MIN_POSITION) {
     Stop();
-    _comm->NotifyStateChange(BLOCKED_BY_MIN_POSITION, _address);
     _state = BLOCKED_BY_MIN_POSITION;
+    _comm->NotifyStateChange(BLOCKED_BY_MIN_POSITION, _address);
   }
 }
 
 void PinneMotor::_MaxPositionReached() {
   if (_state != BLOCKED_BY_MAX_POSITION) {
     Stop();
-    _comm->NotifyStateChange(BLOCKED_BY_MAX_POSITION, _address);
     _state = BLOCKED_BY_MAX_POSITION;
+    _comm->NotifyStateChange(BLOCKED_BY_MAX_POSITION, _address);
   }
 }
 
 void PinneMotor::_TargetReached() {
-  if (_state != STOPPED_AT_TARGET) {
     Stop();
-    _targetPosition = TARGET_NONE;
-    _comm->NotifyStateChange(STOPPED_AT_TARGET, _address);
-    _state = STOPPED_AT_TARGET;
-  }
-}
-
-void PinneMotor::_GoingToTarget() {
-  _state = GOING_TO_TARGET;
-  _comm->NotifyStateChange(GOING_TO_TARGET, _address);
 }
 
 void PinneMotor::SetTargetPosition(position_t targetPosition) {
@@ -362,7 +402,7 @@ void PinneMotor::SetTargetPosition(position_t targetPosition) {
 }
 
 void PinneMotor::SetBipolarTargetSpeed(float value) {
-  _targetSpeedPIDInput = value;
+  _targetSpeedPIDSetpoint = value;
 }
 
 void PinneMotor::SetCurrentPosition(position_t currentPosition) {
@@ -395,28 +435,6 @@ void PinneMotor::GoToParkingPosition(int speed) {
 
 void PinneMotor::GoToParkingPosition() {
   GoToParkingPosition(VNH5019Driver::SPEED_MAX / 4);
-}
-
-void PinneMotor::GoToTargetPosition() {
-  if (GetTargetPosition() != TARGET_NONE) {
-    _GoingToTarget();
-  }
-}
-
-void PinneMotor::GoToTargetPosition(position_t value) {
-  if (value > 0) {
-    if (GetTargetPosition() != TARGET_NONE) {
-      _GoingToTarget();
-    }
-  } else {
-    if (GetDirection() ==
-        DIRECTION_DOWN) // cancel goto target when speed is set
-    {
-      _GoingDown();
-    } else {
-      _GoingUp();
-    }
-  }
 }
 
 void PinneMotor::SetMotorControlMode(controlMode_t mode) {
@@ -673,9 +691,6 @@ void PinneMotor::_RouteGoToParkingPositionMsg(OSCMessage &msg,
 
 void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
                                              int initialOffset) {
-  if (msg.size() == 0) {
-    this->GoToTargetPosition();
-  }
 }
 
 void PinneMotor::_RouteMeasuredSpeedMsg(OSCMessage &msg, int initialOffset) {

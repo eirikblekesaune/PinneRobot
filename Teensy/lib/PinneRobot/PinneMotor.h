@@ -21,6 +21,13 @@ typedef double pidvalue_t;
 
 class PinneComm;
 
+enum targetSpeedState_t : uint8_t {
+  TARGET_SPEED_STOPPED,
+  TARGET_SPEED_GOING_UP,
+  TARGET_SPEED_GOING_DOWN,
+  TARGET_SPEED_REACHED_TARGET
+};
+
 class PinneMotor
 {
 	public:
@@ -28,7 +35,6 @@ class PinneMotor
                      int encoderInterruptPinA, int encoderInterruptPinB,
                      int currentSensePin, VNH5019Driver *driver,
                      address_t address, PinneComm *comm);
-          //		enum DIRECTION { DIRECTION_DOWN, DIRECTION_UP };
           const int TOP_SENSOR_IN = 1;
           const int TOP_SENSOR_OUT = 0;
           const int SLACK_SENSOR_IN = 1;
@@ -58,7 +64,7 @@ class PinneMotor
             return static_cast<direction_t>(_driver->GetDirection());
           };
           position_t GetTargetPosition() { return _targetPosition; };
-          float GetBipolarTargetSpeed() { return _targetSpeedPIDInput; };
+          float GetBipolarTargetSpeed() { return _targetSpeedPIDSetpoint; };
           position_t GetCurrentPosition();
           int GetBrake() { return static_cast<int>(_driver->GetBrake()); };
           position_t GetMaxPosition() { return _maxPosition; };
@@ -70,13 +76,13 @@ class PinneMotor
           float GetMeasuredSpeed();
           int GetCurrentSense() { return static_cast<int>(_measuredCurrent); };
 
-          void GoToTargetPosition(position_t value);
-          void GoToTargetPosition();
 
           bool IsBlocked();
+          void Update();
           void UpdateState();
           void ReadTopStopSensor();
           void ReadSlackStopSensor();
+          void CheckPositionLimits();
           void GoToParkingPosition(int speed);
           void GoToParkingPosition();
 
@@ -104,9 +110,10 @@ class PinneMotor
           int _speedometerInterval;
           Metro *_speedometerMetro;
           position_t _prevPosition;
-          pidvalue_t _targetSpeedPIDInput;
+          pidvalue_t _targetSpeedPIDSetpoint;
           pidvalue_t _targetSpeedPIDOutput;
           pidvalue_t _measuredSpeed;
+          targetSpeedState_t _targetSpeedState;
           void _UpdateSpeedometer();
           void _UpdateCurrentSense();
           float _measuredCurrent;
@@ -115,6 +122,8 @@ class PinneMotor
           int _slackStopSensorValue;
           bool _blocked;
           int _stoppingSpeed;
+          float _targetSpeedStopThreshold;
+          void _Stopped();
           void _GoingUp();
           void _GoingDown();
           void _TargetReached();
@@ -125,12 +134,10 @@ class PinneMotor
           void _AbsMinPositionReached();
           void _MinPositionReached();
           void _MaxPositionReached();
-          void _GoingToTarget();
           void _PWMModeUpdate();
           void _TargetPositionModeUpdate();
           void _TargetSpeedModeUpdate();
 
-          void _SetBlocked(bool block){};
           stateChange_t _state;
 
           void _RouteStopMsg(OSCMessage &msg, int initialOffset);

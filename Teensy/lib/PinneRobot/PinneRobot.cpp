@@ -48,8 +48,8 @@ void PinneRobot::init()
 
 void PinneRobot::update()
 {
-  motorA->UpdateState();
-  motorB->UpdateState();
+  motorA->Update();
+  motorB->Update();
   position_t posA = motorA->GetCurrentPosition();
   position_t posB = motorB->GetCurrentPosition();
   if (_lastAPositionSent != posA || (_lastBPositionSent != posB)) {
