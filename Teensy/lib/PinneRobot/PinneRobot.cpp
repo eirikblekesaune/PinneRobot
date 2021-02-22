@@ -56,8 +56,8 @@ void PinneRobot::update()
     OSCMessage msg("/pinne/currentPosition");
     msg.add(posA);
     msg.add(posB);
-    msg.add(motorA->GetPWM());
-    msg.add(motorB->GetPWM());
+    msg.add(motorA->GetBipolarTargetSpeed());
+    msg.add(motorB->GetBipolarTargetSpeed());
     msg.add(motorA->GetMeasuredSpeed());
     msg.add(motorB->GetMeasuredSpeed());
     _comm->SendOSCMessage(msg);
