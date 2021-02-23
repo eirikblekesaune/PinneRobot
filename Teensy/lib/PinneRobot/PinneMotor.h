@@ -7,6 +7,7 @@
 #include <OSCMessage.h>
 #include <PID_v1.h>
 #include <PinneComm.h>
+#include <TargetPositionMover.h>
 #include <VNH5019Driver.h>
 
 // todo: implement private inheritance of PID in motor classes
@@ -20,6 +21,7 @@ typedef int position_t;
 typedef double pidvalue_t;
 
 class PinneComm;
+class TargetPositionMover;
 
 enum targetSpeedState_t : uint8_t {
   TARGET_SPEED_STOPPED,
@@ -85,6 +87,12 @@ class PinneMotor
           void CheckPositionLimits();
           void GoToParkingPosition(int speed);
           void GoToParkingPosition();
+          void GoToTargetPositionByDuration(int targetPosition, int duration,
+                                            double minSpeed, double beta,
+                                            double skirtRatio);
+          void GoToTargetPositionByMaxSpeed(int targetPosition, double maxSpeed,
+                                            double minSpeed, double beta,
+                                            double skirtRatio);
 
           bool routeOSC(OSCMessage &msg, int initialOffset);
 
@@ -96,6 +104,7 @@ class PinneMotor
           int _encoderInterruptPinA;
           int _encoderInterruptPinB;
           int _currentSensePin;
+          TargetPositionMover *_targetPositionMover;
           VNH5019Driver *_driver;
           address_t _address;
           PinneComm *_comm;

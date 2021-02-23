@@ -27,6 +27,7 @@ void PinneMotor::init() {
   pinMode(_topStopSensorPin, INPUT_PULLUP);
   pinMode(_slackStopSensorPin, INPUT_PULLUP);
   pinMode(_currentSensePin, INPUT);
+  _targetPositionMover = new TargetPositionMover();
   SetMotorControlMode(CONTROL_MODE_PWM);
   _measuredCurrent = static_cast<float>(analogRead(_currentSensePin));
   _topStopButton = new Bounce(_topStopSensorPin, 5);
@@ -433,6 +434,28 @@ void PinneMotor::GoToParkingPosition(int speed) {
   }
 }
 
+void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
+                                              double minSpeed, double beta,
+                                              double skirtRatio) {
+  if (!_targetPositionMover->IsMoving()) {
+    position_t currentPosition = GetCurrentPosition();
+    _targetPositionMover->PlanMoveByDuration(
+        currentPosition, targetPosition, duration, minSpeed, beta, skirtRatio);
+    _targetPositionMover->StartMove();
+  }
+}
+
+void PinneMotor::GoToTargetPositionByMaxSpeed(int targetPosition,
+                                              double minSpeed, double maxSpeed,
+                                              double beta, double skirtRatio) {
+  if (!_targetPositionMover->IsMoving()) {
+    position_t currentPosition = GetCurrentPosition();
+    _targetPositionMover->PlanMoveByMaxSpeed(
+        currentPosition, targetPosition, maxSpeed, minSpeed, beta, skirtRatio);
+    _targetPositionMover->StartMove();
+  }
+}
+
 void PinneMotor::GoToParkingPosition() {
   GoToParkingPosition(VNH5019Driver::SPEED_MAX / 4);
 }
@@ -691,6 +714,44 @@ void PinneMotor::_RouteGoToParkingPositionMsg(OSCMessage &msg,
 
 void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
                                              int initialOffset) {
+  if (GetMotorControlMode() == CONTROL_MODE_TARGET_POSITION) {
+    if (msg.size() >= 2 && (msg.isInt(0))) {
+      int targetPosition = msg.getInt(0);
+      double minSpeed, beta, skirtRatio;
+      if (msg.size() >= 3 && (msg.isFloat(2))) {
+        minSpeed = msg.getFloat(2);
+      } else {
+        minSpeed = _targetSpeedStopThreshold;
+      }
+      if (msg.size() >= 4 && (msg.isFloat(3))) {
+        beta = msg.getFloat(3);
+      } else {
+        beta = 3.0;
+      }
+      if (msg.size() >= 5) {
+        skirtRatio = msg.getFloat(4);
+      } else {
+        skirtRatio = 0.1;
+      }
+      int offset = msg.match("/byDuration", initialOffset);
+      if (offset) {
+        if (msg.isInt(1)) {
+          int duration = msg.getInt(1);
+          int beta, minSpeed;
+          this->GoToTargetPositionByDuration(targetPosition, duration, minSpeed,
+                                             beta, skirtRatio);
+        }
+      }
+      offset = msg.match("/byMaxSpeed", initialOffset);
+      if (offset) {
+        if (msg.isFloat(1)) {
+          double maxSpeed = msg.getFloat(1);
+          this->GoToTargetPositionByMaxSpeed(targetPosition, maxSpeed, minSpeed,
+                                             beta, skirtRatio);
+        }
+      }
+    }
+  }
 }
 
 void PinneMotor::_RouteMeasuredSpeedMsg(OSCMessage &msg, int initialOffset) {
