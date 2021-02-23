@@ -16,6 +16,7 @@ enum targetPositionMode_t : uint8_t {
 };
 
 enum targetPositionMoverState_t : uint8_t {
+  TARGET_POSITION_MOVER_STATE_NOT_READY,
   TARGET_POSITION_MOVER_STATE_READY,
   TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT,
   TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT,
@@ -50,7 +51,7 @@ public:
   bool DidReachTarget() {
     return _state == TARGET_POSITION_MOVER_STATE_REACHED_TARGET;
   };
-  double GetNextSpeedValue();
+  double GetCurrentSpeed();
   position_t GetStartPosition() { return _startPosition; };
   position_t GetTargetPosition() { return _targetPosition; };
   int GetNumTicks() { return _numTicks; };
@@ -96,7 +97,7 @@ private:
   int _skirtSegmentDuration;
   unsigned long _previousUpdateTime;
   direction_t _direction;
-  double _currentSpeedValue;
+  double _currentSpeed;
   double _minSpeed;
   double _maxSpeed;
   double _beta;

@@ -209,7 +209,7 @@ void PinneMotor::_TargetPositionModeUpdate() {
   _targetPositionMover->Update(currentPosition);
   if (_targetPositionMover->IsMoving()) {
     double targetSpeed;
-    targetSpeed = _targetPositionMover->GetNextSpeedValue();
+    targetSpeed = _targetPositionMover->GetCurrentSpeed();
     this->SetBipolarTargetSpeed(targetSpeed);
   } else {
     if (_targetPositionMover->DidReachTarget()) {
