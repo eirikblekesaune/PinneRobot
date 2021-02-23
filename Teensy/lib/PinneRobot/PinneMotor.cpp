@@ -472,6 +472,7 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
       break;
     case CONTROL_MODE_TARGET_SPEED:
       _speedPID->SetMode(MANUAL);
+      this->SetBipolarTargetSpeed(0.0);
       break;
     }
 
@@ -482,6 +483,8 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
       break;
     case CONTROL_MODE_TARGET_SPEED:
       _speedPID->SetMode(AUTOMATIC);
+      this->SetBipolarTargetSpeed(
+          0.0); // TODO: Could use measuredSpeed here for bumpless transistion
       break;
     }
   }
@@ -615,8 +618,10 @@ void PinneMotor::_RouteTargetPositionMsg(OSCMessage &msg, int initialOffset) {
 
 void PinneMotor::_RouteTargetSpeedMsg(OSCMessage &msg, int initialOffset) {
   if ((msg.size() > 0) && (msg.isFloat(0))) {
-    float pos = msg.getFloat(0);
-    this->SetBipolarTargetSpeed(pos);
+    if (GetMotorControlMode() == CONTROL_MODE_TARGET_SPEED) {
+      float pos = msg.getFloat(0);
+      this->SetBipolarTargetSpeed(pos);
+    }
   } else {
     if (_comm->HasQueryAddress(msg, initialOffset)) {
       OSCMessage replyMsg("/");
