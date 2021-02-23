@@ -54,6 +54,8 @@ void TargetPositionMover::_CalculateFadeSegmentBuffer() {
     double t = inc * i;
     _fadeSegmentBuffer[i] =
         _fadeSegmentBufferSize / (1.0 + pow((t / (1.0 - t)), -_beta));
+    _fadeSegmentBuffer[i] =
+        _fadeSegmentBuffer[i] / (_maxSpeed - _minSpeed) + _minSpeed;
   }
 }
 
