@@ -586,23 +586,7 @@ void PinneMotor::_RouteBipolarPWMMsg(OSCMessage &msg, int initialOffset) {
 }
 
 void PinneMotor::_RouteDirectionMsg(OSCMessage &msg, int initialOffset) {
-  if (msg.size() > 0) {
-    direction_t direction;
-    if (msg.isInt(0)) {
-      direction = static_cast<direction_t>(msg.getInt(0));
-      this->SetDirection(direction);
-    } else if (msg.isString(0)) {
-      char dirStr[8];
-      msg.getString(0, dirStr, 8);
-      if (strcmp(dirStr, "up") == 0) {
-        direction = DIRECTION_UP;
-        this->SetDirection(direction);
-      } else if (strcmp(dirStr, "down") == 0) {
-        direction = DIRECTION_DOWN;
-        this->SetDirection(direction);
-      }
-    }
-  } else {
+  if (msg.size() == 0) {
     if (_comm->HasQueryAddress(msg, initialOffset)) {
       direction_t dir = GetDirection();
       OSCMessage replyMsg("/");
