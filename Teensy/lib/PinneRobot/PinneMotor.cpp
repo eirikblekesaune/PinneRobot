@@ -205,15 +205,16 @@ void PinneMotor::_PWMModeUpdate() {
 }
 
 void PinneMotor::_TargetPositionModeUpdate() {
-  position_t currPosition = GetCurrentPosition();
-  direction_t direction = GetDirection();
-  if (direction == DIRECTION_DOWN) {
-    if ((_targetPosition != TARGET_NONE) && (currPosition > _targetPosition)) {
-      _TargetReached();
-    }
+  position_t currentPosition = GetCurrentPosition();
+  _targetPositionMover->Update(currentPosition);
+  if (_targetPositionMover->IsMoving()) {
+    double targetSpeed;
+    targetSpeed = _targetPositionMover->GetNextSpeedValue();
+    this->SetBipolarTargetSpeed(targetSpeed);
   } else {
-    if ((_targetPosition != TARGET_NONE) && (currPosition < _targetPosition)) {
-      _TargetReached();
+    if (_targetPositionMover->DidReachTarget()) {
+      // target was reached
+      _targetPositionMover->StopMove();
     }
   }
 }
@@ -717,7 +718,7 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
       } else {
         beta = 3.0;
       }
-      if (msg.size() >= 5) {
+      if (msg.size() >= 5 && (msg.isFloat(4))) {
         skirtRatio = msg.getFloat(4);
       } else {
         skirtRatio = 0.1;
@@ -726,7 +727,6 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
       if (offset) {
         if (msg.isInt(1)) {
           int duration = msg.getInt(1);
-          int beta, minSpeed;
           this->GoToTargetPositionByDuration(targetPosition, duration, minSpeed,
                                              beta, skirtRatio);
         }

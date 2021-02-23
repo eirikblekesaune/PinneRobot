@@ -1,6 +1,7 @@
 #ifndef TARGET_POSITION_MOVER_H
 #define TARGET_POSITION_MOVER_H
 #include <Arduino.h>
+#include <Metro.h>
 #include <PinneComm.h>
 #include <PinneMotor.h>
 #include <PinneRobot.h>
@@ -12,6 +13,14 @@ enum targetPositionMode_t : uint8_t {
   TARGET_POSITION_MODE_BY_DURATION,
   TARGET_POSITION_MODE_BY_MAX_SPEED,
   TARGET_POSITION_MODE_UNKNOWN
+};
+
+enum targetPositionMoverState_t : uint8_t {
+  TARGET_POSITION_MOVER_STATE_READY,
+  TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT,
+  TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT,
+  TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT,
+  TARGET_POSITION_MOVER_STATE_REACHED_TARGET
 };
 
 class TargetPositionMover {
@@ -37,7 +46,11 @@ public:
                           double skirtRatio, int tickDuration);
   void StartMove();
   void StopMove();
-  bool GetNextSpeedValue(double *val);
+  void Update(position_t currentPosition);
+  bool DidReachTarget() {
+    return _state == TARGET_POSITION_MOVER_STATE_REACHED_TARGET;
+  };
+  double GetNextSpeedValue();
   position_t GetStartPosition() { return _startPosition; };
   position_t GetTargetPosition() { return _targetPosition; };
   int GetNumTicks() { return _numTicks; };
@@ -50,28 +63,48 @@ public:
   direction_t GetDirection() { return _direction; };
   double GetSkirtRatio() { return _skirtRatio; };
   bool IsMoving() { return _isMoving; };
+  unsigned long GetMoveStartTime() { return _moveStartTime; };
+  size_t NumTicksSincePreviousUpdate();
+  unsigned long TimeSincePreviousUpdate();
+  size_t CurrentTickIndex() { return _currentTickIndex; }
+  targetPositionMode_t GetMode() { return _mode; };
 
 private:
   void _Reset();
   void _InitMove(position_t startPosition, position_t targetPosition,
                  double minSpeed, double beta, double skirtRatio,
                  int tickDuration);
+  bool _CheckPositionTargetHit(position_t currentPosition);
+  void _CalculateFadeSegmentBuffer();
+  double _GetFadeSegmentValue(size_t tickIndex);
   bool _isMoving;
+
+  unsigned long _moveStartTime;
+  Metro *_metro;
+  static const size_t _fadeSegmentBufferSize = 512;
+  double _fadeSegmentBuffer[_fadeSegmentBufferSize];
+  float _numFadeSegmentSamplesPerTick;
   int _startPosition;
   int _targetPosition;
   int _distance;
   int _duration;
   int _tickDuration;
   int _numTicks;
+  size_t _currentTickIndex;
   int _maxSpeedNumTicks;
   int _numSkirtTicks;
   int _skirtSegmentDuration;
+  unsigned long _previousUpdateTime;
   direction_t _direction;
   double _currentSpeedValue;
   double _minSpeed;
   double _maxSpeed;
   double _beta;
   double _skirtRatio;
+  int _maxSpeedSegmentStartIndex;
+  int _fadeDownSegmentStartIndex;
+  targetPositionMode_t _mode;
+  targetPositionMoverState_t _state;
 };
 
 #endif
