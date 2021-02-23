@@ -14,6 +14,8 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
                                              int duration, double minSpeed,
                                              double beta, double skirtRatio,
                                              int tickDuration) {
+
+  OSCMessage msg("/PlanMoveByDuration");
   this->_Reset();
   this->_InitMove(startPosition, targetPosition, minSpeed, beta, skirtRatio,
                   tickDuration);
@@ -25,10 +27,16 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
   _maxSpeedSegmentNumTicks = _numTicks - (_numSkirtTicks * 2);
   _maxSpeedSegmentStartIndex = _numSkirtTicks;
   _fadeDownSegmentStartIndex = _numSkirtTicks + _maxSpeedSegmentNumTicks;
-  _numFadeSegmentSamplesPerTick = static_cast<float>(_numSkirtTicks) /
-                                  static_cast<float>(_fadeSegmentBufferSize);
+  _numFadeSegmentSamplesPerTick = static_cast<float>(_fadeSegmentBufferSize) /
+                                  static_cast<float>(_numSkirtTicks);
   _CalculateFadeSegmentBuffer();
   _ChangeState(TARGET_POSITION_MOVER_STATE_READY);
+  msg.add(_duration);
+  msg.add(_numTicks);
+  msg.add(_skirtSegmentDuration);
+  msg.add(_numSkirtTicks);
+  msg.add(_maxSpeed);
+  _comm->SendOSCMessage(msg);
 }
 
 void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
@@ -45,8 +53,8 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
   _maxSpeedSegmentNumTicks = _numTicks - _numSkirtTicks;
   _maxSpeedSegmentStartIndex = _numSkirtTicks;
   _fadeDownSegmentStartIndex = _numSkirtTicks + _maxSpeedSegmentNumTicks;
-  _numFadeSegmentSamplesPerTick = static_cast<float>(_numSkirtTicks) /
-                                  static_cast<float>(_fadeSegmentBufferSize);
+  _numFadeSegmentSamplesPerTick = static_cast<float>(_fadeSegmentBufferSize) /
+                                  static_cast<float>(_numSkirtTicks);
   _CalculateFadeSegmentBuffer();
   _ChangeState(TARGET_POSITION_MOVER_STATE_READY);
 }
@@ -55,11 +63,19 @@ void TargetPositionMover::_CalculateFadeSegmentBuffer() {
   double inc = 1.0 / (_fadeSegmentBufferSize - 1);
   for (size_t i = 0; i < _fadeSegmentBufferSize; i++) {
     double t = inc * i;
-    _fadeSegmentBuffer[i] =
-        _fadeSegmentBufferSize / (1.0 + pow((t / (1.0 - t)), -_beta));
-    _fadeSegmentBuffer[i] =
-        _fadeSegmentBuffer[i] / (_maxSpeed - _minSpeed) + _minSpeed;
+    double val = _fadeSegmentBufferSize / (1.0 + pow((t / (1.0 - t)), -_beta));
+    val = val / _fadeSegmentBufferSize * (_maxSpeed - _minSpeed) + _minSpeed;
+    _fadeSegmentBuffer[i] = val;
   }
+  /* for (size_t i = 0; i < 4; i++) { */
+  /*   OSCMessage msg("/scurve"); */
+  /*   size_t k = _fadeSegmentBufferSize / 4; */
+  /*   for (size_t j = 0; j < k; j++) { */
+  /*     float v = static_cast<float>(_fadeSegmentBuffer[j + (i * k)]); */
+  /*     msg.add(v); */
+  /*   } */
+  /*   _comm->SendOSCMessage(msg); */
+  /* } */
 }
 
 void TargetPositionMover::_InitMove(position_t startPosition,
@@ -74,23 +90,32 @@ void TargetPositionMover::_InitMove(position_t startPosition,
   _tickDuration = max(1, tickDuration);
   _metro->interval(_tickDuration);
   _distance = _targetPosition - _startPosition;
+  OSCMessage msg("/direction");
   if (_distance < 0.0) {
     _direction = DIRECTION_UP;
+    msg.add("going_up");
   } else {
     _direction = DIRECTION_DOWN;
+    msg.add("going_down");
   }
   _distance = abs(_distance);
+  msg.add(_distance);
+  _comm->SendOSCMessage(msg);
 }
 
 // TODO: This method could return a bool upon success or not.
-void TargetPositionMover::StartMove() {
+bool TargetPositionMover::StartMove() {
   if (_state == TARGET_POSITION_MOVER_STATE_READY) {
     _moveStartTime = millis();
     _previousUpdateTime = _moveStartTime;
     _currentTickIndex = 0;
     _isMoving = true;
-    _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT);
     _currentSpeed = _minSpeed;
+    _metro->reset();
+    _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT);
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -126,55 +151,74 @@ bool TargetPositionMover::DidReachTarget() {
 }
 
 void TargetPositionMover::Update(position_t currentPosition) {
-  if (_CheckPositionTargetHit(currentPosition)) {
-    _ChangeState(TARGET_POSITION_MOVER_STATE_REACHED_TARGET);
-    StopMove();
-  } else {
-    if (_metro->check() == 1) {
-      _currentTickIndex += NumTicksSincePreviousUpdate();
-      int idx = static_cast<int>(_currentTickIndex);
-      // Update state first in case a transition has happened between updates
-      if ((idx < _numSkirtTicks) &&
-          (_state == TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT)) {
-        // redundant assignment but a bit more readable
-        _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT);
-      } else if ((idx >= _numSkirtTicks) &&
-                 (_state == TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT)) {
-        _ChangeState(TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT);
-      } else if ((idx >= _fadeDownSegmentStartIndex) &&
-                 (_state == TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT)) {
-        _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT);
-      } else if ((idx >= _numTicks) &&
-                 (_state == TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT)) {
-        _ChangeState(
-            TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED);
-      }
+  if (IsMoving()) {
+    if (_CheckPositionTargetHit(currentPosition)) {
+      _ChangeState(TARGET_POSITION_MOVER_STATE_REACHED_TARGET);
+      StopMove();
+    } else {
+      if (_metro->check() == 1) {
+        /* OSCMessage msg("/UpdateMetroLoop"); */
+        _currentTickIndex += NumTicksSincePreviousUpdate();
+        /* msg.add(_currentTickIndex); */
+        int idx = static_cast<int>(_currentTickIndex);
+        // Update state first in case a transition has happened between updates
+        if ((idx < _numSkirtTicks) &&
+            (_state == TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT)) {
+          // redundant assignment but a bit more readable
+          _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT);
+        } else if ((idx >= _numSkirtTicks) &&
+                   (_state == TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT)) {
+          _ChangeState(TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT);
+        } else if ((idx >= _fadeDownSegmentStartIndex) &&
+                   (_state == TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT)) {
+          _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT);
+        } else if ((idx >= _numTicks) &&
+                   (_state == TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT)) {
+          _ChangeState(
+              TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED);
+          StopMove();
+        }
 
-      size_t fadeSegmentBufferIndex;
-      switch (_state) {
-      case TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT:
-        fadeSegmentBufferIndex =
-            _numFadeSegmentSamplesPerTick * _currentTickIndex;
-        _currentSpeed = _fadeSegmentBuffer[fadeSegmentBufferIndex];
-        break;
-      case TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT:
-        _currentSpeed = _maxSpeed;
-        break;
-      case TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT:
-        fadeSegmentBufferIndex =
-            abs(_fadeSegmentBufferSize -
-                (_numFadeSegmentSamplesPerTick *
-                 (_currentTickIndex - _fadeDownSegmentStartIndex)));
-        _currentSpeed = _fadeSegmentBuffer[fadeSegmentBufferIndex];
-        break;
-      case TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED:
-        break;
-      case TARGET_POSITION_MOVER_STATE_REACHED_TARGET:
-      case TARGET_POSITION_MOVER_STATE_READY:
-      case TARGET_POSITION_MOVER_STATE_NOT_READY:
-        break;
+        OSCMessage msg("/stateSegment");
+        size_t fadeSegmentBufferIndex;
+        switch (_state) {
+        case TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT:
+          fadeSegmentBufferIndex =
+              _numFadeSegmentSamplesPerTick * _currentTickIndex;
+          _currentSpeed = _fadeSegmentBuffer[fadeSegmentBufferIndex];
+          msg.add("fadeIn");
+          msg.add(_currentTickIndex);
+          msg.add(_currentSpeed);
+          msg.add(fadeSegmentBufferIndex);
+          break;
+        case TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT:
+          _currentSpeed = _maxSpeed;
+          msg.add("maxSpeed");
+          msg.add(_currentTickIndex);
+          msg.add(_currentSpeed);
+          break;
+        case TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT:
+          fadeSegmentBufferIndex =
+              abs((_fadeSegmentBufferSize - 1) -
+                  (_numFadeSegmentSamplesPerTick *
+                   (_currentTickIndex - _fadeDownSegmentStartIndex)));
+          _currentSpeed = _fadeSegmentBuffer[fadeSegmentBufferIndex];
+          msg.add("fadeOut");
+          msg.add(_currentTickIndex);
+          msg.add(_currentSpeed);
+          msg.add(fadeSegmentBufferIndex);
+          break;
+        case TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED:
+          break;
+        case TARGET_POSITION_MOVER_STATE_REACHED_TARGET:
+        case TARGET_POSITION_MOVER_STATE_READY:
+        case TARGET_POSITION_MOVER_STATE_NOT_READY:
+          break;
+        }
+        msg.empty();
+        /* _comm->SendOSCMessage(msg); */
+        _previousUpdateTime = millis();
       }
-      _previousUpdateTime = millis();
     }
   }
 }
@@ -195,6 +239,10 @@ unsigned long TargetPositionMover::TimeSincePreviousUpdate() {
 }
 
 bool TargetPositionMover::_CheckPositionTargetHit(position_t currentPosition) {
+  /* OSCMessage msg("/UpdateReachedTarget"); */
+  /* msg.add(currentPosition); */
+  /* msg.add(_targetPosition); */
+  /* _comm->SendOSCMessage(msg); */
   if (_direction == DIRECTION_DOWN) {
     if (currentPosition >= _targetPosition) {
       return true;
@@ -210,5 +258,6 @@ bool TargetPositionMover::_CheckPositionTargetHit(position_t currentPosition) {
 void TargetPositionMover::_ChangeState(targetPositionMoverState_t state) {
   if (_state != state) {
     _state = state;
+    _comm->NotifyTargetPositionMoverStateChange(_state, *_address);
   }
 }

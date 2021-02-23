@@ -41,7 +41,7 @@ public:
   void PlanMoveByMaxSpeed(position_t startPosition, position_t targetPosition,
                           double maxSpeed, double minSpeed, double beta,
                           double skirtRatio, int tickDuration);
-  void StartMove();
+  bool StartMove();
   void StopMove();
   void Update(position_t currentPosition);
   bool DidReachTarget();

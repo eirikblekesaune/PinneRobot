@@ -14,6 +14,7 @@ PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
   _maxPosition = POSITION_DEFAULT_MAX;
   _targetPosition = TARGET_NONE;
   _targetSpeedPIDSetpoint = 0.0;
+  _targetSpeedPIDOutput = 0.0;
   _currentPosition = POSITION_ALL_UP;
   _prevPosition = _currentPosition;
   _measuredSpeed = 0.0;
@@ -69,13 +70,14 @@ position_t PinneMotor::GetCurrentPosition() { return _encoder->read(); };
 void PinneMotor::Stop() {
   switch (_motorControlMode) {
   case CONTROL_MODE_PWM:
-    this->SetPWM(0);
+    this->SetBipolarPWM(0);
     break;
   case CONTROL_MODE_TARGET_SPEED:
-    this->SetBipolarTargetSpeed(0.0);
+    this->SetBipolarPWM(0);
     break;
   case CONTROL_MODE_TARGET_POSITION:
-    this->SetPWM(0);
+    _targetPositionMover->StopMove();
+    this->SetBipolarPWM(0);
     break;
   }
 }
@@ -211,11 +213,10 @@ void PinneMotor::_TargetPositionModeUpdate() {
     double targetSpeed;
     targetSpeed = _targetPositionMover->GetCurrentSpeed();
     this->SetBipolarTargetSpeed(targetSpeed);
+    this->_TargetSpeedModeUpdate();
   } else {
-    if (_targetPositionMover->DidReachTarget()) {
-      // target was reached
-      _targetPositionMover->StopMove();
-    }
+    OSCMessage msg("/ItStoppedMoving");
+    this->Stop();
   }
 }
 
@@ -224,27 +225,35 @@ void PinneMotor::_TargetSpeedModeUpdate() {
   if (IsBlocked()) {
     if (_targetSpeedState != TARGET_SPEED_STOPPED) {
       _targetSpeedState = TARGET_SPEED_STOPPED;
-      /* _speedPID->SetMode(MANUAL); */
-      this->SetBipolarPWM(0);
+      _speedPID->SetMode(MANUAL);
+      this->Stop();
     }
   }
   if ((_targetSpeedPIDSetpoint < _targetSpeedStopThreshold) &&
       (_targetSpeedPIDSetpoint > -_targetSpeedStopThreshold)) {
     if (_targetSpeedState != TARGET_SPEED_STOPPED) {
-      /* _speedPID->SetMode(MANUAL); */
-      this->SetBipolarPWM(0);
       _targetSpeedState = TARGET_SPEED_STOPPED;
+      _speedPID->SetMode(MANUAL);
+      this->Stop();
     }
   } else {
     if (_targetSpeedPIDSetpoint >= _targetSpeedStopThreshold) {
       if (_targetSpeedState != TARGET_SPEED_GOING_DOWN) {
         _targetSpeedState = TARGET_SPEED_GOING_DOWN;
-        /* _speedPID->SetMode(AUTOMATIC); */
+        _speedPID->SetMode(AUTOMATIC);
+        this->SetBipolarTargetSpeed(0.0);
+        _measuredSpeed = 0.0;
+        _targetSpeedPIDOutput = 0.0;
+        _speedPID->Compute();
       }
     } else {
       if (_targetSpeedState != TARGET_SPEED_GOING_UP) {
         _targetSpeedState = TARGET_SPEED_GOING_UP;
-        /* _speedPID->SetMode(AUTOMATIC); */
+        _speedPID->SetMode(AUTOMATIC);
+        this->SetBipolarTargetSpeed(0.0);
+        _measuredSpeed = 0.0;
+        _targetSpeedPIDOutput = 0.0;
+        _speedPID->Compute();
       }
     }
     /* _speedPID->Compute(); */
@@ -442,7 +451,13 @@ void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
     position_t currentPosition = GetCurrentPosition();
     _targetPositionMover->PlanMoveByDuration(
         currentPosition, targetPosition, duration, minSpeed, beta, skirtRatio);
-    _targetPositionMover->StartMove();
+    if (!_targetPositionMover->StartMove()) {
+      OSCMessage msg("/CouldNotStartMove");
+      _comm->SendOSCMessage(msg);
+    } else {
+      OSCMessage msg("/StartedMove");
+      _comm->SendOSCMessage(msg);
+    }
   }
 }
 
@@ -468,12 +483,15 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
 
     switch (prevMode) {
     case CONTROL_MODE_PWM:
+      Stop();
       break;
     case CONTROL_MODE_TARGET_POSITION:
+      _speedPID->SetMode(MANUAL);
+      Stop();
       break;
     case CONTROL_MODE_TARGET_SPEED:
       _speedPID->SetMode(MANUAL);
-      this->SetBipolarTargetSpeed(0.0);
+      Stop();
       break;
     }
 
@@ -481,11 +499,18 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
     case CONTROL_MODE_PWM:
       break;
     case CONTROL_MODE_TARGET_POSITION:
+      _speedPID->SetMode(AUTOMATIC);
+      this->SetBipolarTargetSpeed(0.0);
+      _measuredSpeed = 0.0;
+      _targetSpeedPIDOutput = 0.0;
+      _speedPID->Compute();
       break;
     case CONTROL_MODE_TARGET_SPEED:
       _speedPID->SetMode(AUTOMATIC);
-      this->SetBipolarTargetSpeed(
-          0.0); // TODO: Could use measuredSpeed here for bumpless transistion
+      this->SetBipolarTargetSpeed(0.0);
+      _measuredSpeed = 0.0;
+      _targetSpeedPIDOutput = 0.0;
+      _speedPID->Compute();
       break;
     }
   }
