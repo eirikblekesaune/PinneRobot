@@ -44,6 +44,7 @@ enum command_t : uint8_t {
   CMD_PID_PARAMETERS,
   CMD_MOTOR_CONTROL_MODE,
   CMD_BIPOLAR_TARGET_SPEED,
+  CMD_TARGET_POSITION_MOVER,
   CMD_UNKNOWN
 };
 
@@ -60,6 +61,27 @@ enum controlMode_t : uint8_t {
   CONTROL_MODE_TARGET_POSITION,
   CONTROL_MODE_TARGET_SPEED
 };
+
+enum targetPositionMoverState_t : uint8_t {
+  TARGET_POSITION_MOVER_STATE_NOT_READY,
+  TARGET_POSITION_MOVER_STATE_READY,
+  TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT,
+  TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT,
+  TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT,
+  TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED,
+  TARGET_POSITION_MOVER_STATE_REACHED_TARGET
+};
+
+const std::map<targetPositionMoverState_t, String>
+    TargetPositionMoverStateChangeMap{
+        {TARGET_POSITION_MOVER_STATE_NOT_READY, "notReady"},
+        {TARGET_POSITION_MOVER_STATE_READY, "ready"},
+        {TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT, "fadeInSegment"},
+        {TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT, "maxSpeedSegment"},
+        {TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT, "fadeOutSegment"},
+        {TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED,
+         "finishedButTargetNotReached"},
+        {TARGET_POSITION_MOVER_STATE_REACHED_TARGET, "reachedTarget"}};
 
 enum setGet_t : uint8_t { SET_MESSAGE, GET_MESSAGE, SETGET_UNKNOWN };
 
@@ -137,6 +159,8 @@ class PinneComm {
           void ReturnQueryValue(command_t command, OSCMessage &replyMsg);
           bool HasQueryAddress(OSCMessage &msg, int initialOffset);
           void NotifyStateChange(stateChange_t stateChange, address_t address);
+          void NotifyTargetPositionMoverStateChange(
+              targetPositionMoverState_t stateChange, address_t address);
           void DebugUnitPrint(address_t address, const char *);
           void DebugUnitPrint(address_t address, int val);
           void DebugPrint(int val);

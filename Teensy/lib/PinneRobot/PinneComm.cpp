@@ -104,6 +104,21 @@ void PinneComm::NotifyStateChange(stateChange_t stateChange,
   _Udp.endPacket();
 }
 
+void PinneComm::NotifyTargetPositionMoverStateChange(
+    targetPositionMoverState_t stateChange, address_t address) {
+  String replyAddress = String();
+  replyAddress.reserve(64);
+  replyAddress.append("/pinne/");
+  replyAddress.append(AddressMap.at(address));
+  replyAddress.append("/targetPositionMover/stateChange");
+  OSCMessage msg(replyAddress.c_str());
+  String stateStr = String(TargetPositionMoverStateChangeMap.at(stateChange));
+  msg.add(stateStr.c_str());
+  _Udp.beginPacket(*_targetIp, _targetPort);
+  msg.send(_Udp);
+  _Udp.endPacket();
+}
+
 void PinneComm::DebugUnitPrint(address_t address, const char *) {}
 
 void PinneComm::DebugUnitPrint(address_t address, int val) {}

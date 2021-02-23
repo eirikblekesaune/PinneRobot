@@ -5,9 +5,13 @@
 #include <PinneComm.h>
 #include <PinneMotor.h>
 #include <PinneRobot.h>
+#include <map>
 
 typedef int position_t;
 enum direction_t : uint8_t;
+enum address_t : uint8_t;
+enum targetPositionMoverState_t : uint8_t;
+class PinneComm;
 
 enum targetPositionMode_t : uint8_t {
   TARGET_POSITION_MODE_BY_DURATION,
@@ -15,19 +19,10 @@ enum targetPositionMode_t : uint8_t {
   TARGET_POSITION_MODE_UNKNOWN
 };
 
-enum targetPositionMoverState_t : uint8_t {
-  TARGET_POSITION_MOVER_STATE_NOT_READY,
-  TARGET_POSITION_MOVER_STATE_READY,
-  TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT,
-  TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT,
-  TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT,
-  TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED,
-  TARGET_POSITION_MOVER_STATE_REACHED_TARGET
-};
 
 class TargetPositionMover {
 public:
-  TargetPositionMover();
+  TargetPositionMover(address_t *address, PinneComm *comm);
   void PlanMoveByDuration(position_t startPosition, position_t targetPosition,
                           int duration, double minSpeed, double beta,
                           double skirtRatio) {
@@ -49,9 +44,7 @@ public:
   void StartMove();
   void StopMove();
   void Update(position_t currentPosition);
-  bool DidReachTarget() {
-    return _state == TARGET_POSITION_MOVER_STATE_REACHED_TARGET;
-  };
+  bool DidReachTarget();
   double GetCurrentSpeed();
   position_t GetStartPosition() { return _startPosition; };
   position_t GetTargetPosition() { return _targetPosition; };
@@ -80,6 +73,8 @@ private:
   void _CalculateFadeSegmentBuffer();
   double _GetFadeSegmentValue(size_t tickIndex);
   bool _isMoving;
+  address_t *_address;
+  PinneComm *_comm;
   void _ChangeState(targetPositionMoverState_t state);
 
   unsigned long _moveStartTime;

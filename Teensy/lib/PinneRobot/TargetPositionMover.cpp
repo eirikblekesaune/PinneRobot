@@ -1,6 +1,7 @@
 #include <TargetPositionMover.h>
 
-TargetPositionMover::TargetPositionMover() {
+TargetPositionMover::TargetPositionMover(address_t *address, PinneComm *comm)
+    : _address(address), _comm(comm) {
   this->_Reset();
   _metro = new Metro(_tickDuration);
   for (size_t i = 0; i < _fadeSegmentBufferSize; i++) {
@@ -118,6 +119,10 @@ double TargetPositionMover::GetCurrentSpeed() {
   } else {
     return -_currentSpeed;
   }
+}
+
+bool TargetPositionMover::DidReachTarget() {
+  return _state == TARGET_POSITION_MOVER_STATE_REACHED_TARGET;
 }
 
 void TargetPositionMover::Update(position_t currentPosition) {
