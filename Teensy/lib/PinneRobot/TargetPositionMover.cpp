@@ -27,7 +27,7 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
   _numFadeSegmentSamplesPerTick = static_cast<float>(_numSkirtTicks) /
                                   static_cast<float>(_fadeSegmentBufferSize);
   _CalculateFadeSegmentBuffer();
-  _state = TARGET_POSITION_MOVER_STATE_READY;
+  _ChangeState(TARGET_POSITION_MOVER_STATE_READY);
 }
 
 void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
@@ -47,7 +47,7 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
   _numFadeSegmentSamplesPerTick = static_cast<float>(_numSkirtTicks) /
                                   static_cast<float>(_fadeSegmentBufferSize);
   _CalculateFadeSegmentBuffer();
-  _state = TARGET_POSITION_MOVER_STATE_READY;
+  _ChangeState(TARGET_POSITION_MOVER_STATE_READY);
 }
 
 void TargetPositionMover::_CalculateFadeSegmentBuffer() {
@@ -88,7 +88,7 @@ void TargetPositionMover::StartMove() {
     _previousUpdateTime = _moveStartTime;
     _currentTickIndex = 0;
     _isMoving = true;
-    _state = TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT;
+    _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT);
     _currentSpeed = _minSpeed;
   }
 }
@@ -109,7 +109,7 @@ void TargetPositionMover::_Reset() {
   _maxSpeedSegmentStartIndex = 0;
   _fadeDownSegmentStartIndex = 0;
   _mode = TARGET_POSITION_MODE_UNKNOWN;
-  _state = TARGET_POSITION_MOVER_STATE_NOT_READY;
+  _ChangeState(TARGET_POSITION_MOVER_STATE_NOT_READY);
 }
 
 double TargetPositionMover::GetCurrentSpeed() {
@@ -122,7 +122,7 @@ double TargetPositionMover::GetCurrentSpeed() {
 
 void TargetPositionMover::Update(position_t currentPosition) {
   if (_CheckPositionTargetHit(currentPosition)) {
-    _state = TARGET_POSITION_MOVER_STATE_REACHED_TARGET;
+    _ChangeState(TARGET_POSITION_MOVER_STATE_REACHED_TARGET);
     StopMove();
   } else {
     if (_metro->check() == 1) {
@@ -132,13 +132,17 @@ void TargetPositionMover::Update(position_t currentPosition) {
       if ((idx < _numSkirtTicks) &&
           (_state == TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT)) {
         // redundant assignment but a bit more readable
-        _state = TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT;
+        _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT);
       } else if ((idx >= _numSkirtTicks) &&
                  (_state == TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT)) {
-        _state = TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT;
+        _ChangeState(TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT);
       } else if ((idx >= _fadeDownSegmentStartIndex) &&
                  (_state == TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT)) {
-        _state = TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT;
+        _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT);
+      } else if ((idx >= _numTicks) &&
+                 (_state == TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT)) {
+        _ChangeState(
+            TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED);
       }
 
       size_t fadeSegmentBufferIndex;
@@ -157,6 +161,8 @@ void TargetPositionMover::Update(position_t currentPosition) {
                 (_numFadeSegmentSamplesPerTick *
                  (_currentTickIndex - _fadeDownSegmentStartIndex)));
         _currentSpeed = _fadeSegmentBuffer[fadeSegmentBufferIndex];
+        break;
+      case TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED:
         break;
       case TARGET_POSITION_MOVER_STATE_REACHED_TARGET:
       case TARGET_POSITION_MOVER_STATE_READY:
@@ -194,4 +200,10 @@ bool TargetPositionMover::_CheckPositionTargetHit(position_t currentPosition) {
     }
   }
   return false;
+}
+
+void TargetPositionMover::_ChangeState(targetPositionMoverState_t state) {
+  if (_state != state) {
+    _state = state;
+  }
 }

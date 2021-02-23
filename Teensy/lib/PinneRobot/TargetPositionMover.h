@@ -21,6 +21,7 @@ enum targetPositionMoverState_t : uint8_t {
   TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT,
   TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT,
   TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT,
+  TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED,
   TARGET_POSITION_MOVER_STATE_REACHED_TARGET
 };
 
@@ -79,6 +80,7 @@ private:
   void _CalculateFadeSegmentBuffer();
   double _GetFadeSegmentValue(size_t tickIndex);
   bool _isMoving;
+  void _ChangeState(targetPositionMoverState_t state);
 
   unsigned long _moveStartTime;
   Metro *_metro;
