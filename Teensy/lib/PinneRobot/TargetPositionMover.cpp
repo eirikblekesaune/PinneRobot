@@ -21,9 +21,9 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
   _skirtSegmentDuration = _duration * _skirtRatio;
   _numSkirtTicks = _skirtSegmentDuration / _tickDuration;
   _maxSpeed = (_distance / (_numTicks - _numSkirtTicks)) - _minSpeed;
-  _maxSpeedNumTicks = _numTicks - (_numSkirtTicks * 2);
+  _maxSpeedSegmentNumTicks = _numTicks - (_numSkirtTicks * 2);
   _maxSpeedSegmentStartIndex = _numSkirtTicks;
-  _fadeDownSegmentStartIndex = _numSkirtTicks + _maxSpeedNumTicks;
+  _fadeDownSegmentStartIndex = _numSkirtTicks + _maxSpeedSegmentNumTicks;
   _numFadeSegmentSamplesPerTick = static_cast<float>(_numSkirtTicks) /
                                   static_cast<float>(_fadeSegmentBufferSize);
   _CalculateFadeSegmentBuffer();
@@ -40,9 +40,9 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
   _maxSpeed = max(maxSpeed, _minSpeed);
   _numTicks = _distance / (_maxSpeed + (_minSpeed * _skirtRatio));
   _numSkirtTicks = _numTicks * _skirtRatio;
-  _maxSpeedNumTicks = _numTicks - _numSkirtTicks;
+  _maxSpeedSegmentNumTicks = _numTicks - _numSkirtTicks;
   _maxSpeedSegmentStartIndex = _numSkirtTicks;
-  _fadeDownSegmentStartIndex = _numSkirtTicks + _maxSpeedNumTicks;
+  _fadeDownSegmentStartIndex = _numSkirtTicks + _maxSpeedSegmentNumTicks;
   _numFadeSegmentSamplesPerTick = static_cast<float>(_numSkirtTicks) /
                                   static_cast<float>(_fadeSegmentBufferSize);
   _CalculateFadeSegmentBuffer();
@@ -65,9 +65,9 @@ void TargetPositionMover::_InitMove(position_t startPosition,
                                     int tickDuration) {
   _startPosition = max(0, startPosition);
   _targetPosition = max(0, targetPosition);
-  _minSpeed = minSpeed;
+  _minSpeed = abs(minSpeed);
   _beta = max(1.0, beta);
-  _skirtRatio = constrain(skirtRatio, 0.0, 1.0);
+  _skirtRatio = constrain(skirtRatio, 0.0, 0.5);
   _tickDuration = max(1, tickDuration);
   _metro->interval(_tickDuration);
   _distance = _targetPosition - _startPosition;

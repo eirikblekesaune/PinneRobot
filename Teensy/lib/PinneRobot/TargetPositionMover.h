@@ -91,7 +91,7 @@ private:
   int _tickDuration;
   int _numTicks;
   size_t _currentTickIndex;
-  int _maxSpeedNumTicks;
+  int _maxSpeedSegmentNumTicks;
   int _numSkirtTicks;
   int _skirtSegmentDuration;
   unsigned long _previousUpdateTime;
