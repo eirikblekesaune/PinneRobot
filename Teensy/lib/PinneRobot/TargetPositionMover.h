@@ -63,6 +63,9 @@ private:
   int _duration;
   int _tickDuration;
   int _numTicks;
+  int _maxSpeedNumTicks;
+  int _numSkirtTicks;
+  int _skirtSegmentDuration;
   direction_t _direction;
   double _currentSpeedValue;
   double _minSpeed;

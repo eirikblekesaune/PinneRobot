@@ -7,13 +7,15 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
                                              int duration, double minSpeed,
                                              double beta, double skirtRatio,
                                              int tickDuration) {
-  // Iam planning
   this->_Reset();
   this->_InitMove(startPosition, targetPosition, minSpeed, beta, skirtRatio,
                   tickDuration);
   _duration = max(_tickDuration, duration);
   _numTicks = _duration / _tickDuration;
-  int skirtSegmentDuration = _duration * _skirtRatio;
+  _skirtSegmentDuration = _duration * _skirtRatio;
+  _numSkirtTicks = _skirtSegmentDuration / _tickDuration;
+  _maxSpeed = (_distance / (_numTicks - _numSkirtTicks)) - _minSpeed;
+  _maxSpeedNumTicks = _numTicks - (_numSkirtTicks * 2);
 }
 
 void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
@@ -21,8 +23,13 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
                                              double maxSpeed, double minSpeed,
                                              double beta, double skirtRatio,
                                              int tickDuration) {
-  // i Am Plannning
   this->_Reset();
+  this->_InitMove(startPosition, targetPosition, minSpeed, beta, skirtRatio,
+                  tickDuration);
+  _maxSpeed = max(maxSpeed, _minSpeed);
+  _numTicks = _distance / (_maxSpeed + (_minSpeed * _skirtRatio));
+  _numSkirtTicks = _numTicks * _skirtRatio;
+  _maxSpeedNumTicks = _numTicks - _numSkirtTicks;
 }
 
 void TargetPositionMover::_InitMove(position_t startPosition,
