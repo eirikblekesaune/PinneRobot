@@ -2,6 +2,7 @@
 #define TARGET_POSITION_MOVER_H
 #include <Arduino.h>
 #include <Metro.h>
+#include <PID_v1.h>
 #include <PinneComm.h>
 #include <PinneMotor.h>
 #include <PinneRobot.h>
@@ -55,6 +56,7 @@ public:
   int GetDistance() { return abs(GetTargetPosition() - GetStartPosition()); };
   double GetMinSpeed() { return _minSpeed; };
   double GetMaxSpeed() { return _maxSpeedPlanned; };
+  double GetAdjustedMaxSpeed() { return _maxSpeedAdjusted; };
   double GetBeta() { return _beta; };
   direction_t GetDirection() { return _direction; };
   double GetSkirtRatio() { return _skirtRatio; };
@@ -77,6 +79,8 @@ private:
   double _GetFadeSegmentValue(size_t tickIndex);
   double _UnmapSpeedValue(double speed, double maxSpeed);
   double _MapSpeedValue(double speed, double maxSpeed);
+  double _EstimateRemainingDistance(double remainingTicksToTarget);
+  double _GetSkirtSum();
   bool _isMoving;
   address_t *_address;
   PinneComm *_comm;
@@ -84,6 +88,7 @@ private:
   void _ChangeState(targetPositionMoverState_t state);
 
   unsigned long _moveStartTime;
+  PID *_maxSpeedPID;
   Metro *_metro;
   static const size_t _fadeSegmentBufferSize = 512;
   double _fadeSegmentBuffer[_fadeSegmentBufferSize];
@@ -108,7 +113,9 @@ private:
   double _beta;
   double _skirtRatio;
   double _distanceTravelled;
-  double _expectedDistanceTravelled;
+  double _plannedDistanceTravelled;
+  double _estimatedRemainingDistance;
+  double _expectedRemainingDistance;
   double _travelError;
   int _maxSpeedSegmentStartIndex;
   int _fadeDownSegmentStartIndex;

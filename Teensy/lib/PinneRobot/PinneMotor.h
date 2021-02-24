@@ -14,7 +14,8 @@
 //
 enum address_t : uint8_t;
 enum direction_t : uint8_t;
-enum stateChange_t : uint8_t;
+enum motorState_t : uint8_t;
+enum blockingMask_t : uint8_t;
 enum controlMode_t : uint8_t;
 typedef int position_t;
 #define PID_CLASS PID
@@ -26,8 +27,7 @@ class TargetPositionMover;
 enum targetSpeedState_t : uint8_t {
   TARGET_SPEED_STOPPED,
   TARGET_SPEED_GOING_UP,
-  TARGET_SPEED_GOING_DOWN,
-  TARGET_SPEED_REACHED_TARGET
+  TARGET_SPEED_GOING_DOWN
 };
 
 class PinneMotor
@@ -123,6 +123,7 @@ class PinneMotor
           pidvalue_t _targetSpeedPIDOutput;
           pidvalue_t _measuredSpeed;
           targetSpeedState_t _targetSpeedState;
+          uint8_t _blockingMask;
           void _UpdateSpeedometer();
           void _UpdateCurrentSense();
           float _measuredCurrent;
@@ -134,6 +135,7 @@ class PinneMotor
           bool _blocked;
           int _stoppingSpeed;
           float _targetSpeedStopThreshold;
+          void _ChangeState(motorState_t state);
           void _Stopped();
           void _GoingUp();
           void _GoingDown();
@@ -144,21 +146,22 @@ class PinneMotor
           void _SlackStopSensorOut();
           void _AbsMinPositionReached();
           void _MinPositionReached();
+          void _MinPositionLeft();
           void _MaxPositionReached();
+          void _MaxPositionLeft();
           void _PWMModeUpdate();
           void _TargetPositionModeUpdate();
           void _TargetSpeedModeUpdate();
+          bool _CheckSensorBlockingState(blockingMask_t sensorMask);
 
-          stateChange_t _state;
+          motorState_t _state;
 
           void _RouteStopMsg(OSCMessage &msg, int initialOffset);
           void _RouteBipolarPWMMsg(OSCMessage &msg, int initialOffset);
-          void _RouteDirectionMsg(OSCMessage &msg, int initialOffset);
-          void _RouteTargetPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteTargetSpeedMsg(OSCMessage &msg, int initialOffset);
           void _RouteCurrentPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteBrakeMsg(OSCMessage &msg, int initialOffset);
-          void _RouteStateChangeMsg(OSCMessage &msg, int initialOffset);
+          void _RouteMotorStateChangeMsg(OSCMessage &msg, int initialOffset);
           void _RouteMinPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteMaxPositionMsg(OSCMessage &msg, int initialOffset);
           void _RouteGoToParkingPositionMsg(OSCMessage &msg, int initialOffset);

@@ -80,7 +80,6 @@ void PinneRobot::SetMotorControlMode(controlMode_t mode) {
 
 void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   int offset;
-  bool handled = false;
   offset = msg.match("/motorA", initialOffset);
   if (offset) {
     motorA->routeOSC(msg, offset + initialOffset);

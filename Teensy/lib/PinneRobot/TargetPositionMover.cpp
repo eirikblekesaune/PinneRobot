@@ -8,6 +8,15 @@ TargetPositionMover::TargetPositionMover(address_t *address, PinneComm *comm,
   for (size_t i = 0; i < _fadeSegmentBufferSize; i++) {
     _fadeSegmentBuffer[i] = 0.0;
   }
+  /* _maxSpeedPID = */
+  /*     new PID(&_estimatedRemainingDistance, &_maxSpeedAdjusted, */
+  /*             &_expectedRemainingDistance, 13.0, 10.0, 1.0, P_ON_M, DIRECT);
+   */
+  _maxSpeedPID =
+      new PID(&_distanceTravelled, &_maxSpeedAdjusted,
+              &_plannedDistanceTravelled, 13.0, 10.0, 1.0, P_ON_M, DIRECT);
+  _maxSpeedPID->SetOutputLimits(
+      0.0, 2.0); // twice the max speed is upper adjustment limit
 }
 
 void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
@@ -127,18 +136,19 @@ void TargetPositionMover::_Reset() {
   _maxSpeedAdjusted = 0.0;
   _beta = 0.0;
   _distance = 0.0;
-  _expectedDistanceTravelled = 0.0;
+  _plannedDistanceTravelled = 0.0;
   _travelError = 0.0;
   _maxSpeedSegmentStartIndex = 0;
   _maxSpeedSegmentNumTicksAdjustment = 0.0;
   _maxSpeedSegmentNumTicks = 0;
   _fadeDownSegmentStartIndex = 0;
+  _maxSpeedPID->SetMode(MANUAL);
   _mode = TARGET_POSITION_MODE_UNKNOWN;
   _ChangeState(TARGET_POSITION_MOVER_STATE_NOT_READY);
 }
 
 double TargetPositionMover::GetCurrentSpeed() {
-  double speed = _MapSpeedValue(_currentSpeedUnmapped, _maxSpeedAdjusted);
+  double speed = _MapSpeedValue(_currentSpeedUnmapped, GetAdjustedMaxSpeed());
   if (_direction == DIRECTION_DOWN) {
     return speed;
   } else {
@@ -157,9 +167,7 @@ void TargetPositionMover::Update(position_t currentPosition) {
       StopMove();
     } else {
       if (_metro->check() == 1) {
-        /* OSCMessage msg("/UpdateMetroLoop"); */
         _currentTickIndex += NumTicksSincePreviousUpdate();
-        /* msg.add(_currentTickIndex); */
         int idx = static_cast<int>(_currentTickIndex);
         // Update state first in case a transition has happened between updates
         if ((idx < _numSkirtTicks) &&
@@ -169,6 +177,11 @@ void TargetPositionMover::Update(position_t currentPosition) {
         } else if ((idx >= _numSkirtTicks) &&
                    (_state == TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT)) {
           _ChangeState(TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT);
+          if (_mode == TARGET_POSITION_MODE_BY_DURATION) {
+            _maxSpeedPID->SetSampleTime(_tickDuration);
+            _maxSpeedPID->SetMode(AUTOMATIC);
+            _maxSpeedPID->Compute();
+          }
         } else if ((idx >= (_fadeDownSegmentStartIndex +
                             _maxSpeedSegmentNumTicksAdjustment)) &&
                    (_state == TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT)) {
@@ -180,9 +193,11 @@ void TargetPositionMover::Update(position_t currentPosition) {
         }
 
         size_t fadeSegmentBufferIndex;
+        // This is how far we actually have travelld at this moment
         _distanceTravelled = (currentPosition - _startPosition);
-        _expectedDistanceTravelled += GetCurrentSpeed();
-        _travelError = _expectedDistanceTravelled - _distanceTravelled;
+        // How far we should have travelled
+        _plannedDistanceTravelled += GetCurrentSpeed();
+        /* _travelError = _plannedDistanceTravelled - _distanceTravelled; */
         switch (_state) {
         case TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT:
           fadeSegmentBufferIndex =
@@ -196,13 +211,40 @@ void TargetPositionMover::Update(position_t currentPosition) {
             // Take the sum of the remaining maxSpeed ticks and add it
             // to the sum of the the fade out segment values.
             // The estimated travel distance is what we at this moment can
-            // foresee the travel distance will be.
-            double estimatedNumTicksToTarget = _EstimateRemainingNumTicks(
-                abs(numTicks - (_numTicks - _currentTickIndex)));
-            double plannedNumTicksToTarget;
+            // foresee that the travel distance will be.
+            //
             // The planned travel distance may differ from this, that is what
             // we call an error that we will adjust for, by adding ticks to the
             // max speed segment.
+            //
+            // This is what the clockwork of ticks has left to churn out.
+            double remainingTicksToTarget =
+                _numTicks -
+                (_currentTickIndex + _maxSpeedSegmentNumTicksAdjustment);
+
+            // An estimate of how long distance will be travelled by the current
+            // clockwork state.
+            double estimatedRemainingDistance =
+                _EstimateRemainingDistance(remainingTicksToTarget);
+
+            // What the mover has planned to have travelled a said distance by
+            // now. This is what is expected to be the remaining distance.
+            double expectedRemainingDistance =
+                _distance - _plannedDistanceTravelled;
+
+            // The difference between these is the error that needs correction
+            _travelError =
+                expectedRemainingDistance - estimatedRemainingDistance;
+            double correction = _travelError / GetMaxSpeed();
+            if (correction < 0.0) {
+              _maxSpeedSegmentNumTicksAdjustment =
+                  static_cast<int>(_travelError);
+            } else {
+              _maxSpeedSegmentNumTicksAdjustment =
+                  static_cast<int>(_travelError) + 1;
+            }
+          } else if (_mode == TARGET_POSITION_MODE_BY_DURATION) {
+            _maxSpeedPID->Compute();
           }
           break;
         case TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT:
@@ -221,7 +263,6 @@ void TargetPositionMover::Update(position_t currentPosition) {
         case TARGET_POSITION_MOVER_STATE_NOT_READY:
           break;
         }
-        msg.empty();
 
         /* _comm->SendOSCMessage(msg); */
         _previousUpdateTime = millis();
@@ -252,6 +293,16 @@ TargetPositionMover::_PerformLastStretchStrategy(double currentPosition) {
     break;
   }
   return speed;
+}
+
+double
+TargetPositionMover::_EstimateRemainingDistance(double remainingTicksToTarget) {
+  return (remainingTicksToTarget * GetMaxSpeed()) - _GetSkirtSum();
+}
+
+double TargetPositionMover::_GetSkirtSum() {
+  double result = (_numSkirtTicks / 2.0) * (1.0 + _minSpeed);
+  return result;
 }
 
 double TargetPositionMover::_GetFadeSegmentValue(size_t tickIndex) {

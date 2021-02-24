@@ -89,15 +89,15 @@ bool PinneComm::HasQueryAddress(OSCMessage &msg, int initialOffset) {
   return offset > 0;
 }
 
-void PinneComm::NotifyStateChange(stateChange_t stateChange,
-                                  address_t address) {
+void PinneComm::NotifyMotorStateChange(motorState_t stateChange,
+                                       address_t address) {
   String replyAddress = String();
   replyAddress.reserve(64);
   replyAddress.append("/pinne/");
   replyAddress.append(AddressMap.at(address));
   replyAddress.append("/stateChange");
   OSCMessage msg(replyAddress.c_str());
-  String stateStr = String(StateChangeMap.at(stateChange));
+  String stateStr = String(MotorStateChangeMap.at(stateChange));
   msg.add(stateStr.c_str());
   _Udp.beginPacket(*_targetIp, _targetPort);
   msg.send(_Udp);

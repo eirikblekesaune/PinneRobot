@@ -91,17 +91,26 @@ enum direction_t : uint8_t { DIRECTION_DOWN = 0x00, DIRECTION_UP = 0x01 };
 
 const std::map<direction_t, String> DirectionMap{{DIRECTION_DOWN, "down"},
                                                  {DIRECTION_UP, "up"}};
+enum blockingMask_t : uint8_t {
+  NOTHING_BLOCKS = 0x00,          //
+  TOP_SENSOR_BLOCKS = 0x01,       // The stop sensor was hit
+  SLACK_SENSOR_BLOCKS = 0x02,     // T
+  MIN_POSITION_BLOCKS = 0x04,     // Position counter is below range
+  MAX_POSITION_BLOCKS = 0x08,     // Position counter is above range
+  ABS_MIN_POSITION_BLOCKS = 0x10, //
+  DRIVER_FAULT_BLOCKS = 0x20      // Something is wrong with the driver itself
+};
 
-enum stateChange_t : uint8_t {
-  STOPPED,           // Stopped manually
-  GOING_DOWN,        // direction set to up
-  GOING_UP,          // directiom set to down
+enum motorState_t : uint8_t {
+  GOING_DOWN,            // direction set to up
+  GOING_UP,              // directiom set to down
+  STOPPED,               // Stopped manually
   BLOCKED_BY_TOP_SENSOR, // The stop sensor was hit
   BLOCKED_BY_SLACK_SENSOR,
   BLOCKED_BY_MIN_POSITION,     // Position counter is below range
   BLOCKED_BY_MAX_POSITION,     // Position counter is above range
   BLOCKED_BY_ABS_MIN_POSITION, //
-  DRIVER_FAULT                 // Something is wrong with the driver itself
+  BLOCKED_BY_DRIVER_FAULT      // Something is wrong with the driver itself
 };
 
 const std::map<controlMode_t, String> ControlModeMap{
@@ -132,7 +141,7 @@ const std::map<address_t, String> AddressMap{{ADDRESS_A, "motorA"},
                                              {ADDRESS_ROTATION, "rotation"},
                                              {ADDRESS_GLOBAL, "global"}};
 
-const std::map<stateChange_t, String> StateChangeMap{
+const std::map<motorState_t, String> MotorStateChangeMap{
     {STOPPED, "stopped"},
     {GOING_DOWN, "going_down"},
     {GOING_UP, "going_up"},
@@ -141,56 +150,66 @@ const std::map<stateChange_t, String> StateChangeMap{
     {BLOCKED_BY_MIN_POSITION, "blocked_by_min_position"},
     {BLOCKED_BY_MAX_POSITION, "blocked_by_max_position"},
     {BLOCKED_BY_ABS_MIN_POSITION, "blocked_by_abs_min_position"},
-    {DRIVER_FAULT, "driver_fault"}};
+    {BLOCKED_BY_DRIVER_FAULT, "driver_fault"}};
+
+const std::map<blockingMask_t, String> BlockingMaskMap{
+    {NOTHING_BLOCKS, "nothing_blocks"},
+    {TOP_SENSOR_BLOCKS, "top_sensor_blocks"},
+    {SLACK_SENSOR_BLOCKS, "slack_sensor_blocks"},
+    {MIN_POSITION_BLOCKS, "min_position_blocks"},
+    {MAX_POSITION_BLOCKS, "max_position_blocks"},
+    {ABS_MIN_POSITION_BLOCKS, "abs_min_position_blocks"},
+    {DRIVER_FAULT_BLOCKS, "driver_fault_blocks"}};
 
 extern EthernetUDP Udp;
 class PinneRobot;
 
 class PinneComm {
-	public:
-          PinneComm(PinneSettings *settings);
-          void RouteMsg(OSCBundle &bundle);
+public:
+  PinneComm(PinneSettings *settings);
+  void RouteMsg(OSCBundle &bundle);
 
-          void Reply(const char *);
-          void SendOSCMessage(OSCMessage &msg);
-          void ReturnGetValue(command_t command, address_t address, int value);
-          void ReturnQueryValue(command_t command, address_t address,
-                                OSCMessage &replyMsg);
-          void ReturnQueryValue(command_t command, OSCMessage &replyMsg);
-          bool HasQueryAddress(OSCMessage &msg, int initialOffset);
-          void NotifyStateChange(stateChange_t stateChange, address_t address);
-          void NotifyTargetPositionMoverStateChange(
-              targetPositionMoverState_t stateChange, address_t address);
-          void DebugUnitPrint(address_t address, const char *);
-          void DebugUnitPrint(address_t address, int val);
-          void DebugPrint(int val);
-          void DebugPrint(float val);
-          void DebugPrint(const char *);
-          void DebugMessagePrint(command_t command, address_t address,
-                                 setGet_t setGet, int value);
-          void msgReceive();
-          void handlePinneMsg(OSCMessage &msg);
+  void Reply(const char *);
+  void SendOSCMessage(OSCMessage &msg);
+  void ReturnGetValue(command_t command, address_t address, int value);
+  void ReturnQueryValue(command_t command, address_t address,
+                        OSCMessage &replyMsg);
+  void ReturnQueryValue(command_t command, OSCMessage &replyMsg);
+  bool HasQueryAddress(OSCMessage &msg, int initialOffset);
+  void NotifyMotorStateChange(motorState_t stateChange, address_t address);
+  void
+  NotifyTargetPositionMoverStateChange(targetPositionMoverState_t stateChange,
+                                       address_t address);
+  void DebugUnitPrint(address_t address, const char *);
+  void DebugUnitPrint(address_t address, int val);
+  void DebugPrint(int val);
+  void DebugPrint(float val);
+  void DebugPrint(const char *);
+  void DebugMessagePrint(command_t command, address_t address, setGet_t setGet,
+                         int value);
+  void msgReceive();
+  void handlePinneMsg(OSCMessage &msg);
 
-          uint8_t initResult = 0;
-          enum InitResults : uint8_t {
-            validSettings = 0x00,
-            invalidHostname = 0x01,
-            invalidTargetHostname = 0x02
-          };
+  uint8_t initResult = 0;
+  enum InitResults : uint8_t {
+    validSettings = 0x00,
+    invalidHostname = 0x01,
+    invalidTargetHostname = 0x02
+  };
 
-          void routeOSC(OSCMessage &msg, int initial_offset);
-          void setRobot(PinneRobot *robot) { _robot = robot; };
+  void routeOSC(OSCMessage &msg, int initial_offset);
+  void setRobot(PinneRobot *robot) { _robot = robot; };
 
-        private:
-          String _name;
-          uint8_t *_mac;
-          EthernetUDP _Udp;
-          IPAddress *_ip;
-          unsigned int _port;
-          IPAddress *_targetIp;
-          IPAddress *_broadcastIp;
-          unsigned int _targetPort;
-          PinneRobot *_robot;
+private:
+  String _name;
+  uint8_t *_mac;
+  EthernetUDP _Udp;
+  IPAddress *_ip;
+  unsigned int _port;
+  IPAddress *_targetIp;
+  IPAddress *_broadcastIp;
+  unsigned int _targetPort;
+  PinneRobot *_robot;
 };
 
 
