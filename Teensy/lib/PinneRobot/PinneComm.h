@@ -97,7 +97,6 @@ enum blockingMask_t : uint8_t {
   SLACK_SENSOR_BLOCKS = 0x02, // T
   MIN_POSITION_BLOCKS = 0x04, // Position counter is below range
   MAX_POSITION_BLOCKS = 0x08, // Position counter is above range
-  DRIVER_FAULT_BLOCKS = 0x10  // Something is wrong with the driver itself
 };
 
 enum motorState_t : uint8_t {
@@ -108,7 +107,6 @@ enum motorState_t : uint8_t {
   BLOCKED_BY_SLACK_SENSOR,
   BLOCKED_BY_MIN_POSITION,     // Position counter is below range
   BLOCKED_BY_MAX_POSITION,     // Position counter is above range
-  BLOCKED_BY_DRIVER_FAULT      // Something is wrong with the driver itself
 };
 
 const std::map<controlMode_t, String> ControlModeMap{
@@ -146,16 +144,14 @@ const std::map<motorState_t, String> MotorStateChangeMap{
     {BLOCKED_BY_TOP_SENSOR, "blocked_by_top_sensor"},
     {BLOCKED_BY_SLACK_SENSOR, "blocked_by_slack_sensor"},
     {BLOCKED_BY_MIN_POSITION, "blocked_by_min_position"},
-    {BLOCKED_BY_MAX_POSITION, "blocked_by_max_position"},
-    {BLOCKED_BY_DRIVER_FAULT, "driver_fault"}};
+    {BLOCKED_BY_MAX_POSITION, "blocked_by_max_position"}};
 
 const std::map<blockingMask_t, String> BlockingMaskMap{
     {NOTHING_BLOCKS, "nothing_blocks"},
     {TOP_SENSOR_BLOCKS, "top_sensor_blocks"},
     {SLACK_SENSOR_BLOCKS, "slack_sensor_blocks"},
     {MIN_POSITION_BLOCKS, "min_position_blocks"},
-    {MAX_POSITION_BLOCKS, "max_position_blocks"},
-    {DRIVER_FAULT_BLOCKS, "driver_fault_blocks"}};
+    {MAX_POSITION_BLOCKS, "max_position_blocks"}};
 
 extern EthernetUDP Udp;
 class PinneRobot;

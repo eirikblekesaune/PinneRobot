@@ -18,7 +18,7 @@ PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
   _currentPosition = POSITION_ALL_UP;
   _prevPosition = _currentPosition;
   _measuredSpeed = 0.0;
-  _state = STOPPED;
+  _blockingMask = NOTHING_BLOCKS;
 }
 
 void PinneMotor::init() {
@@ -49,7 +49,6 @@ void PinneMotor::init() {
   _targetSpeedState = TARGET_SPEED_STOPPED;
 
   _driver->init();
-  _driver->SetDirection(DIRECTION_UP);
   SetDirection(DIRECTION_DOWN);
   Stop();
   _blocked = true;
@@ -75,6 +74,8 @@ void PinneMotor::Stop() {
 void PinneMotor::SetPWM(int speed) {
   if (!IsBlocked()) {
     _driver->SetPWM(max(0, speed));
+  } else if (speed == 0) {
+    _driver->SetPWM(0);
   }
 }
 
@@ -156,7 +157,7 @@ void PinneMotor::UpdateState() {
 }
 
 bool PinneMotor::_CheckSensorBlockingState(blockingMask_t sensorMask) {
-  return (_blockingMask & sensorMask);
+  return (_blockingMask & sensorMask) > 1;
 }
 
 void PinneMotor::CheckPositionLimits() {
@@ -235,9 +236,6 @@ void PinneMotor::_TargetSpeedModeUpdate() {
   /*     _targetSpeedState = TARGET_SPEED_STOPPED; */
   /*     this->_DeactivateTargetSpeedPID(); */
   /*     this->SetBipolarPWM(0); */
-  /*     OSCMessage bbb("/bbb"); */
-  /*     bbb.add(_targetSpeedPIDSetpoint); */
-  /*     _comm->SendOSCMessage(bbb); */
   /*   } */
   if ((_targetSpeedPIDSetpoint < _targetSpeedStopThreshold) &&
       (_targetSpeedPIDSetpoint > -_targetSpeedStopThreshold)) {
@@ -245,9 +243,6 @@ void PinneMotor::_TargetSpeedModeUpdate() {
       _targetSpeedState = TARGET_SPEED_STOPPED;
       this->_DeactivateTargetSpeedPID();
       this->SetBipolarPWM(0);
-      OSCMessage ccc("/TargetSpeedStopped");
-      ccc.add(_targetSpeedPIDSetpoint);
-      _comm->SendOSCMessage(ccc);
     }
     _speedPID->Compute(); // doesn't hurt does it ehh...
   } else {
@@ -255,9 +250,6 @@ void PinneMotor::_TargetSpeedModeUpdate() {
       if (_targetSpeedState != TARGET_SPEED_GOING_DOWN) {
         _targetSpeedState = TARGET_SPEED_GOING_DOWN;
         this->_ActivateTargetSpeedPID();
-        OSCMessage ddd("/TargetSpeedGoingDown");
-        ddd.add(_targetSpeedPIDSetpoint);
-        _comm->SendOSCMessage(ddd);
       }
       _speedPID->Compute();
       // clip negative values from the PID in case stuff
@@ -266,9 +258,6 @@ void PinneMotor::_TargetSpeedModeUpdate() {
       if (_targetSpeedState != TARGET_SPEED_GOING_UP) {
         _targetSpeedState = TARGET_SPEED_GOING_UP;
         this->_ActivateTargetSpeedPID();
-        OSCMessage eee("/TargetSpeedGoingUp");
-        eee.add(_targetSpeedPIDSetpoint);
-        _comm->SendOSCMessage(eee);
         // clip positive values from the PID in case stuff
       }
       _speedPID->Compute();
@@ -281,9 +270,6 @@ void PinneMotor::_TargetSpeedModeUpdate() {
   }
   /* static Metro metro(100); */
   /* if (metro.check() == 1) { */
-  /*   OSCMessage msg("/PID"); */
-  /*   msg.add(_targetSpeedPIDOutput); */
-  /*   _comm->SendOSCMessage(msg); */
   /* } */
 }
 
@@ -335,7 +321,7 @@ void PinneMotor::_TopStopSensorIn() {
   _ChangeState(BLOCKED_BY_TOP_SENSOR);
 }
 
-void PinneMotor::_TopStopSensorOut() { _blockingMask ^= TOP_SENSOR_BLOCKS; }
+void PinneMotor::_TopStopSensorOut() { _blockingMask &= ~TOP_SENSOR_BLOCKS; }
 
 void PinneMotor::_SlackStopSensorOut() {
   Stop();
@@ -343,7 +329,7 @@ void PinneMotor::_SlackStopSensorOut() {
   _ChangeState(BLOCKED_BY_SLACK_SENSOR);
 }
 
-void PinneMotor::_SlackStopSensorIn() { _blockingMask ^= SLACK_SENSOR_BLOCKS; }
+void PinneMotor::_SlackStopSensorIn() { _blockingMask &= ~SLACK_SENSOR_BLOCKS; }
 
 void PinneMotor::_ChangeState(motorState_t state) {
   motorState_t previousState = _state;
@@ -360,26 +346,24 @@ void PinneMotor::_GoingUp() { _ChangeState(GOING_UP); }
 void PinneMotor::_GoingDown() { _ChangeState(GOING_DOWN); }
 
 void PinneMotor::_MinPositionReached() {
-  Stop();
   _blockingMask |= MIN_POSITION_BLOCKS;
   _ChangeState(BLOCKED_BY_MIN_POSITION);
+  Stop();
 }
 
-void PinneMotor::_MinPositionLeft() { _blockingMask ^= MIN_POSITION_BLOCKS; }
+void PinneMotor::_MinPositionLeft() {
+  _blockingMask &= ~MIN_POSITION_BLOCKS;
+}
 
 void PinneMotor::_MaxPositionReached() {
-    Stop();
-    _blockingMask |= MAX_POSITION_BLOCKS;
-    _ChangeState(BLOCKED_BY_MAX_POSITION);
+  _ChangeState(BLOCKED_BY_MAX_POSITION);
+  Stop();
 }
 
-void PinneMotor::_MaxPositionLeft() { _blockingMask ^= MIN_POSITION_BLOCKS; }
+void PinneMotor::_MaxPositionLeft() { _blockingMask &= ~MAX_POSITION_BLOCKS; }
 
 void PinneMotor::SetBipolarTargetSpeed(float value) {
   _targetSpeedPIDSetpoint = value;
-  /* OSCMessage aaa("/aaa"); */
-  /* aaa.add(_targetSpeedPIDSetpoint); */
-  /* _comm->SendOSCMessage(aaa); */
 }
 
 void PinneMotor::SetCurrentPosition(position_t currentPosition) {
@@ -419,11 +403,7 @@ void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
   /*       currentPosition, targetPosition, duration, minSpeed, beta,
    * skirtRatio); */
   /*   if (!_targetPositionMover->StartMove()) { */
-  /*     OSCMessage msg("/CouldNotStartMove"); */
-  /*     _comm->SendOSCMessage(msg); */
   /*   } else { */
-  /*     OSCMessage msg("/StartedMove"); */
-  /*     _comm->SendOSCMessage(msg); */
   /*   } */
   /* } */
 }
@@ -547,8 +527,8 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
 }
 
 void PinneMotor::_RouteStopMsg(OSCMessage &msg, int initialOffset) {
-    this->Stop();
-    _Stopped();
+  this->Stop();
+  _Stopped();
 }
 
 void PinneMotor::_RouteBipolarPWMMsg(OSCMessage &msg, int initialOffset) {
