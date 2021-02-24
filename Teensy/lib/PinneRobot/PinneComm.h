@@ -92,13 +92,12 @@ enum direction_t : uint8_t { DIRECTION_DOWN = 0x00, DIRECTION_UP = 0x01 };
 const std::map<direction_t, String> DirectionMap{{DIRECTION_DOWN, "down"},
                                                  {DIRECTION_UP, "up"}};
 enum blockingMask_t : uint8_t {
-  NOTHING_BLOCKS = 0x00,          //
-  TOP_SENSOR_BLOCKS = 0x01,       // The stop sensor was hit
-  SLACK_SENSOR_BLOCKS = 0x02,     // T
-  MIN_POSITION_BLOCKS = 0x04,     // Position counter is below range
-  MAX_POSITION_BLOCKS = 0x08,     // Position counter is above range
-  ABS_MIN_POSITION_BLOCKS = 0x10, //
-  DRIVER_FAULT_BLOCKS = 0x20      // Something is wrong with the driver itself
+  NOTHING_BLOCKS = 0x00,      //
+  TOP_SENSOR_BLOCKS = 0x01,   // The stop sensor was hit
+  SLACK_SENSOR_BLOCKS = 0x02, // T
+  MIN_POSITION_BLOCKS = 0x04, // Position counter is below range
+  MAX_POSITION_BLOCKS = 0x08, // Position counter is above range
+  DRIVER_FAULT_BLOCKS = 0x10  // Something is wrong with the driver itself
 };
 
 enum motorState_t : uint8_t {
@@ -109,7 +108,6 @@ enum motorState_t : uint8_t {
   BLOCKED_BY_SLACK_SENSOR,
   BLOCKED_BY_MIN_POSITION,     // Position counter is below range
   BLOCKED_BY_MAX_POSITION,     // Position counter is above range
-  BLOCKED_BY_ABS_MIN_POSITION, //
   BLOCKED_BY_DRIVER_FAULT      // Something is wrong with the driver itself
 };
 
@@ -149,7 +147,6 @@ const std::map<motorState_t, String> MotorStateChangeMap{
     {BLOCKED_BY_SLACK_SENSOR, "blocked_by_slack_sensor"},
     {BLOCKED_BY_MIN_POSITION, "blocked_by_min_position"},
     {BLOCKED_BY_MAX_POSITION, "blocked_by_max_position"},
-    {BLOCKED_BY_ABS_MIN_POSITION, "blocked_by_abs_min_position"},
     {BLOCKED_BY_DRIVER_FAULT, "driver_fault"}};
 
 const std::map<blockingMask_t, String> BlockingMaskMap{
@@ -158,7 +155,6 @@ const std::map<blockingMask_t, String> BlockingMaskMap{
     {SLACK_SENSOR_BLOCKS, "slack_sensor_blocks"},
     {MIN_POSITION_BLOCKS, "min_position_blocks"},
     {MAX_POSITION_BLOCKS, "max_position_blocks"},
-    {ABS_MIN_POSITION_BLOCKS, "abs_min_position_blocks"},
     {DRIVER_FAULT_BLOCKS, "driver_fault_blocks"}};
 
 extern EthernetUDP Udp;

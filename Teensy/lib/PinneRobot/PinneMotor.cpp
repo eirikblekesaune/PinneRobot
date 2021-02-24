@@ -101,32 +101,24 @@ void PinneMotor::SetDirection(direction_t direction) {
 }
 
 bool PinneMotor::IsBlocked() {
-  if (_state >= BLOCKED_BY_TOP_SENSOR) {
+  if (_blockingMask > NOTHING_BLOCKS) {
     direction_t direction = GetDirection();
-    switch (_state) {
-    case BLOCKED_BY_MIN_POSITION:
-    case BLOCKED_BY_TOP_SENSOR:
-    case BLOCKED_BY_ABS_MIN_POSITION:
+    if ((_blockingMask & (MIN_POSITION_BLOCKS | TOP_SENSOR_BLOCKS)) > 0) {
       if (direction == DIRECTION_UP) {
         return true;
       } else {
         return false;
       }
-      break;
-    case BLOCKED_BY_MAX_POSITION:
-    case BLOCKED_BY_SLACK_SENSOR:
+    } else if ((_blockingMask & (MAX_POSITION_BLOCKS | SLACK_SENSOR_BLOCKS)) >
+               0) {
       if (direction == DIRECTION_DOWN) {
         return true;
       } else {
         return false;
       }
-    default:
-      //
-      return false;
     }
-  } else {
-    return false;
   }
+  return false;
 }
 
 // Read all sensor values and check positions
