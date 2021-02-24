@@ -22,7 +22,8 @@ enum targetPositionMode_t : uint8_t {
 
 class TargetPositionMover {
 public:
-  TargetPositionMover(address_t *address, PinneComm *comm);
+  TargetPositionMover(address_t *address, PinneComm *comm,
+                      float *stopSpeedThreshold);
   void PlanMoveByDuration(position_t startPosition, position_t targetPosition,
                           int duration, double minSpeed, double beta,
                           double skirtRatio) {
@@ -53,7 +54,7 @@ public:
   int GetDuration() { return _duration; };
   int GetDistance() { return abs(GetTargetPosition() - GetStartPosition()); };
   double GetMinSpeed() { return _minSpeed; };
-  double GetMaxSpeed() { return _maxSpeed; };
+  double GetMaxSpeed() { return _maxSpeedPlanned; };
   double GetBeta() { return _beta; };
   direction_t GetDirection() { return _direction; };
   double GetSkirtRatio() { return _skirtRatio; };
@@ -70,11 +71,16 @@ private:
                  double minSpeed, double beta, double skirtRatio,
                  int tickDuration);
   bool _CheckPositionTargetHit(position_t currentPosition);
+  void _FinalizeMovePlan();
   void _CalculateFadeSegmentBuffer();
+  double _PerformLastStretchStrategy(double currentPosition);
   double _GetFadeSegmentValue(size_t tickIndex);
+  double _UnmapSpeedValue(double speed, double maxSpeed);
+  double _MapSpeedValue(double speed, double maxSpeed);
   bool _isMoving;
   address_t *_address;
   PinneComm *_comm;
+  float *_stopSpeedThreshold;
   void _ChangeState(targetPositionMoverState_t state);
 
   unsigned long _moveStartTime;
@@ -90,15 +96,20 @@ private:
   int _numTicks;
   size_t _currentTickIndex;
   int _maxSpeedSegmentNumTicks;
+  int _maxSpeedSegmentNumTicksAdjustment;
   int _numSkirtTicks;
   int _skirtSegmentDuration;
   unsigned long _previousUpdateTime;
   direction_t _direction;
-  double _currentSpeed;
+  double _currentSpeedUnmapped;
   double _minSpeed;
-  double _maxSpeed;
+  double _maxSpeedPlanned;
+  double _maxSpeedAdjusted;
   double _beta;
   double _skirtRatio;
+  double _distanceTravelled;
+  double _expectedDistanceTravelled;
+  double _travelError;
   int _maxSpeedSegmentStartIndex;
   int _fadeDownSegmentStartIndex;
   targetPositionMode_t _mode;

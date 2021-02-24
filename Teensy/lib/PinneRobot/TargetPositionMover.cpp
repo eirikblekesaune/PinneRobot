@@ -1,7 +1,8 @@
 #include <TargetPositionMover.h>
 
-TargetPositionMover::TargetPositionMover(address_t *address, PinneComm *comm)
-    : _address(address), _comm(comm) {
+TargetPositionMover::TargetPositionMover(address_t *address, PinneComm *comm,
+                                         float *stopSpeedThreshold)
+    : _address(address), _comm(comm), _stopSpeedThreshold(stopSpeedThreshold) {
   this->_Reset();
   _metro = new Metro(_tickDuration);
   for (size_t i = 0; i < _fadeSegmentBufferSize; i++) {
@@ -15,7 +16,6 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
                                              double beta, double skirtRatio,
                                              int tickDuration) {
 
-  OSCMessage msg("/PlanMoveByDuration");
   this->_Reset();
   this->_InitMove(startPosition, targetPosition, minSpeed, beta, skirtRatio,
                   tickDuration);
@@ -23,20 +23,9 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
   _numTicks = _duration / _tickDuration;
   _skirtSegmentDuration = _duration * _skirtRatio;
   _numSkirtTicks = _skirtSegmentDuration / _tickDuration;
-  _maxSpeed = (_distance / (_numTicks - _numSkirtTicks)) - _minSpeed;
+  _maxSpeedPlanned = (_distance / (_numTicks - _numSkirtTicks)) - _minSpeed;
   _maxSpeedSegmentNumTicks = _numTicks - (_numSkirtTicks * 2);
-  _maxSpeedSegmentStartIndex = _numSkirtTicks;
-  _fadeDownSegmentStartIndex = _numSkirtTicks + _maxSpeedSegmentNumTicks;
-  _numFadeSegmentSamplesPerTick = static_cast<float>(_fadeSegmentBufferSize) /
-                                  static_cast<float>(_numSkirtTicks);
-  _CalculateFadeSegmentBuffer();
-  _ChangeState(TARGET_POSITION_MOVER_STATE_READY);
-  msg.add(_duration);
-  msg.add(_numTicks);
-  msg.add(_skirtSegmentDuration);
-  msg.add(_numSkirtTicks);
-  msg.add(_maxSpeed);
-  _comm->SendOSCMessage(msg);
+  _FinalizeMovePlan();
 }
 
 void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
@@ -47,10 +36,14 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
   this->_Reset();
   this->_InitMove(startPosition, targetPosition, minSpeed, beta, skirtRatio,
                   tickDuration);
-  _maxSpeed = max(maxSpeed, _minSpeed);
-  _numTicks = _distance / (_maxSpeed + (_minSpeed * _skirtRatio));
+  _maxSpeedPlanned = max(maxSpeed, _minSpeed);
+  _numTicks = _distance / (_maxSpeedPlanned + (_minSpeed * _skirtRatio));
   _numSkirtTicks = _numTicks * _skirtRatio;
   _maxSpeedSegmentNumTicks = _numTicks - _numSkirtTicks;
+  _FinalizeMovePlan();
+}
+
+void TargetPositionMover::_FinalizeMovePlan() {
   _maxSpeedSegmentStartIndex = _numSkirtTicks;
   _fadeDownSegmentStartIndex = _numSkirtTicks + _maxSpeedSegmentNumTicks;
   _numFadeSegmentSamplesPerTick = static_cast<float>(_fadeSegmentBufferSize) /
@@ -63,8 +56,9 @@ void TargetPositionMover::_CalculateFadeSegmentBuffer() {
   double inc = 1.0 / (_fadeSegmentBufferSize - 1);
   for (size_t i = 0; i < _fadeSegmentBufferSize; i++) {
     double t = inc * i;
-    double val = _fadeSegmentBufferSize / (1.0 + pow((t / (1.0 - t)), -_beta));
-    val = val / _fadeSegmentBufferSize * (_maxSpeed - _minSpeed) + _minSpeed;
+    double val = 1.0 / (1.0 + pow((t / (1.0 - t)), -_beta));
+    /* val = val / _fadeSegmentBufferSize * (_maxSpeedPlanned - _minSpeed) + */
+    /* _minSpeed; */
     _fadeSegmentBuffer[i] = val;
   }
   /* for (size_t i = 0; i < 4; i++) { */
@@ -103,14 +97,14 @@ void TargetPositionMover::_InitMove(position_t startPosition,
   _comm->SendOSCMessage(msg);
 }
 
-// TODO: This method could return a bool upon success or not.
 bool TargetPositionMover::StartMove() {
   if (_state == TARGET_POSITION_MOVER_STATE_READY) {
     _moveStartTime = millis();
     _previousUpdateTime = _moveStartTime;
     _currentTickIndex = 0;
     _isMoving = true;
-    _currentSpeed = _minSpeed;
+    _currentSpeedUnmapped = _minSpeed;
+    _maxSpeedAdjusted = _maxSpeedPlanned;
     _metro->reset();
     _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT);
     return true;
@@ -127,22 +121,28 @@ void TargetPositionMover::_Reset() {
   _targetPosition = 0;
   _numTicks = 0;
   _duration = 0;
-  _currentSpeed = 0.0;
+  _currentSpeedUnmapped = 0.0;
   _minSpeed = 0.0;
-  _maxSpeed = 0.0;
+  _maxSpeedPlanned = 0.0;
+  _maxSpeedAdjusted = 0.0;
   _beta = 0.0;
   _distance = 0.0;
+  _expectedDistanceTravelled = 0.0;
+  _travelError = 0.0;
   _maxSpeedSegmentStartIndex = 0;
+  _maxSpeedSegmentNumTicksAdjustment = 0.0;
+  _maxSpeedSegmentNumTicks = 0;
   _fadeDownSegmentStartIndex = 0;
   _mode = TARGET_POSITION_MODE_UNKNOWN;
   _ChangeState(TARGET_POSITION_MOVER_STATE_NOT_READY);
 }
 
 double TargetPositionMover::GetCurrentSpeed() {
+  double speed = _MapSpeedValue(_currentSpeedUnmapped, _maxSpeedAdjusted);
   if (_direction == DIRECTION_DOWN) {
-    return _currentSpeed;
+    return speed;
   } else {
-    return -_currentSpeed;
+    return -speed;
   }
 }
 
@@ -169,46 +169,52 @@ void TargetPositionMover::Update(position_t currentPosition) {
         } else if ((idx >= _numSkirtTicks) &&
                    (_state == TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT)) {
           _ChangeState(TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT);
-        } else if ((idx >= _fadeDownSegmentStartIndex) &&
+        } else if ((idx >= (_fadeDownSegmentStartIndex +
+                            _maxSpeedSegmentNumTicksAdjustment)) &&
                    (_state == TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT)) {
           _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT);
         } else if ((idx >= _numTicks) &&
                    (_state == TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT)) {
           _ChangeState(
               TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED);
-          StopMove();
         }
 
-        OSCMessage msg("/stateSegment");
         size_t fadeSegmentBufferIndex;
+        _distanceTravelled = (currentPosition - _startPosition);
+        _expectedDistanceTravelled += GetCurrentSpeed();
+        _travelError = _expectedDistanceTravelled - _distanceTravelled;
         switch (_state) {
         case TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT:
           fadeSegmentBufferIndex =
               _numFadeSegmentSamplesPerTick * _currentTickIndex;
-          _currentSpeed = _fadeSegmentBuffer[fadeSegmentBufferIndex];
-          msg.add("fadeIn");
-          msg.add(_currentTickIndex);
-          msg.add(_currentSpeed);
-          msg.add(fadeSegmentBufferIndex);
+          _currentSpeedUnmapped = _fadeSegmentBuffer[fadeSegmentBufferIndex];
           break;
         case TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT:
-          _currentSpeed = _maxSpeed;
-          msg.add("maxSpeed");
-          msg.add(_currentTickIndex);
-          msg.add(_currentSpeed);
+          _currentSpeedUnmapped = 1.0;
+          if (_mode == TARGET_POSITION_MODE_BY_MAX_SPEED) {
+            // Will we reach the target with the current numTicks?
+            // Take the sum of the remaining maxSpeed ticks and add it
+            // to the sum of the the fade out segment values.
+            // The estimated travel distance is what we at this moment can
+            // foresee the travel distance will be.
+            double estimatedNumTicksToTarget = _EstimateRemainingNumTicks(
+                abs(numTicks - (_numTicks - _currentTickIndex)));
+            double plannedNumTicksToTarget;
+            // The planned travel distance may differ from this, that is what
+            // we call an error that we will adjust for, by adding ticks to the
+            // max speed segment.
+          }
           break;
         case TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT:
           fadeSegmentBufferIndex =
               abs((_fadeSegmentBufferSize - 1) -
                   (_numFadeSegmentSamplesPerTick *
                    (_currentTickIndex - _fadeDownSegmentStartIndex)));
-          _currentSpeed = _fadeSegmentBuffer[fadeSegmentBufferIndex];
-          msg.add("fadeOut");
-          msg.add(_currentTickIndex);
-          msg.add(_currentSpeed);
-          msg.add(fadeSegmentBufferIndex);
+          _currentSpeedUnmapped = _fadeSegmentBuffer[fadeSegmentBufferIndex];
           break;
         case TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED:
+          _currentSpeedUnmapped =
+              this->_PerformLastStretchStrategy(currentPosition);
           break;
         case TARGET_POSITION_MOVER_STATE_REACHED_TARGET:
         case TARGET_POSITION_MOVER_STATE_READY:
@@ -216,11 +222,36 @@ void TargetPositionMover::Update(position_t currentPosition) {
           break;
         }
         msg.empty();
+
         /* _comm->SendOSCMessage(msg); */
         _previousUpdateTime = millis();
       }
     }
   }
+}
+
+double TargetPositionMover::_UnmapSpeedValue(double speed, double maxSpeed) {
+  return (speed - _minSpeed) / (maxSpeed - _minSpeed);
+}
+
+double TargetPositionMover::_MapSpeedValue(double speed, double maxSpeed) {
+  return (speed * (maxSpeed - _minSpeed)) + _minSpeed;
+}
+
+double
+TargetPositionMover::_PerformLastStretchStrategy(double currentPosition) {
+  double speed = 0.0;
+  switch (_mode) {
+  case TARGET_POSITION_MODE_BY_DURATION:
+    speed = *_stopSpeedThreshold;
+    break;
+  case TARGET_POSITION_MODE_BY_MAX_SPEED:
+    speed = *_stopSpeedThreshold;
+    break;
+  default:
+    break;
+  }
+  return speed;
 }
 
 double TargetPositionMover::_GetFadeSegmentValue(size_t tickIndex) {

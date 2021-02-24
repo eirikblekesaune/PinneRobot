@@ -28,7 +28,8 @@ void PinneMotor::init() {
   pinMode(_topStopSensorPin, INPUT_PULLUP);
   pinMode(_slackStopSensorPin, INPUT_PULLUP);
   pinMode(_currentSensePin, INPUT);
-  _targetPositionMover = new TargetPositionMover(&_address, _comm);
+  _targetPositionMover =
+      new TargetPositionMover(&_address, _comm, &_targetSpeedStopThreshold);
   SetMotorControlMode(CONTROL_MODE_PWM);
   _measuredCurrent = static_cast<float>(analogRead(_currentSensePin));
   _topStopButton = new Bounce(_topStopSensorPin, 5);
@@ -73,7 +74,7 @@ void PinneMotor::Stop() {
     this->SetBipolarPWM(0);
     break;
   case CONTROL_MODE_TARGET_SPEED:
-    this->SetBipolarPWM(0);
+    this->SetBipolarTargetSpeed(0);
     break;
   case CONTROL_MODE_TARGET_POSITION:
     _targetPositionMover->StopMove();
@@ -214,50 +215,50 @@ void PinneMotor::_TargetPositionModeUpdate() {
     targetSpeed = _targetPositionMover->GetCurrentSpeed();
     this->SetBipolarTargetSpeed(targetSpeed);
     this->_TargetSpeedModeUpdate();
-  } else {
-    OSCMessage msg("/ItStoppedMoving");
-    this->Stop();
   }
 }
+
+void PinneMotor::_ActivateTargetSpeedPID() {
+  _speedPID->SetMode(AUTOMATIC);
+  this->SetBipolarTargetSpeed(0.0);
+  _measuredSpeed = 0.0;
+  _targetSpeedPIDOutput = 0.0;
+  _speedPID->Compute();
+}
+
+void PinneMotor::_DeactivateTargetSpeedPID() { _speedPID->SetMode(MANUAL); }
 
 void PinneMotor::_TargetSpeedModeUpdate() {
   _speedPID->Compute();
   if (IsBlocked()) {
     if (_targetSpeedState != TARGET_SPEED_STOPPED) {
       _targetSpeedState = TARGET_SPEED_STOPPED;
-      _speedPID->SetMode(MANUAL);
-      this->Stop();
-    }
-  }
-  if ((_targetSpeedPIDSetpoint < _targetSpeedStopThreshold) &&
-      (_targetSpeedPIDSetpoint > -_targetSpeedStopThreshold)) {
-    if (_targetSpeedState != TARGET_SPEED_STOPPED) {
-      _targetSpeedState = TARGET_SPEED_STOPPED;
-      _speedPID->SetMode(MANUAL);
-      this->Stop();
+      this->_DeactivateTargetSpeedPID();
+      this->SetBipolarPWM(0);
     }
   } else {
-    if (_targetSpeedPIDSetpoint >= _targetSpeedStopThreshold) {
-      if (_targetSpeedState != TARGET_SPEED_GOING_DOWN) {
-        _targetSpeedState = TARGET_SPEED_GOING_DOWN;
-        _speedPID->SetMode(AUTOMATIC);
-        this->SetBipolarTargetSpeed(0.0);
-        _measuredSpeed = 0.0;
-        _targetSpeedPIDOutput = 0.0;
-        _speedPID->Compute();
+    if ((_targetSpeedPIDSetpoint < _targetSpeedStopThreshold) &&
+        (_targetSpeedPIDSetpoint > -_targetSpeedStopThreshold)) {
+      if (_targetSpeedState != TARGET_SPEED_STOPPED) {
+        _targetSpeedState = TARGET_SPEED_STOPPED;
+        this->_DeactivateTargetSpeedPID();
+        this->SetBipolarPWM(0);
       }
     } else {
-      if (_targetSpeedState != TARGET_SPEED_GOING_UP) {
-        _targetSpeedState = TARGET_SPEED_GOING_UP;
-        _speedPID->SetMode(AUTOMATIC);
-        this->SetBipolarTargetSpeed(0.0);
-        _measuredSpeed = 0.0;
-        _targetSpeedPIDOutput = 0.0;
-        _speedPID->Compute();
+      if (_targetSpeedPIDSetpoint >= _targetSpeedStopThreshold) {
+        if (_targetSpeedState != TARGET_SPEED_GOING_DOWN) {
+          _targetSpeedState = TARGET_SPEED_GOING_DOWN;
+          this->_ActivateTargetSpeedPID();
+        }
+      } else {
+        if (_targetSpeedState != TARGET_SPEED_GOING_UP) {
+          _targetSpeedState = TARGET_SPEED_GOING_UP;
+          this->_ActivateTargetSpeedPID();
+        }
       }
+      /* _speedPID->Compute(); */
+      this->SetBipolarPWM(static_cast<int>(_targetSpeedPIDOutput));
     }
-    /* _speedPID->Compute(); */
-    this->SetBipolarPWM(static_cast<int>(_targetSpeedPIDOutput));
   }
   /* static Metro metro(100); */
   /* if (metro.check() == 1) { */

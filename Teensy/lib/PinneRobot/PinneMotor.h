@@ -126,6 +126,8 @@ class PinneMotor
           void _UpdateSpeedometer();
           void _UpdateCurrentSense();
           float _measuredCurrent;
+          void _ActivateTargetSpeedPID();
+          void _DeactivateTargetSpeedPID();
 
           int _topStopSensorValue;
           int _slackStopSensorValue;
