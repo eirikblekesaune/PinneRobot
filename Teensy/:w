@@ -225,28 +225,35 @@ void PinneMotor::_TargetSpeedModeUpdate() {
       break;
     case TARGET_SPEED_GOING_DOWN:
     case TARGET_SPEED_GOING_UP:
+      this->_DeactivateTargetSpeedPID();
+      this->SetBipolarPWM(0);
       break;
     }
 
+    OSCMessage a("/TARGET_SPEED_STATE");
     switch (_targetSpeedState) {
     case TARGET_SPEED_STOPPED:
-      this->SetBipolarTargetSpeed(0.0001);
+      a.add("STOPPED");
       break;
     case TARGET_SPEED_GOING_DOWN:
-      /* this->_ActivateTargetSpeedPID(); */
+      a.add("GOING_DOWN");
+      this->_ActivateTargetSpeedPID();
       break;
     case TARGET_SPEED_GOING_UP:
-      /* this->_ActivateTargetSpeedPID(); */
+      a.add("GOING_UP");
+      this->_ActivateTargetSpeedPID();
       break;
     }
+    _comm->SendOSCMessage(a);
   }
 
-  _speedPID->Compute();
   switch (_targetSpeedState) {
   case TARGET_SPEED_GOING_DOWN:
+    _speedPID->Compute();
     this->SetBipolarPWM(static_cast<int>(_targetSpeedPIDOutput));
     break;
   case TARGET_SPEED_GOING_UP:
+    _speedPID->Compute();
     this->SetBipolarPWM(static_cast<int>(_targetSpeedPIDOutput));
     break;
   case TARGET_SPEED_STOPPED:
@@ -435,11 +442,9 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
       break;
     case CONTROL_MODE_TARGET_POSITION:
       _targetSpeedState = TARGET_SPEED_STOPPED;
-      this->_ActivateTargetSpeedPID();
       break;
     case CONTROL_MODE_TARGET_SPEED:
       _targetSpeedState = TARGET_SPEED_STOPPED;
-      this->_ActivateTargetSpeedPID();
       break;
     }
   }
