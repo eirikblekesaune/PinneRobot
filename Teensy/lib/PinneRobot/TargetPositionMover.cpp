@@ -3,7 +3,6 @@
 TargetPositionMover::TargetPositionMover(address_t *address, PinneComm *comm,
                                          float *stopSpeedThreshold)
     : _address(address), _comm(comm), _stopSpeedThreshold(stopSpeedThreshold) {
-  this->_Reset();
   _metro = new Metro(_tickDuration);
   for (size_t i = 0; i < _fadeSegmentBufferSize; i++) {
     _fadeSegmentBuffer[i] = 0.0;
@@ -14,9 +13,10 @@ TargetPositionMover::TargetPositionMover(address_t *address, PinneComm *comm,
    */
   _maxSpeedPID =
       new PID(&_distanceTravelled, &_maxSpeedAdjusted,
-              &_plannedDistanceTravelled, 13.0, 10.0, 1.0, P_ON_M, DIRECT);
+              &_plannedDistanceTravelled, 2.0, 100.0, 1.0, P_ON_E, DIRECT);
   _maxSpeedPID->SetOutputLimits(
       0.0, 2.0); // twice the max speed is upper adjustment limit
+  this->_Reset();
 }
 
 void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
@@ -34,6 +34,7 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
   _numSkirtTicks = _skirtSegmentDuration / _tickDuration;
   _maxSpeedPlanned = (_distance / (_numTicks - _numSkirtTicks)) - _minSpeed;
   _maxSpeedSegmentNumTicks = _numTicks - (_numSkirtTicks * 2);
+  /* _mode = TARGET_POSITION_MODE_BY_DURATION; */
   _FinalizeMovePlan();
 }
 
@@ -49,6 +50,7 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
   _numTicks = _distance / (_maxSpeedPlanned + (_minSpeed * _skirtRatio));
   _numSkirtTicks = _numTicks * _skirtRatio;
   _maxSpeedSegmentNumTicks = _numTicks - _numSkirtTicks;
+  /* _mode = TARGET_POSITION_MODE_BY_MAX_SPEED; */
   _FinalizeMovePlan();
 }
 
@@ -58,6 +60,8 @@ void TargetPositionMover::_FinalizeMovePlan() {
   _numFadeSegmentSamplesPerTick = static_cast<float>(_fadeSegmentBufferSize) /
                                   static_cast<float>(_numSkirtTicks);
   _CalculateFadeSegmentBuffer();
+
+  _state = TARGET_POSITION_MOVER_STATE_READY;
   _ChangeState(TARGET_POSITION_MOVER_STATE_READY);
 }
 
@@ -122,7 +126,9 @@ bool TargetPositionMover::StartMove() {
   }
 }
 
-void TargetPositionMover::StopMove() { _isMoving = false; }
+void TargetPositionMover::StopMove() {
+  this->_Reset();
+}
 
 void TargetPositionMover::_Reset() {
   _isMoving = false;
