@@ -146,12 +146,14 @@ void PinneMotor::Update() {
 }
 
 void PinneMotor::UpdateState() {
-  if (_state < STOPPED) {
-    direction_t direction = GetDirection();
-    if (direction == DIRECTION_DOWN) {
-      _GoingDown();
-    } else {
-      _GoingUp();
+  if (_state <= STOPPED) {
+    if ((_state == STOPPED) && (GetPWM() != 0)) {
+      direction_t direction = GetDirection();
+      if (direction == DIRECTION_DOWN) {
+        _GoingDown();
+      } else {
+        _GoingUp();
+      }
     }
   }
 }
@@ -292,11 +294,9 @@ void PinneMotor::ReadTopStopSensor() {
   _topStopButton->update();
   if (_topStopButton->fallingEdge()) {
     // pin is pulled LOW when button is pressed
-    _topStopSensorValue = TOP_SENSOR_IN;
     _TopStopSensorIn();
   } else if (_topStopButton->risingEdge()) {
     // pin is pulled HIGH when button is released
-    _topStopSensorValue = TOP_SENSOR_OUT;
     _TopStopSensorOut();
   }
 }
@@ -305,31 +305,12 @@ void PinneMotor::ReadSlackStopSensor() {
   _slackStopButton->update();
   if (_slackStopButton->fallingEdge()) {
     // pin is pulled HIGH when button is pressed
-    _slackStopSensorValue = SLACK_SENSOR_OUT;
     _SlackStopSensorOut();
   } else if (_slackStopButton->risingEdge()) {
     // pin is pulled LOW when button is released
-    _slackStopSensorValue = SLACK_SENSOR_IN;
     _SlackStopSensorIn();
   }
 }
-
-void PinneMotor::_TopStopSensorIn() {
-  Stop();
-  SetCurrentPosition(POSITION_ALL_UP);
-  _blockingMask |= TOP_SENSOR_BLOCKS;
-  _ChangeState(BLOCKED_BY_TOP_SENSOR);
-}
-
-void PinneMotor::_TopStopSensorOut() { _blockingMask &= ~TOP_SENSOR_BLOCKS; }
-
-void PinneMotor::_SlackStopSensorOut() {
-  Stop();
-  _blockingMask |= SLACK_SENSOR_BLOCKS;
-  _ChangeState(BLOCKED_BY_SLACK_SENSOR);
-}
-
-void PinneMotor::_SlackStopSensorIn() { _blockingMask &= ~SLACK_SENSOR_BLOCKS; }
 
 void PinneMotor::_ChangeState(motorState_t state) {
   motorState_t previousState = _state;
@@ -339,6 +320,28 @@ void PinneMotor::_ChangeState(motorState_t state) {
   }
 }
 
+void PinneMotor::_TopStopSensorIn() {
+  Stop();
+  SetCurrentPosition(POSITION_ALL_UP);
+  _SetBlockingMaskBit(TOP_SENSOR_BLOCKS);
+  _ChangeState(BLOCKED_BY_TOP_SENSOR);
+}
+
+void PinneMotor::_TopStopSensorOut() {
+  _ClearBlockingMaskBit(TOP_SENSOR_BLOCKS);
+}
+
+void PinneMotor::_SlackStopSensorOut() {
+  Stop();
+  _SetBlockingMaskBit(SLACK_SENSOR_BLOCKS);
+  _ChangeState(BLOCKED_BY_SLACK_SENSOR);
+}
+
+void PinneMotor::_SlackStopSensorIn() {
+  _ClearBlockingMaskBit(SLACK_SENSOR_BLOCKS);
+}
+
+
 void PinneMotor::_Stopped() { _ChangeState(STOPPED); }
 
 void PinneMotor::_GoingUp() { _ChangeState(GOING_UP); }
@@ -346,21 +349,32 @@ void PinneMotor::_GoingUp() { _ChangeState(GOING_UP); }
 void PinneMotor::_GoingDown() { _ChangeState(GOING_DOWN); }
 
 void PinneMotor::_MinPositionReached() {
-  _blockingMask |= MIN_POSITION_BLOCKS;
+  _SetBlockingMaskBit(MIN_POSITION_BLOCKS);
   _ChangeState(BLOCKED_BY_MIN_POSITION);
   Stop();
 }
 
 void PinneMotor::_MinPositionLeft() {
-  _blockingMask &= ~MIN_POSITION_BLOCKS;
+  _ClearBlockingMaskBit(MIN_POSITION_BLOCKS);
 }
 
 void PinneMotor::_MaxPositionReached() {
+  _SetBlockingMaskBit(MAX_POSITION_BLOCKS);
   _ChangeState(BLOCKED_BY_MAX_POSITION);
   Stop();
 }
 
-void PinneMotor::_MaxPositionLeft() { _blockingMask &= ~MAX_POSITION_BLOCKS; }
+void PinneMotor::_MaxPositionLeft() {
+  _ClearBlockingMaskBit(MAX_POSITION_BLOCKS);
+}
+
+void PinneMotor::_SetBlockingMaskBit(blockingMask_t sensorMask) {
+  _blockingMask |= sensorMask;
+}
+
+void PinneMotor::_ClearBlockingMaskBit(blockingMask_t sensorMask) {
+  _blockingMask &= ~sensorMask;
+}
 
 void PinneMotor::SetBipolarTargetSpeed(float value) {
   _targetSpeedPIDSetpoint = value;
@@ -384,14 +398,7 @@ void PinneMotor::SetMaxPosition(position_t maxPosition) {
 }
 
 void PinneMotor::GoToParkingPosition(int speed) {
-  // Check if already at top and do parking only if the sensor is out
-  _topStopSensorValue = digitalRead(_topStopSensorPin);
-  if (_topStopSensorValue == TOP_SENSOR_OUT) {
-    // fake the currentPosition to default max
-    SetCurrentPosition(POSITION_DEFAULT_MAX);
-    SetDirection(DIRECTION_UP);
-    SetPWM(speed);
-  }
+  // TODO: implement this
 }
 
 void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,

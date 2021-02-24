@@ -130,12 +130,12 @@ class PinneMotor
           void _ActivateTargetSpeedPID();
           void _DeactivateTargetSpeedPID();
 
-          int _topStopSensorValue;
-          int _slackStopSensorValue;
           bool _blocked;
           int _stoppingSpeed;
           float _targetSpeedStopThreshold;
           void _ChangeState(motorState_t state);
+          void _SetBlockingMaskBit(blockingMask_t sensorMask);
+          void _ClearBlockingMaskBit(blockingMask_t sensorMask);
           void _Stopped();
           void _GoingUp();
           void _GoingDown();
