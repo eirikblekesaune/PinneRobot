@@ -17,9 +17,9 @@ class PinneComm;
 enum targetPositionMode_t : uint8_t {
   TARGET_POSITION_MODE_BY_DURATION,
   TARGET_POSITION_MODE_BY_MAX_SPEED,
+  TARGET_POSITION_MODE_BY_CONSTANT_SPEED,
   TARGET_POSITION_MODE_UNKNOWN
 };
-
 
 class TargetPositionMover {
 public:
@@ -43,6 +43,18 @@ public:
   void PlanMoveByMaxSpeed(position_t startPosition, position_t targetPosition,
                           double maxSpeed, double minSpeed, double beta,
                           double skirtRatio, int tickDuration);
+  void PlanMoveByConstantSpeed(position_t startPosition,
+                               position_t targetPosition, double speed,
+                               double minSpeed, double beta, double skirtRatio,
+                               int tickDuration);
+  void PlanMoveByConstantSpeed(position_t startPosition,
+                               position_t targetPosition, double speed,
+                               double minSpeed, double beta,
+                               double skirtRatio) {
+    this->PlanMoveByConstantSpeed(startPosition, targetPosition, speed,
+                                  minSpeed, beta, skirtRatio, 50);
+  }
+
   bool StartMove();
   void StopMove();
   void Update(position_t currentPosition);
@@ -86,6 +98,7 @@ private:
   PinneComm *_comm;
   float *_stopSpeedThreshold;
   void _ChangeState(targetPositionMoverState_t state);
+  double _GetSCurveValue(double t, double beta);
 
   unsigned long _moveStartTime;
   PID *_maxSpeedPID;
@@ -99,6 +112,8 @@ private:
   int _duration;
   int _tickDuration;
   int _numTicks;
+  int _numFadeInTicks;
+  int _numFadeOutTicks;
   size_t _currentTickIndex;
   int _maxSpeedSegmentNumTicks;
   int _maxSpeedSegmentNumTicksAdjustment;

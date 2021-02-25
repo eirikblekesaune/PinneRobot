@@ -29,6 +29,7 @@ private:
   PinneComm *_comm;
   controlMode_t _motorControlMode;
   void _RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset);
+  void _RouteStopMsg(OSCMessage &msg, int initialOffset);
 };
 
 #endif

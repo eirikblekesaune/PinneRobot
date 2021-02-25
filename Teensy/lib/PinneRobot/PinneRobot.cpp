@@ -92,6 +92,10 @@ void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   if (offset) {
     this->_RouteMotorControlModeMsg(msg, offset + initialOffset);
   }
+  offset = msg.match("/stop", initialOffset);
+  if (offset) {
+    this->_RouteStopMsg(msg, offset + initialOffset);
+  }
 }
 
 void PinneRobot::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
@@ -121,4 +125,9 @@ void PinneRobot::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
       _comm->ReturnQueryValue(CMD_MOTOR_CONTROL_MODE, replyMsg);
     }
   }
+}
+
+void PinneRobot::_RouteStopMsg(OSCMessage &msg, int initialOffset) {
+  motorA->Stop();
+  motorB->Stop();
 }

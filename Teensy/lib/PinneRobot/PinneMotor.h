@@ -93,6 +93,10 @@ class PinneMotor
           void GoToTargetPositionByMaxSpeed(int targetPosition, double maxSpeed,
                                             double minSpeed, double beta,
                                             double skirtRatio);
+          void GoToTargetPositionByConstantSpeed(int targetPosition,
+                                                 double speed, double minSpeed,
+                                                 double beta,
+                                                 double skirtRatio);
 
           bool routeOSC(OSCMessage &msg, int initialOffset);
 
