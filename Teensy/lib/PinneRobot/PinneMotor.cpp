@@ -43,7 +43,7 @@ void PinneMotor::init() {
       new PID_CLASS(&_measuredSpeed, &_targetSpeedPIDOutput,
                     &_targetSpeedPIDSetpoint, 2.0, 1000.0, 1.0, P_ON_M, DIRECT);
 
-  _speedPID->SetOutputLimits(-_driver->SPEED_MAX, _driver->SPEED_MAX);
+  _speedPID->SetOutputLimits(-_driver->SPEED_MAX / 2, _driver->SPEED_MAX / 2);
   _speedPID->SetSampleTime(_speedometerInterval);
   _targetSpeedStopThreshold = 0.1;
   _targetSpeedState = TARGET_SPEED_STOPPED;
@@ -146,8 +146,9 @@ void PinneMotor::Update() {
 }
 
 void PinneMotor::UpdateState() {
-  if (_state <= STOPPED) {
-    if ((_state == STOPPED) && (GetPWM() != 0)) {
+  switch (_state) {
+  case STOPPED:
+    if (GetPWM() != 0) {
       direction_t direction = GetDirection();
       if (direction == DIRECTION_DOWN) {
         _GoingDown();
@@ -155,6 +156,19 @@ void PinneMotor::UpdateState() {
         _GoingUp();
       }
     }
+    break;
+  case GOING_DOWN:
+    if (GetDirection() == DIRECTION_UP) {
+      _GoingUp();
+    }
+    break;
+  case GOING_UP:
+    if (GetDirection() == DIRECTION_DOWN) {
+      _GoingDown();
+    }
+    break;
+  default:
+    break;
   }
 }
 
@@ -207,6 +221,7 @@ void PinneMotor::_TargetPositionModeUpdate() {
 }
 
 void PinneMotor::_ActivateTargetSpeedPID() {
+  _targetSpeedPIDOutput = _measuredSpeed;
   _speedPID->SetMode(AUTOMATIC);
   _speedPID->Compute();
 }
@@ -234,17 +249,22 @@ void PinneMotor::_TargetSpeedModeUpdate() {
       break;
     }
 
+    OSCMessage m("/TargetSpeed");
     switch (_targetSpeedState) {
     case TARGET_SPEED_STOPPED:
-      this->SetBipolarTargetSpeed(0.0001);
+      m.add("STOPPED");
+      this->_DeactivateTargetSpeedPID();
       break;
     case TARGET_SPEED_GOING_DOWN:
-      /* this->_ActivateTargetSpeedPID(); */
+      m.add("GOING_DOWN");
+      this->_ActivateTargetSpeedPID();
       break;
     case TARGET_SPEED_GOING_UP:
-      /* this->_ActivateTargetSpeedPID(); */
+      m.add("GOING_UP");
+      this->_ActivateTargetSpeedPID();
       break;
     }
+    _comm->SendOSCMessage(m);
   }
 
   _speedPID->Compute();
@@ -450,11 +470,9 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
       break;
     case CONTROL_MODE_TARGET_POSITION:
       _targetSpeedState = TARGET_SPEED_STOPPED;
-      this->_ActivateTargetSpeedPID();
       break;
     case CONTROL_MODE_TARGET_SPEED:
       _targetSpeedState = TARGET_SPEED_STOPPED;
-      this->_ActivateTargetSpeedPID();
       break;
     }
   }
@@ -708,6 +726,14 @@ void PinneMotor::_RoutePIDParametersMsg(OSCMessage &msg, int initialOffset) {
     ki = msg.getFloat(1);
     kd = msg.getFloat(2);
     _speedPID->SetTunings(kp, ki, kd);
+  } else if (msg.size() == 4) {
+    pidvalue_t kp, ki, kd;
+    int pOnE;
+    kp = msg.getFloat(0);
+    ki = msg.getFloat(1);
+    kd = msg.getFloat(2);
+    pOnE = msg.getInt(3);
+    _speedPID->SetTunings(kp, ki, kd, pOnE);
   } else if (_comm->HasQueryAddress(msg, initialOffset)) {
     OSCMessage replyMsg("/");
     replyMsg.add(static_cast<float>(_speedPID->GetKp()));
