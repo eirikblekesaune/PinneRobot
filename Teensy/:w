@@ -28,9 +28,9 @@ void PinneMotor::init() {
   pinMode(_topStopSensorPin, INPUT_PULLUP);
   pinMode(_slackStopSensorPin, INPUT_PULLUP);
   pinMode(_currentSensePin, INPUT);
-  _targetPositionMover =
-      new TargetPositionMover(&_address, _comm, &_targetSpeedStopThreshold);
-
+  /* _targetPositionMover = */
+  /*     new TargetPositionMover(&_address, _comm, &_targetSpeedStopThreshold);
+   */
   SetMotorControlMode(CONTROL_MODE_PWM);
   _measuredCurrent = static_cast<float>(analogRead(_currentSensePin));
   _topStopButton = new Bounce(_topStopSensorPin, 5);
@@ -65,8 +65,8 @@ void PinneMotor::Stop() {
     this->SetBipolarTargetSpeed(0);
     break;
   case CONTROL_MODE_TARGET_POSITION:
-    _targetPositionMover->StopMove();
-    this->SetBipolarTargetSpeed(0);
+    /* _targetPositionMover->StopMove(); */
+    this->SetBipolarPWM(0);
     break;
   }
 }
@@ -146,9 +146,8 @@ void PinneMotor::Update() {
 }
 
 void PinneMotor::UpdateState() {
-  switch (_state) {
-  case STOPPED:
-    if (GetPWM() != 0) {
+  if (_state <= STOPPED) {
+    if ((_state == STOPPED) && (GetPWM() != 0)) {
       direction_t direction = GetDirection();
       if (direction == DIRECTION_DOWN) {
         _GoingDown();
@@ -156,19 +155,6 @@ void PinneMotor::UpdateState() {
         _GoingUp();
       }
     }
-    break;
-  case GOING_DOWN:
-    if (GetDirection() == DIRECTION_UP) {
-      _GoingUp();
-    }
-    break;
-  case GOING_UP:
-    if (GetDirection() == DIRECTION_DOWN) {
-      _GoingDown();
-    }
-    break;
-  default:
-    break;
   }
 }
 
@@ -204,26 +190,19 @@ void PinneMotor::_PWMModeUpdate() {
 }
 
 void PinneMotor::_TargetPositionModeUpdate() {
-  if (_targetPositionMover->IsMoving()) {
-    double targetSpeed;
-    position_t currentPosition = GetCurrentPosition();
-    _targetPositionMover->Update(currentPosition);
-    targetSpeed = _targetPositionMover->GetCurrentSpeed();
-    if (_targetPositionMover->DidReachTarget()) {
-      this->Stop();
-      OSCMessage msg("/DidReachTarget");
-      _comm->SendOSCMessage(msg);
-    } else {
-      this->SetBipolarTargetSpeed(targetSpeed);
-    }
-  }
-  this->_TargetSpeedModeUpdate();
+  /* position_t currentPosition = GetCurrentPosition(); */
+  /* _targetPositionMover->Update(currentPosition); */
+  /* if (_targetPositionMover->IsMoving()) { */
+  /*   double targetSpeed; */
+  /*   targetSpeed = _targetPositionMover->GetCurrentSpeed(); */
+  /*   this->SetBipolarTargetSpeed(targetSpeed); */
+  /*   this->_TargetSpeedModeUpdate(); */
+  /* } */
 }
 
 void PinneMotor::_ActivateTargetSpeedPID() {
-  _targetSpeedPIDOutput = _measuredSpeed;
   _speedPID->SetMode(AUTOMATIC);
-  _speedPID->Compute();
+  /* _speedPID->Compute(); */
 }
 
 void PinneMotor::_DeactivateTargetSpeedPID() { _speedPID->SetMode(MANUAL); }
@@ -246,28 +225,35 @@ void PinneMotor::_TargetSpeedModeUpdate() {
       break;
     case TARGET_SPEED_GOING_DOWN:
     case TARGET_SPEED_GOING_UP:
+      this->_DeactivateTargetSpeedPID();
+      this->SetBipolarPWM(0);
       break;
     }
 
+    OSCMessage a("/TARGET_SPEED_STATE");
     switch (_targetSpeedState) {
     case TARGET_SPEED_STOPPED:
-      this->_DeactivateTargetSpeedPID();
+      a.add("STOPPED");
       break;
     case TARGET_SPEED_GOING_DOWN:
+      a.add("GOING_DOWN");
       this->_ActivateTargetSpeedPID();
       break;
     case TARGET_SPEED_GOING_UP:
+      a.add("GOING_UP");
       this->_ActivateTargetSpeedPID();
       break;
     }
+    _comm->SendOSCMessage(a);
   }
 
-  _speedPID->Compute();
   switch (_targetSpeedState) {
   case TARGET_SPEED_GOING_DOWN:
+    _speedPID->Compute();
     this->SetBipolarPWM(static_cast<int>(_targetSpeedPIDOutput));
     break;
   case TARGET_SPEED_GOING_UP:
+    _speedPID->Compute();
     this->SetBipolarPWM(static_cast<int>(_targetSpeedPIDOutput));
     break;
   case TARGET_SPEED_STOPPED:
@@ -280,6 +266,7 @@ void PinneMotor::_UpdateSpeedometer() {
   if (_speedometerMetro->check() == 1) {
     float prevSpeed = _measuredSpeed;
     position_t currentPosition = GetCurrentPosition();
+    /* _measuredSpeed = (currentPosition - _prevPosition); */
     _measuredSpeed = (currentPosition - _prevPosition) * 0.5;
     _measuredSpeed = _measuredSpeed + (prevSpeed * 0.5);
     _prevPosition = currentPosition;
@@ -404,25 +391,15 @@ void PinneMotor::GoToParkingPosition(int speed) {
 void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
                                               double minSpeed, double beta,
                                               double skirtRatio) {
-  OSCMessage a("/GoToTargetPositionByDuration");
-  a.add(targetPosition);
-  a.add(duration);
-  a.add(minSpeed);
-  a.add(beta);
-  a.add(skirtRatio);
-  _comm->SendOSCMessage(a);
-  if (!_targetPositionMover->IsMoving()) {
-    position_t currentPosition = GetCurrentPosition();
-    _targetPositionMover->PlanMoveByDuration(
-        currentPosition, targetPosition, duration, minSpeed, beta, skirtRatio);
-    if (_targetPositionMover->StartMove()) {
-      OSCMessage b("/StartedMove");
-      _comm->SendOSCMessage(b);
-    } else {
-      OSCMessage c("/CouldNotStartMove");
-      _comm->SendOSCMessage(c);
-    }
-  }
+  /* if (!_targetPositionMover->IsMoving()) { */
+  /*   position_t currentPosition = GetCurrentPosition(); */
+  /*   _targetPositionMover->PlanMoveByDuration( */
+  /*       currentPosition, targetPosition, duration, minSpeed, beta,
+   * skirtRatio); */
+  /*   if (!_targetPositionMover->StartMove()) { */
+  /*   } else { */
+  /*   } */
+  /* } */
 }
 
 void PinneMotor::GoToTargetPositionByMaxSpeed(int targetPosition,
@@ -435,24 +412,6 @@ void PinneMotor::GoToTargetPositionByMaxSpeed(int targetPosition,
    * skirtRatio); */
   /*   _targetPositionMover->StartMove(); */
   /* } */
-}
-
-void PinneMotor::GoToTargetPositionByConstantSpeed(int targetPosition,
-                                                   double speed,
-                                                   double minSpeed, double beta,
-                                                   double skirtRatio) {
-  if (!_targetPositionMover->IsMoving()) {
-    position_t currentPosition = GetCurrentPosition();
-    _targetPositionMover->PlanMoveByConstantSpeed(
-        currentPosition, targetPosition, speed, minSpeed, beta, skirtRatio);
-    if (_targetPositionMover->StartMove()) {
-      OSCMessage b("/StartedMove");
-      _comm->SendOSCMessage(b);
-    } else {
-      OSCMessage c("/CouldNotStartMove");
-      _comm->SendOSCMessage(c);
-    }
-  }
 }
 
 void PinneMotor::GoToParkingPosition() {
@@ -718,15 +677,6 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
                                              beta, skirtRatio);
         }
       }
-
-      offset = msg.match("/byConstantSpeed", initialOffset);
-      if (offset) {
-        if (msg.isFloat(1)) {
-          double speed = msg.getFloat(1);
-          this->GoToTargetPositionByConstantSpeed(targetPosition, speed,
-                                                  minSpeed, beta, skirtRatio);
-        }
-      }
     }
   }
 }
@@ -748,14 +698,6 @@ void PinneMotor::_RoutePIDParametersMsg(OSCMessage &msg, int initialOffset) {
     ki = msg.getFloat(1);
     kd = msg.getFloat(2);
     _speedPID->SetTunings(kp, ki, kd);
-  } else if (msg.size() == 4) {
-    pidvalue_t kp, ki, kd;
-    int pOnE;
-    kp = msg.getFloat(0);
-    ki = msg.getFloat(1);
-    kd = msg.getFloat(2);
-    pOnE = msg.getInt(3);
-    _speedPID->SetTunings(kp, ki, kd, pOnE);
   } else if (_comm->HasQueryAddress(msg, initialOffset)) {
     OSCMessage replyMsg("/");
     replyMsg.add(static_cast<float>(_speedPID->GetKp()));

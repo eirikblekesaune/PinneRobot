@@ -2,6 +2,7 @@
 #define TARGET_POSITION_MOVER_H
 #include <Arduino.h>
 #include <Metro.h>
+#include <PID_v1.h>
 #include <PinneComm.h>
 #include <PinneMotor.h>
 #include <PinneRobot.h>
@@ -16,9 +17,9 @@ class PinneComm;
 enum targetPositionMode_t : uint8_t {
   TARGET_POSITION_MODE_BY_DURATION,
   TARGET_POSITION_MODE_BY_MAX_SPEED,
+  TARGET_POSITION_MODE_BY_CONSTANT_SPEED,
   TARGET_POSITION_MODE_UNKNOWN
 };
-
 
 class TargetPositionMover {
 public:
@@ -42,6 +43,18 @@ public:
   void PlanMoveByMaxSpeed(position_t startPosition, position_t targetPosition,
                           double maxSpeed, double minSpeed, double beta,
                           double skirtRatio, int tickDuration);
+  void PlanMoveByConstantSpeed(position_t startPosition,
+                               position_t targetPosition, double speed,
+                               double minSpeed, double beta, double skirtRatio,
+                               int tickDuration);
+  void PlanMoveByConstantSpeed(position_t startPosition,
+                               position_t targetPosition, double speed,
+                               double minSpeed, double beta,
+                               double skirtRatio) {
+    this->PlanMoveByConstantSpeed(startPosition, targetPosition, speed,
+                                  minSpeed, beta, skirtRatio, 50);
+  }
+
   bool StartMove();
   void StopMove();
   void Update(position_t currentPosition);
@@ -55,6 +68,7 @@ public:
   int GetDistance() { return abs(GetTargetPosition() - GetStartPosition()); };
   double GetMinSpeed() { return _minSpeed; };
   double GetMaxSpeed() { return _maxSpeedPlanned; };
+  double GetAdjustedMaxSpeed() { return _maxSpeedAdjusted; };
   double GetBeta() { return _beta; };
   direction_t GetDirection() { return _direction; };
   double GetSkirtRatio() { return _skirtRatio; };
@@ -77,13 +91,17 @@ private:
   double _GetFadeSegmentValue(size_t tickIndex);
   double _UnmapSpeedValue(double speed, double maxSpeed);
   double _MapSpeedValue(double speed, double maxSpeed);
+  double _EstimateRemainingDistance(double remainingTicksToTarget);
+  double _GetSkirtSum();
   bool _isMoving;
   address_t *_address;
   PinneComm *_comm;
   float *_stopSpeedThreshold;
   void _ChangeState(targetPositionMoverState_t state);
+  double _GetSCurveValue(double t, double beta);
 
   unsigned long _moveStartTime;
+  PID *_maxSpeedPID;
   Metro *_metro;
   static const size_t _fadeSegmentBufferSize = 512;
   double _fadeSegmentBuffer[_fadeSegmentBufferSize];
@@ -94,6 +112,8 @@ private:
   int _duration;
   int _tickDuration;
   int _numTicks;
+  int _numFadeInTicks;
+  int _numFadeOutTicks;
   size_t _currentTickIndex;
   int _maxSpeedSegmentNumTicks;
   int _maxSpeedSegmentNumTicksAdjustment;
@@ -108,7 +128,9 @@ private:
   double _beta;
   double _skirtRatio;
   double _distanceTravelled;
-  double _expectedDistanceTravelled;
+  double _plannedDistanceTravelled;
+  double _estimatedRemainingDistance;
+  double _expectedRemainingDistance;
   double _travelError;
   int _maxSpeedSegmentStartIndex;
   int _fadeDownSegmentStartIndex;
