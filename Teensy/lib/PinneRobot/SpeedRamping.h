@@ -2,7 +2,6 @@
 #define SpeedRamping_h
 
 #include <Arduino.h>
-#include "PinneAPI.h"
 class SpeedRamping {
 	public:
 	SpeedRamping(int minSpeed, int maxSpeed);

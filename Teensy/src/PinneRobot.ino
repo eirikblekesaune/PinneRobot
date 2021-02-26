@@ -1,174 +1,155 @@
-
-#include <Ethernet.h>
-#include <EthernetUdp.h>
-#include <SPI.h>    
-
-#include <OSCBundle.h>
-#include <OSCBoards.h>
-
-/*
-* UDPReceiveOSC
-* Set a tone according to incoming OSC control
-*                           Adrian Freed
-*/
-
-//UDP communication
-
-
-EthernetUDP Udp;
-byte mac[] = {  
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED }; // you can find this written on the board of some Arduino Ethernets or shields
-
-//the Arduino's IP
-IPAddress ip(128, 32, 122, 252);
-
-//port numbers
-const unsigned int inPort = 8888;
-
-//converts the pin to an osc address
-char * numToOSCAddress( int pin){
-    static char s[10];
-    int i = 9;
-	
-    s[i--]= '\0';
-	do
-    {
-		s[i] = "0123456789"[pin % 10];
-                --i;
-                pin /= 10;
-    }
-    while(pin && i);
-    s[i] = '/';
-    return &s[i];
-}
-
-/**
- * TONE
- * 
- * square wave output "/tone"
- * 
- * format:
- * /tone/pin
- *   
- *   (digital value) (float value) = freqency in Hz
- *   (no value) disable tone
- * 
- **/
-
-void routeTone(OSCMessage &msg, int addrOffset ){
-  //iterate through all the analog pins
-  for(byte pin = 0; pin < NUM_DIGITAL_PINS; pin++){
-    //match against the pin number strings
-    int pinMatched = msg.match(numToOSCAddress(pin), addrOffset);
-    if(pinMatched){
-      unsigned int frequency = 0;
-      //if it has an int, then it's an integers frequency in Hz
-      if (msg.isInt(0)){        
-        frequency = msg.getInt(0);
-      } //otherwise it's a floating point frequency in Hz
-      else if(msg.isFloat(0)){
-        frequency = msg.getFloat(0);
-      }
-      else
-        noTone(pin);
-      if(frequency>0)
-      {
-         if(msg.isInt(1))
-           tone(pin, frequency, msg.getInt(1));
-         else
-           tone(pin, frequency);
-      }
-    }
-  }
-}
-
-void setup() {
-  //setup ethernet part
-  Ethernet.begin(mac,ip);
-  Udp.begin(inPort);
-
-}
-//reads and dispatches the incoming message
-void loop(){ 
-    OSCBundle bundleIN;
-   int size;
- 
-   if( (size = Udp.parsePacket())>0)
-   {
-     while(size--)
-       bundleIN.fill(Udp.read());
-
-      if(!bundleIN.hasError())
-        bundleIN.route("/tone", routeTone);
-   }
-}
-
-
-
-///////////////////////////////
-/*
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
 #include <OSCBundle.h>
 #include <OSCBoards.h>
+#include <SD.h>
+#include <SPI.h>
+#include <PinneComm.h>
+#include <PinneRobot.h>
+#include <EEPROM.h>
 
-#include "PinneAPI.h"
-#include "PinneRobot.h"
-#include "PinneAPIParser.h"
+const int LOOP_UPDATE_RATE = 10;
 
-PinneRobot *robot;
-PinneAPIParser *parser;
-byte mac[] = {
-	0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
-};
-IPAddress ip(10, 0, 0, 222);
-EthernetUDP Udp;
-
-unsigned int localPort = 8888;
-
-extern const int LOOP_UPDATE_RATE = 10;
-char packetBuffer[UDP_TX_PACKET_MAX_SIZE];  // buffer to hold incoming packet,
-char ReplyBuffer[] = "ok baby baby";        // a string to send back
-
-
-void msgReceive() {
-	OSCMessage msg;
-	int size;
-	if((size = Udp.parsePacket()) > 0) {
-		while(size--)
-			msg.fill(Udp.read());
-		if(!msg.hasError()) {
-			msg.route("/pinne", handlePinneMsg);
+String readLineFromFile(File& file, int lineNum) {
+	file.seek(0); //rewind
+	int l = 0;
+	char c = file.read();
+	while(l != lineNum) {
+		if(c == '\n') {
+			l++;
 		}
+		c = file.read();
 	}
+	String result;
+	result += c;
+	c = file.read();
+	while(c != '\n') {
+		result += c;
+		c = file.read();
+	}
+	return result;
 }
 
-void handlePinneMsg(OSCMessage &msg) {
-	Serial.println("Got msg");
+unsigned long blinkInterval;
+unsigned long lastBlinkTime = 0;
+int blinkValue = LOW;
+bool initSuccess = false;
+bool nocard = true;
+int readSettingsFromSDCardPin = 32;
+
+PinneComm *comm;
+PinneRobot *robot;
+
+bool readSettingsFromSDCard(PinneSettings *settings) {
+	bool didLoad = false;
+	if(SD.begin(BUILTIN_SDCARD)) {
+		File settings_file;
+		Serial.println("Has SD card");
+		settings_file = SD.open("pinne.txt", FILE_READ);
+		if(settings_file) {
+			settings->name = readLineFromFile(settings_file, 0);
+			settings->hostname = readLineFromFile(settings_file, 1);
+			settings->port = readLineFromFile(settings_file, 2).toInt();
+			settings->targetHostname = readLineFromFile(settings_file, 3);
+			settings->targetPort = readLineFromFile(settings_file, 4).toInt();
+			didLoad = true;
+		}
+	}
+	return didLoad;
+}
+
+void writeSettingsToEEPROM(PinneSettings &settings) {
+	PinneSettingsRaw rawSettings;
+	settings.name.toCharArray(rawSettings.name, 16);
+	settings.hostname.toCharArray(rawSettings.hostname, 16);
+	rawSettings.port = settings.port;
+	settings.targetHostname.toCharArray(rawSettings.targetHostname, 16);
+	rawSettings.targetPort = settings.targetPort;
+	EEPROM.put(0, rawSettings);
+	Serial.println("wrote settings to EEPROM");
+}
+
+bool readSettingsFromEEPROM(PinneSettings *settings) {
+	PinneSettingsRaw rawSettings;
+	EEPROM.get(0, rawSettings);
+	settings->name = String(rawSettings.name);
+	settings->hostname = String(rawSettings.hostname);
+	settings->port = rawSettings.port;
+	settings->targetHostname = String(rawSettings.targetHostname);
+	settings->targetPort = rawSettings.targetPort;
+	return true;
 }
 
 void setup()
 { 
-  Serial.begin(57600);
-  while(!Serial);
-  delay(100);
+	delay(100);
+	pinMode(LED_BUILTIN, OUTPUT);
+	pinMode(readSettingsFromSDCardPin, INPUT_PULLUP);
+	analogWriteResolution(12);
+	/* Serial.begin(57600); */
+	delay(1000);
+	/* while(!Serial); */
+	Serial.println("Hello my friend~!");
+	//if an SD card is inserted we will read the settings from the inserted SD card
+	//from the file 'pinne.txt'.
+	//If not SD card inserted we read the settings from the EEPROM
+	bool settingsLoaded = false;
+	PinneSettings settings;
+	Serial.println("Feeling is a nice!");
+	if(SD.begin(BUILTIN_SDCARD)) {
+		Serial.println("Attempt reading settings from SD card");
+		settingsLoaded = readSettingsFromSDCard(&settings);
+		Serial.println("Loaded settings from SD card");
+	} else {
+		Serial.println("Attempt reading settings from EEPROM");
+		settingsLoaded = readSettingsFromEEPROM(&settings);
+		Serial.println("Loaded settings from EEPROM");
+	}
+	Serial.print("settingsLoaded: ");
+	Serial.println(settingsLoaded);
+	if(settingsLoaded) {
+		Serial.println(settings.name);
+		Serial.println(settings.hostname);
+		Serial.println(settings.port);
+		Serial.println(settings.targetHostname);
+		Serial.println(settings.targetPort);
+		comm = new PinneComm(&settings);
+		if(comm->initResult == comm->validSettings) {
+			robot = new PinneRobot(comm);
+			robot->init();
+			comm->setRobot(robot);
+			initSuccess = true;
 
-  Ethernet.begin(mac, ip);
-  Udp.begin(localPort);
-
-  robot = new PinneRobot();
-  parser = new PinneAPIParser(robot);
-  robot->init();
+			//if pin 32 is pulled LOW we will write the loaded settings
+			//to the mcu EEPROM
+			if(digitalRead(readSettingsFromSDCardPin) == LOW) {
+				Serial.print("Writing settings to EEPROM");
+				writeSettingsToEEPROM(settings);
+			}
+		} else {
+			Serial.print("Invalid settings: ");
+			Serial.print(comm->initResult);
+			Serial.println();
+		}
+	}
+	if(initSuccess) {
+		blinkInterval = 1000;
+	} else {
+		blinkInterval = 200;
+	}
 }
 
 void loop()
 {
-  while(Serial.available() > 0)
-  {
-    parser->parseIncomingByte(Serial.read());
-  }
-  msgReceive();
-  robot->update();
-  delay(LOOP_UPDATE_RATE);
+	//Heartbeat
+	if((millis() - lastBlinkTime) > blinkInterval) {
+		blinkValue = !blinkValue;
+		digitalWrite(LED_BUILTIN, blinkValue);
+		lastBlinkTime = millis();
+	} 
+	if(initSuccess) {
+		comm->msgReceive();
+		robot->update();
+		/* delay(LOOP_UPDATE_RATE); */
+	}
 }
-*/

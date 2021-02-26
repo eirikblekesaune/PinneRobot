@@ -1,4 +1,3 @@
-
 #include "SpeedRamping.h"
 #include "kRISE_TABLE.h"
 #define DEFAULT_RAMP_TIME 500

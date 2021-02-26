@@ -4,3 +4,4 @@ tags
 build/
 
 .DS_Store
+.ccls-cache
