@@ -62,6 +62,7 @@ class PinneMotor
           void SetMinPosition(position_t minPos);
 
           int GetPWM() { return static_cast<int>(_driver->GetPWM()); };
+          int GetBipolarPWM();
           direction_t GetDirection() {
             return static_cast<direction_t>(_driver->GetDirection());
           };

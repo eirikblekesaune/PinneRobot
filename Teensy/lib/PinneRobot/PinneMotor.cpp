@@ -425,6 +425,16 @@ void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
   }
 }
 
+int PinneMotor::GetBipolarPWM() {
+  int result;
+  if (GetDirection() == DIRECTION_UP) {
+    result = -GetPWM();
+  } else {
+    result = GetPWM();
+  }
+  return result;
+}
+
 void PinneMotor::GoToTargetPositionByMaxSpeed(int targetPosition,
                                               double minSpeed, double maxSpeed,
                                               double beta, double skirtRatio) {

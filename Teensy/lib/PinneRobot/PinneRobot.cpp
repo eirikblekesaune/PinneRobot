@@ -44,6 +44,9 @@ void PinneRobot::init()
   motorB->init();
   _lastAPositionSent = -1; // -1 for forcing init update
   _lastBPositionSent = -1;
+  _lastPWMMotorA = motorA->GetPWM();
+  _lastPWMMotorB = motorB->GetPWM();
+  _currentPositionQueried = false;
 }
 
 void PinneRobot::update()
@@ -52,7 +55,24 @@ void PinneRobot::update()
   motorB->Update();
   position_t posA = motorA->GetCurrentPosition();
   position_t posB = motorB->GetCurrentPosition();
-  if (_lastAPositionSent != posA || (_lastBPositionSent != posB)) {
+  int currentPWMMotorA = motorA->GetBipolarPWM();
+  int currentPWMMotorB = motorB->GetBipolarPWM();
+
+  bool motorAMovedLastTime = _lastPWMMotorA != 0;
+  bool motorBMovedLastTime = _lastPWMMotorB != 0;
+
+  bool motorANotMoving = currentPWMMotorA == 0;
+  bool motorBNotMoving = currentPWMMotorB == 0;
+
+  bool motorAHasStopped = motorAMovedLastTime && motorANotMoving;
+  bool motorBHasStopped = motorBMovedLastTime && motorBNotMoving;
+
+  bool aMotorHasStopped = motorAHasStopped || motorBHasStopped;
+
+  bool aPositionHasChanged =
+      _lastAPositionSent != posA || (_lastBPositionSent != posB);
+
+  if (aPositionHasChanged || aMotorHasStopped || _currentPositionQueried) {
     OSCMessage msg("/pinne/currentPosition");
     msg.add(posA);
     msg.add(posB);
@@ -60,9 +80,17 @@ void PinneRobot::update()
     msg.add(motorB->GetBipolarTargetSpeed());
     msg.add(motorA->GetMeasuredSpeed());
     msg.add(motorB->GetMeasuredSpeed());
+    msg.add(currentPWMMotorA);
+    msg.add(currentPWMMotorB);
     _comm->SendOSCMessage(msg);
+    if (_currentPositionQueried) {
+      _currentPositionQueried = false;
+    }
+
     _lastAPositionSent = posA;
     _lastBPositionSent = posB;
+    _lastPWMMotorA = currentPWMMotorA;
+    _lastPWMMotorB = currentPWMMotorB;
   }
 }
 
@@ -95,6 +123,10 @@ void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   offset = msg.match("/stop", initialOffset);
   if (offset) {
     this->_RouteStopMsg(msg, offset + initialOffset);
+  }
+  offset = msg.match("/currentPosition/:query", initialOffset);
+  if (offset) {
+    _currentPositionQueried = true;
   }
 }
 
