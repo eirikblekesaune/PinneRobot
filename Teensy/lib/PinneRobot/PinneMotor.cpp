@@ -515,7 +515,7 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
   }
   offset = msg.match("/brake", initialOffset);
   if (offset) {
-    this->_RouteCurrentPositionMsg(msg, offset + initialOffset);
+    this->_RouteBrakeMsg(msg, offset + initialOffset);
     return true;
   }
   offset = msg.match("/stateChange", initialOffset);
