@@ -78,6 +78,8 @@ class PinneMotor
           float GetMeasuredSpeed();
           int GetCurrentSense() { return static_cast<int>(_measuredCurrent); };
 
+          float GetStopSpeedThreshold() { return _targetSpeedStopThreshold; }
+          address_t GetAddress() { return _address; }
 
           bool IsBlocked();
           void Update();

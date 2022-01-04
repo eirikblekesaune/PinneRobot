@@ -156,9 +156,7 @@ bool TargetPositionMover::StartMove() {
   }
 }
 
-void TargetPositionMover::StopMove() {
-  this->_Reset();
-}
+void TargetPositionMover::StopMove() { this->_Reset(); }
 
 void TargetPositionMover::_Reset() {
   _isMoving = false;
