@@ -13,6 +13,7 @@ enum direction_t : uint8_t;
 enum address_t : uint8_t;
 enum targetPositionMoverState_t : uint8_t;
 class PinneComm;
+class PinneMotor;
 
 enum targetPositionMode_t : uint8_t {
   TARGET_POSITION_MODE_BY_DURATION,
@@ -23,8 +24,7 @@ enum targetPositionMode_t : uint8_t {
 
 class TargetPositionMover {
 public:
-  TargetPositionMover(address_t *address, PinneComm *comm,
-                      float *stopSpeedThreshold);
+  TargetPositionMover(PinneMotor *motor, PinneComm *comm);
   void PlanMoveByDuration(position_t startPosition, position_t targetPosition,
                           int duration, double minSpeed, double beta,
                           double skirtRatio) {
@@ -94,7 +94,7 @@ private:
   double _EstimateRemainingDistance(double remainingTicksToTarget);
   double _GetSkirtSum();
   bool _isMoving;
-  address_t *_address;
+  PinneMotor *_motor;
   PinneComm *_comm;
   float *_stopSpeedThreshold;
   void _ChangeState(targetPositionMoverState_t state);

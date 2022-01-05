@@ -29,7 +29,7 @@ void PinneMotor::init() {
   pinMode(_slackStopSensorPin, INPUT_PULLUP);
   pinMode(_currentSensePin, INPUT);
   _targetPositionMover =
-      new TargetPositionMover(&_address, _comm, &_targetSpeedStopThreshold);
+      new TargetPositionMover(this, _comm);
 
   SetMotorControlMode(CONTROL_MODE_PWM);
   _measuredCurrent = static_cast<float>(analogRead(_currentSensePin));

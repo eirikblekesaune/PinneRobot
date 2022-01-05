@@ -1,8 +1,7 @@
 #include <TargetPositionMover.h>
 
-TargetPositionMover::TargetPositionMover(address_t *address, PinneComm *comm,
-                                         float *stopSpeedThreshold)
-    : _address(address), _comm(comm), _stopSpeedThreshold(stopSpeedThreshold) {
+TargetPositionMover::TargetPositionMover(PinneMotor *motor, PinneComm *comm)
+    : _motor(motor), _comm(comm) {
   _metro = new Metro(_tickDuration);
   for (size_t i = 0; i < _fadeSegmentBufferSize; i++) {
     _fadeSegmentBuffer[i] = 0.0;
@@ -411,6 +410,6 @@ bool TargetPositionMover::_CheckPositionTargetHit(position_t currentPosition) {
 void TargetPositionMover::_ChangeState(targetPositionMoverState_t state) {
   if (_state != state) {
     _state = state;
-    _comm->NotifyTargetPositionMoverStateChange(_state, *_address);
+    _comm->NotifyTargetPositionMoverStateChange(_state, _motor->GetAddress());
   }
 }
