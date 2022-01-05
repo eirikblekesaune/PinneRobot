@@ -126,17 +126,17 @@ void TargetPositionMover::_InitMove(position_t startPosition,
   _tickDuration = max(1, tickDuration);
   _metro->interval(_tickDuration);
   _distance = _targetPosition - _startPosition;
-  OSCMessage msg("/direction");
+  /* OSCMessage msg("/direction"); */
   if (_distance < 0.0) {
     _direction = DIRECTION_UP;
-    msg.add("going_up");
+    /* msg.add("going_up"); */
   } else {
     _direction = DIRECTION_DOWN;
-    msg.add("going_down");
+    /* msg.add("going_down"); */
   }
   _distance = abs(_distance);
-  msg.add(_distance);
-  _comm->SendOSCMessage(msg);
+  /* msg.add(_distance); */
+  /* _comm->SendOSCMessage(msg); */
 }
 
 bool TargetPositionMover::StartMove() {
@@ -193,6 +193,15 @@ bool TargetPositionMover::DidReachTarget() {
   return _state == TARGET_POSITION_MOVER_STATE_REACHED_TARGET;
 }
 
+void TargetPositionMover::_UpdateProgress(int distanceToTarget) {
+  float p = static_cast<float>(distanceToTarget) / static_cast<float>(_distance);
+  float pDiff = abs(_progress - p);
+  _progress = p;
+  if( pDiff > 0.00001) {
+    _comm->SendTargetPositionMoverProgress(_progress, _motor->GetAddress());
+  }
+}
+
 void TargetPositionMover::Update(position_t currentPosition) {
   if (IsMoving()) {
     if (_CheckPositionTargetHit(currentPosition)) {
@@ -202,8 +211,9 @@ void TargetPositionMover::Update(position_t currentPosition) {
       if (_metro->check() == 1) {
         _currentTickIndex += NumTicksSincePreviousUpdate();
         int idx = static_cast<int>(_currentTickIndex);
+        int distanceToTarget = abs(_targetPosition - currentPosition);
+        _UpdateProgress(distanceToTarget);
         if (_mode == TARGET_POSITION_MODE_BY_CONSTANT_SPEED) {
-          int distanceToTarget = abs(_targetPosition - currentPosition);
           int distanceFromStart = abs(currentPosition - _startPosition);
           if (distanceFromStart < _numFadeInTicks) {
             double increment = 1.0 / static_cast<double>(_numFadeInTicks);
@@ -217,6 +227,9 @@ void TargetPositionMover::Update(position_t currentPosition) {
             /* aaa.add(distanceFromStart); */
             /* _comm->SendOSCMessage(aaa); */
           } else if (distanceToTarget < _numFadeOutTicks) {
+            if(_state == TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT) {
+              _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT);
+            }
             double decrement = 1.0 / static_cast<double>(_numFadeOutTicks);
             double v = max(static_cast<double>(_minSpeed),
                            static_cast<double>(distanceToTarget) * decrement);
@@ -228,6 +241,9 @@ void TargetPositionMover::Update(position_t currentPosition) {
             /* aaa.add(distanceFromStart); */
             /* _comm->SendOSCMessage(aaa); */
           } else {
+            if(_state == TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT) {
+              _ChangeState(TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT);
+            }
             _currentSpeedUnmapped = 1.0;
             /* OSCMessage aaa("/MAX_SPEED"); */
             /* aaa.add(_currentSpeedUnmapped); */

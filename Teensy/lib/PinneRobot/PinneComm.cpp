@@ -54,7 +54,8 @@ PinneComm::PinneComm(PinneSettings *settings) {
 
 void PinneComm::Reply(const char *) {}
 
-void PinneComm::ReturnGetValue(command_t command, address_t address, int value) {}
+void PinneComm::ReturnGetValue(command_t command, address_t address,
+                               int value) {}
 
 void PinneComm::ReturnQueryValue(command_t command, address_t address,
                                  OSCMessage &replyMsg) {
@@ -110,24 +111,34 @@ void PinneComm::NotifyTargetPositionMoverStateChange(
   replyAddress.reserve(64);
   replyAddress.append("/pinne/");
   replyAddress.append(AddressMap.at(address));
-  replyAddress.append("/targetPositionMover/stateChange");
+  replyAddress.append("/goToTargetPosition/moverState");
   OSCMessage msg(replyAddress.c_str());
   String stateStr = String(TargetPositionMoverStateChangeMap.at(stateChange));
   msg.add(stateStr.c_str());
-  _Udp.beginPacket(*_targetIp, _targetPort);
-  msg.send(_Udp);
-  _Udp.endPacket();
+  SendOSCMessage(msg);
+}
+
+// FIXME: too little time for DRY
+void PinneComm::SendTargetPositionMoverProgress(float progress, address_t address) {
+  String replyAddress = String();
+  replyAddress.reserve(64);
+  replyAddress.append("/pinne/");
+  replyAddress.append(AddressMap.at(address));
+  replyAddress.append("/goToTargetPosition/moverProgress");
+  OSCMessage msg(replyAddress.c_str());
+  msg.add(progress);
+  SendOSCMessage(msg);
 }
 
 void PinneComm::DebugUnitPrint(address_t address, const char *) {}
 
 void PinneComm::DebugUnitPrint(address_t address, int val) {}
 
-void PinneComm::DebugPrint( int val ) {}
+void PinneComm::DebugPrint(int val) {}
 
-void PinneComm::DebugPrint( float val) {}
+void PinneComm::DebugPrint(float val) {}
 
-void PinneComm::DebugPrint( const char *) {}
+void PinneComm::DebugPrint(const char *) {}
 
 void PinneComm::SendOSCMessage(OSCMessage &msg) {
   _Udp.beginPacket(*_targetIp, _targetPort);
@@ -135,7 +146,8 @@ void PinneComm::SendOSCMessage(OSCMessage &msg) {
   _Udp.endPacket();
 }
 
-void PinneComm::DebugMessagePrint(command_t command, address_t address, setGet_t setGet, int value) {}
+void PinneComm::DebugMessagePrint(command_t command, address_t address,
+                                  setGet_t setGet, int value) {}
 
 void PinneComm::msgReceive() {
   OSCMessage msg;

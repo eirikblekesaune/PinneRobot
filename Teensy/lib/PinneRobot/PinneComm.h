@@ -74,14 +74,14 @@ enum targetPositionMoverState_t : uint8_t {
 
 const std::map<targetPositionMoverState_t, String>
     TargetPositionMoverStateChangeMap{
-        {TARGET_POSITION_MOVER_STATE_NOT_READY, "notReady"},
+        {TARGET_POSITION_MOVER_STATE_NOT_READY, "not_ready"},
         {TARGET_POSITION_MOVER_STATE_READY, "ready"},
-        {TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT, "fadeInSegment"},
-        {TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT, "maxSpeedSegment"},
-        {TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT, "fadeOutSegment"},
+        {TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT, "fade_in_segment"},
+        {TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT, "max_speed_segment"},
+        {TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT, "fade_out_segment"},
         {TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED,
-         "finishedButTargetNotReached"},
-        {TARGET_POSITION_MOVER_STATE_REACHED_TARGET, "reachedTarget"}};
+         "finished_but_target_not_reached"},
+        {TARGET_POSITION_MOVER_STATE_REACHED_TARGET, "reached_target"}};
 
 enum setGet_t : uint8_t { SET_MESSAGE, GET_MESSAGE, SETGET_UNKNOWN };
 
@@ -105,8 +105,8 @@ enum motorState_t : uint8_t {
   STOPPED,               // Stopped manually
   BLOCKED_BY_TOP_SENSOR, // The stop sensor was hit
   BLOCKED_BY_SLACK_SENSOR,
-  BLOCKED_BY_MIN_POSITION,     // Position counter is below range
-  BLOCKED_BY_MAX_POSITION,     // Position counter is above range
+  BLOCKED_BY_MIN_POSITION, // Position counter is below range
+  BLOCKED_BY_MAX_POSITION, // Position counter is above range
 };
 
 const std::map<controlMode_t, String> ControlModeMap{
@@ -172,6 +172,7 @@ public:
   void
   NotifyTargetPositionMoverStateChange(targetPositionMoverState_t stateChange,
                                        address_t address);
+  void SendTargetPositionMoverProgress(float progress, address_t address);
   void DebugUnitPrint(address_t address, const char *);
   void DebugUnitPrint(address_t address, int val);
   void DebugPrint(int val);
@@ -203,6 +204,5 @@ private:
   unsigned int _targetPort;
   PinneRobot *_robot;
 };
-
 
 #endif

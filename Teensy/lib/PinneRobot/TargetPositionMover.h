@@ -99,6 +99,7 @@ private:
   float *_stopSpeedThreshold;
   void _ChangeState(targetPositionMoverState_t state);
   double _GetSCurveValue(double t, double beta);
+  void _UpdateProgress(int distanceToTarget);
 
   unsigned long _moveStartTime;
   PID *_maxSpeedPID;
@@ -108,6 +109,7 @@ private:
   float _numFadeSegmentSamplesPerTick;
   int _startPosition;
   int _targetPosition;
+  float _progress;
   int _distance;
   int _duration;
   int _tickDuration;
