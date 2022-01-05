@@ -49,7 +49,26 @@ PinneComm::PinneComm(PinneSettings *settings) {
   msg->send(_Udp);
   _Udp.endPacket();
   msg->empty();
-  /* free(msg); */
+  free(msg);
+}
+
+void PinneComm::SendInfo() {
+  OSCMessage *msg;
+  if (initResult == validSettings) {
+    msg = new OSCMessage("/pinne/info");
+  } else {
+    msg = new OSCMessage("/pinne/initFailed");
+  }
+  msg->add(_name.c_str());
+  /* msg->add(_hostname.c_str()); */
+  msg->add(_port);
+  /* msg->add(_targetHostname.c_str()); */
+  msg->add(_targetPort);
+  _Udp.beginPacket(*_broadcastIp, _targetPort);
+  msg->send(_Udp);
+  _Udp.endPacket();
+  msg->empty();
+  free(msg);
 }
 
 void PinneComm::Reply(const char *) {}
@@ -160,6 +179,9 @@ void PinneComm::msgReceive() {
       if (offset) {
         _robot->routeOSC(msg, offset);
       } else {
+        if(msg.match("/hello")) {
+          SendInfo();
+        }
         Serial.println("Unmatched OSc message");
       }
     }

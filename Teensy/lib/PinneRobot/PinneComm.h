@@ -160,6 +160,7 @@ class PinneComm {
 public:
   PinneComm(PinneSettings *settings);
   void RouteMsg(OSCBundle &bundle);
+  void SendInfo();
 
   void Reply(const char *);
   void SendOSCMessage(OSCMessage &msg);
