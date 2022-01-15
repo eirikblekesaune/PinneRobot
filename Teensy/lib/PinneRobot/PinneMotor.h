@@ -17,18 +17,15 @@ enum direction_t : uint8_t;
 enum motorState_t : uint8_t;
 enum blockingMask_t : uint8_t;
 enum controlMode_t : uint8_t;
+enum targetSpeedState_t : uint8_t;
+enum parkingProcedureState_t : uint8_t;
+
 typedef int position_t;
 #define PID_CLASS PID
 typedef double pidvalue_t;
 
 class PinneComm;
 class TargetPositionMover;
-
-enum targetSpeedState_t : uint8_t {
-  TARGET_SPEED_STOPPED,
-  TARGET_SPEED_GOING_UP,
-  TARGET_SPEED_GOING_DOWN
-};
 
 class PinneMotor
 {
@@ -87,7 +84,7 @@ class PinneMotor
           void ReadTopStopSensor();
           void ReadSlackStopSensor();
           void CheckPositionLimits();
-          void GoToParkingPosition(int speed);
+          void GoToParkingPosition(double speed);
           void GoToParkingPosition();
           void GoToTargetPositionByDuration(int targetPosition, int duration,
                                             double minSpeed, double beta,
@@ -101,6 +98,8 @@ class PinneMotor
                                                  double skirtRatio);
 
           bool routeOSC(OSCMessage &msg, int initialOffset);
+          uint8_t GetBlockingMask() { return _blockingMask; }
+          PinneMotor *otherMotor;
 
         private:
           int _topStopSensorPin;
@@ -129,6 +128,8 @@ class PinneMotor
           pidvalue_t _targetSpeedPIDOutput;
           pidvalue_t _measuredSpeed;
           targetSpeedState_t _targetSpeedState;
+          parkingProcedureState_t _parkingProcedureState;
+          unsigned long _parkingProcedureStabilizeStartTime;
           uint8_t _blockingMask;
           void _UpdateSpeedometer();
           void _UpdateCurrentSense();
@@ -140,6 +141,7 @@ class PinneMotor
           int _stoppingSpeed;
           float _targetSpeedStopThreshold;
           void _ChangeState(motorState_t state);
+          void _ChangeParkingModeState(parkingProcedureState_t state);
           void _SetBlockingMaskBit(blockingMask_t sensorMask);
           void _ClearBlockingMaskBit(blockingMask_t sensorMask);
           void _Stopped();
@@ -156,6 +158,7 @@ class PinneMotor
           void _MaxPositionReached();
           void _MaxPositionLeft();
           void _PWMModeUpdate();
+          void _ParkingModeUpdate();
           void _TargetPositionModeUpdate();
           void _TargetSpeedModeUpdate();
           bool _CheckSensorBlockingState(blockingMask_t sensorMask);

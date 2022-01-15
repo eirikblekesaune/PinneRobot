@@ -26,6 +26,24 @@ struct PinneSettingsRaw {
   int targetPort;
 };
 
+enum targetSpeedState_t : uint8_t {
+  TARGET_SPEED_STOPPED,
+  TARGET_SPEED_GOING_UP,
+  TARGET_SPEED_GOING_DOWN
+};
+
+enum parkingProcedureState_t : uint8_t {
+  PARKING_PROCEDURE_STATE_NOT_RUNNING,
+  PARKING_PROCEDURE_STATE_AIMING_FOR_COARSE_CALIBRATION,
+  PARKING_PROCEDURE_STATE_WAITING_FOR_OTHER_MOTOR,
+  PARKING_PROCEDURE_STATE_STABILIZE_AFTER_COARSE_CALIBRATION,
+  PARKING_PROCEDURE_STATE_POSITIONING_FOR_FINE_CALIBRATION,
+  PARKING_PROCEDURE_STATE_STABILIZE_BEFORE_FINE_CALIBRATION,
+  PARKING_PROCEDURE_STATE_AIMING_FOR_FINE_CALIBRATION,
+  PARKING_PROCEDURE_STATE_SLIGHT_LOWERING,
+  PARKING_PROCEDURE_STATE_PARKED
+};
+
 enum command_t : uint8_t {
   CMD_STOP,
   CMD_BIPOLAR_PWM,
@@ -59,7 +77,8 @@ enum address_t : uint8_t {
 enum controlMode_t : uint8_t {
   CONTROL_MODE_PWM,
   CONTROL_MODE_TARGET_POSITION,
-  CONTROL_MODE_TARGET_SPEED
+  CONTROL_MODE_TARGET_SPEED,
+  CONTROL_MODE_PARKING
 };
 
 enum targetPositionMoverState_t : uint8_t {
@@ -112,7 +131,8 @@ enum motorState_t : uint8_t {
 const std::map<controlMode_t, String> ControlModeMap{
     {CONTROL_MODE_PWM, "pwm"},
     {CONTROL_MODE_TARGET_POSITION, "targetPosition"},
-    {CONTROL_MODE_TARGET_SPEED, "targetSpeed"}};
+    {CONTROL_MODE_TARGET_SPEED, "targetSpeed"},
+    {CONTROL_MODE_PARKING, "parking"}};
 
 const std::map<command_t, String> CommandMap{
     {CMD_STOP, "stop"},
@@ -153,6 +173,17 @@ const std::map<blockingMask_t, String> BlockingMaskMap{
     {MIN_POSITION_BLOCKS, "min_position_blocks"},
     {MAX_POSITION_BLOCKS, "max_position_blocks"}};
 
+const std::map<parkingProcedureState_t, String> ParkingStateMap{
+  {PARKING_PROCEDURE_STATE_NOT_RUNNING, "not_running"},
+  {PARKING_PROCEDURE_STATE_AIMING_FOR_COARSE_CALIBRATION, "aiming_for_coarse_calibration"},
+  {PARKING_PROCEDURE_STATE_WAITING_FOR_OTHER_MOTOR, "waiting_for_other_motor"},
+  {PARKING_PROCEDURE_STATE_STABILIZE_AFTER_COARSE_CALIBRATION, "stabilize_after_coarse_calibration"},
+  {PARKING_PROCEDURE_STATE_POSITIONING_FOR_FINE_CALIBRATION, "positioning_for_fine_calibration"},
+  {PARKING_PROCEDURE_STATE_AIMING_FOR_FINE_CALIBRATION, "aiming_for_fine_calibration"},
+  {PARKING_PROCEDURE_STATE_STABILIZE_BEFORE_FINE_CALIBRATION, "stabilize_before_fine_calibration"},
+  {PARKING_PROCEDURE_STATE_SLIGHT_LOWERING, "slight_lowering"},
+  {PARKING_PROCEDURE_STATE_PARKED, "parked"}};
+
 extern EthernetUDP Udp;
 class PinneRobot;
 
@@ -173,6 +204,8 @@ public:
   void
   NotifyTargetPositionMoverStateChange(targetPositionMoverState_t stateChange,
                                        address_t address);
+  void SendParkingProceduresState(parkingProcedureState_t state, address_t address);
+
   void SendTargetPositionMoverProgress(float progress, address_t address);
   void DebugUnitPrint(address_t address, const char *);
   void DebugUnitPrint(address_t address, int val);

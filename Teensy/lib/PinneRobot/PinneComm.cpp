@@ -149,6 +149,19 @@ void PinneComm::SendTargetPositionMoverProgress(float progress, address_t addres
   SendOSCMessage(msg);
 }
 
+// FIXME: too little time for DRY
+void PinneComm::SendParkingProceduresState(parkingProcedureState_t state, address_t address) {
+  String replyAddress = String();
+  replyAddress.reserve(64);
+  replyAddress.append("/pinne/");
+  replyAddress.append(AddressMap.at(address));
+  replyAddress.append("/goToParkingPosition/procedureState");
+  OSCMessage msg(replyAddress.c_str());
+  String stateStr = String(ParkingStateMap.at(state));
+  msg.add(stateStr.c_str());
+  SendOSCMessage(msg);
+}
+
 void PinneComm::DebugUnitPrint(address_t address, const char *) {}
 
 void PinneComm::DebugUnitPrint(address_t address, int val) {}

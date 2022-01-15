@@ -18,7 +18,7 @@ public:
   void update();
   PinneMotor *motorA;
   PinneMotor *motorB;
-  void GoToParkingPosition();
+  void GoToParkingPosition(float speed);
   void routeOSC(OSCMessage &msg, int initialOffset);
   controlMode_t GetMotorControlMode() { return _motorControlMode; };
   void SetMotorControlMode(controlMode_t mode);
@@ -29,6 +29,7 @@ private:
   PinneComm *_comm;
   controlMode_t _motorControlMode;
   void _RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset);
+  void _RouteGoToParkingPositionMsg(OSCMessage &msg, int initialOffset);
   void _RouteStopMsg(OSCMessage &msg, int initialOffset);
 };
 

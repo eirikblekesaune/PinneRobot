@@ -35,6 +35,8 @@ PinneRobot::PinneRobot(PinneComm *comm) : _comm(comm) {
       new PinneMotor(motorBTopStopSensor, motorBSlackStopSensor,
                      motorBEncoderInterruptPinA, motorBEncoderInterruptPinB,
                      motorBCurrentSensePin, driverB_, ADDRESS_B, _comm);
+  motorA->otherMotor = motorB;
+  motorB->otherMotor = motorA;
   SetMotorControlMode(CONTROL_MODE_PWM);
 }
 
@@ -66,10 +68,10 @@ void PinneRobot::update()
   }
 }
 
-void PinneRobot::GoToParkingPosition()
+void PinneRobot::GoToParkingPosition(float speed)
 {
-  /* motorA->GoToParkingPosition(); */
-  /* motorB->GoToParkingPosition(); */
+  motorA->GoToParkingPosition(speed);
+  motorB->GoToParkingPosition(speed);
 }
 
 void PinneRobot::SetMotorControlMode(controlMode_t mode) {
@@ -96,6 +98,23 @@ void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   if (offset) {
     this->_RouteStopMsg(msg, offset + initialOffset);
   }
+  offset = msg.match("/goToParkingPosition", initialOffset);
+  if (offset) {
+    this->_RouteGoToParkingPositionMsg(msg, offset + initialOffset);
+  }
+}
+
+void PinneRobot::_RouteGoToParkingPositionMsg(OSCMessage &msg, int initialOffset) {
+  if (_motorControlMode == CONTROL_MODE_PARKING) {
+    if( msg.size() == 0) {
+      GoToParkingPosition(1.0);
+    } else {
+      if(msg.isFloat(0)) {
+        int speed = msg.getFloat(0);
+        this->GoToParkingPosition(speed);
+      }
+    }
+  }
 }
 
 void PinneRobot::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
@@ -109,6 +128,8 @@ void PinneRobot::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
         this->SetMotorControlMode(CONTROL_MODE_TARGET_POSITION);
       } else if (strcmp(dirStr, "targetSpeed") == 0) {
         this->SetMotorControlMode(CONTROL_MODE_TARGET_SPEED);
+      } else if (strcmp(dirStr, "parking") == 0) {
+        this->SetMotorControlMode(CONTROL_MODE_PARKING);
       }
     }
   } else {

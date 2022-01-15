@@ -8,7 +8,8 @@ PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
       _slackStopSensorPin(slackStopSensorPin),
       _encoderInterruptPinA(encoderInterruptPinA),
       _encoderInterruptPinB(encoderInterruptPinB),
-      _currentSensePin(currentSensePin), _driver(driver), _address(address),
+      _currentSensePin(currentSensePin), _driver(driver),
+      _address(address),
       _comm(comm) {
   _minPosition = POSITION_ALL_UP;
   _maxPosition = POSITION_DEFAULT_MAX;
@@ -19,6 +20,7 @@ PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
   _prevPosition = _currentPosition;
   _measuredSpeed = 0.0;
   _blockingMask = NOTHING_BLOCKS;
+  _parkingProcedureState = PARKING_PROCEDURE_STATE_NOT_RUNNING;
 }
 
 void PinneMotor::init() {
@@ -68,6 +70,9 @@ void PinneMotor::Stop() {
     _targetPositionMover->StopMove();
     this->SetBipolarTargetSpeed(0);
     break;
+  case CONTROL_MODE_PARKING:
+    this->SetBipolarTargetSpeed(0.0);
+    break;
   }
 }
 
@@ -104,7 +109,13 @@ void PinneMotor::SetDirection(direction_t direction) {
 bool PinneMotor::IsBlocked() {
   if (_blockingMask > NOTHING_BLOCKS) {
     direction_t direction = GetDirection();
-    if ((_blockingMask & (MIN_POSITION_BLOCKS | TOP_SENSOR_BLOCKS)) > 0) {
+    bool topBlockingMask;
+    if(GetMotorControlMode() == CONTROL_MODE_PARKING) {
+      topBlockingMask = TOP_SENSOR_BLOCKS;
+    } else {
+      topBlockingMask = MIN_POSITION_BLOCKS | TOP_SENSOR_BLOCKS;
+    }
+    if ((_blockingMask & topBlockingMask) > 0) {
       if (direction == DIRECTION_UP) {
         return true;
       } else {
@@ -140,6 +151,9 @@ void PinneMotor::Update() {
     break;
   case CONTROL_MODE_TARGET_SPEED:
     this->_TargetSpeedModeUpdate();
+    break;
+  case CONTROL_MODE_PARKING:
+    this->_ParkingModeUpdate();
     break;
   };
   this->UpdateState();
@@ -203,6 +217,61 @@ void PinneMotor::CheckPositionLimits() {
 void PinneMotor::_PWMModeUpdate() {
 }
 
+void PinneMotor::_ParkingModeUpdate() {
+  switch(_parkingProcedureState) {
+    case PARKING_PROCEDURE_STATE_NOT_RUNNING:
+      break;
+    case PARKING_PROCEDURE_STATE_AIMING_FOR_COARSE_CALIBRATION:
+      //If the top sensor is in it means that pinne is all the way up.
+      if((_blockingMask & TOP_SENSOR_BLOCKS) > 0) {
+        _ChangeParkingModeState(PARKING_PROCEDURE_STATE_WAITING_FOR_OTHER_MOTOR);
+      }
+      break;
+    case PARKING_PROCEDURE_STATE_WAITING_FOR_OTHER_MOTOR:
+      if((otherMotor->GetBlockingMask() & TOP_SENSOR_BLOCKS) > 0) {
+        _parkingProcedureStabilizeStartTime = millis();
+        _ChangeParkingModeState(PARKING_PROCEDURE_STATE_STABILIZE_AFTER_COARSE_CALIBRATION);
+      }
+      break;
+    case PARKING_PROCEDURE_STATE_STABILIZE_AFTER_COARSE_CALIBRATION:
+      //let stabilize before continue
+      if((millis() - _parkingProcedureStabilizeStartTime) > 2000) {
+        _ChangeParkingModeState(PARKING_PROCEDURE_STATE_POSITIONING_FOR_FINE_CALIBRATION);
+        SetBipolarTargetSpeed(1.0);
+      }
+      break;
+    case PARKING_PROCEDURE_STATE_POSITIONING_FOR_FINE_CALIBRATION:
+      if(GetCurrentPosition() >= 30) {
+        SetBipolarTargetSpeed(0.0);
+        _parkingProcedureStabilizeStartTime = millis();
+        _ChangeParkingModeState(PARKING_PROCEDURE_STATE_STABILIZE_BEFORE_FINE_CALIBRATION);
+      }
+      break;
+    case PARKING_PROCEDURE_STATE_STABILIZE_BEFORE_FINE_CALIBRATION:
+      //let stabilize before continue
+      if((millis() - _parkingProcedureStabilizeStartTime) > 2000) {
+        _ChangeParkingModeState(PARKING_PROCEDURE_STATE_AIMING_FOR_FINE_CALIBRATION);
+        SetBipolarTargetSpeed(-0.4);
+      }
+      break;
+    case PARKING_PROCEDURE_STATE_AIMING_FOR_FINE_CALIBRATION:
+      if((_blockingMask & TOP_SENSOR_BLOCKS) > 0) {
+        _ChangeParkingModeState(PARKING_PROCEDURE_STATE_SLIGHT_LOWERING);
+        SetBipolarTargetSpeed(0.4);
+      }
+      break;
+    case PARKING_PROCEDURE_STATE_SLIGHT_LOWERING:
+      if(GetCurrentPosition() >= 15) {
+        SetBipolarTargetSpeed(0.0);
+        _ChangeParkingModeState(PARKING_PROCEDURE_STATE_PARKED);
+      }
+      break;
+    case PARKING_PROCEDURE_STATE_PARKED:
+      break;
+  }
+  this->_TargetSpeedModeUpdate();
+}
+
 void PinneMotor::_TargetPositionModeUpdate() {
   if (_targetPositionMover->IsMoving()) {
     double targetSpeed;
@@ -211,8 +280,6 @@ void PinneMotor::_TargetPositionModeUpdate() {
     targetSpeed = _targetPositionMover->GetCurrentSpeed();
     if (_targetPositionMover->DidReachTarget()) {
       this->Stop();
-      OSCMessage msg("/DidReachTarget");
-      _comm->SendOSCMessage(msg);
     } else {
       this->SetBipolarTargetSpeed(targetSpeed);
     }
@@ -320,6 +387,14 @@ void PinneMotor::_ChangeState(motorState_t state) {
   }
 }
 
+void PinneMotor::_ChangeParkingModeState(parkingProcedureState_t state) {
+  parkingProcedureState_t previousState = _parkingProcedureState;
+  _parkingProcedureState = state;
+  if( previousState != _parkingProcedureState ) {
+    _comm->SendParkingProceduresState(_parkingProcedureState, _address);
+  }
+}
+
 void PinneMotor::_TopStopSensorIn() {
   Stop();
   SetCurrentPosition(POSITION_ALL_UP);
@@ -350,8 +425,11 @@ void PinneMotor::_GoingDown() { _ChangeState(GOING_DOWN); }
 
 void PinneMotor::_MinPositionReached() {
   _SetBlockingMaskBit(MIN_POSITION_BLOCKS);
-  _ChangeState(BLOCKED_BY_MIN_POSITION);
-  Stop();
+  //dont block for min position in parking mode
+  if(GetMotorControlMode() != CONTROL_MODE_PARKING) {
+    _ChangeState(BLOCKED_BY_MIN_POSITION);
+    Stop();
+  }
 }
 
 void PinneMotor::_MinPositionLeft() {
@@ -395,10 +473,6 @@ void PinneMotor::SetMinPosition(position_t minPosition) {
 void PinneMotor::SetMaxPosition(position_t maxPosition) {
   /* _maxPosition = min(maxPosition, POSITION_DEFAULT_MAX); */
   _maxPosition = maxPosition;
-}
-
-void PinneMotor::GoToParkingPosition(int speed) {
-  // TODO: implement this
 }
 
 void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
@@ -455,8 +529,30 @@ void PinneMotor::GoToTargetPositionByConstantSpeed(int targetPosition,
   }
 }
 
+void PinneMotor::GoToParkingPosition(double speed) {
+  switch(_parkingProcedureState) {
+    case PARKING_PROCEDURE_STATE_NOT_RUNNING:
+      _ChangeParkingModeState(PARKING_PROCEDURE_STATE_AIMING_FOR_COARSE_CALIBRATION);
+      SetBipolarTargetSpeed(-speed); //set the upward direction by negating the speed value
+      break;
+    //in either other case, restart the parking procedure
+    case PARKING_PROCEDURE_STATE_PARKED:
+    case PARKING_PROCEDURE_STATE_AIMING_FOR_COARSE_CALIBRATION:
+    case PARKING_PROCEDURE_STATE_WAITING_FOR_OTHER_MOTOR:
+    case PARKING_PROCEDURE_STATE_POSITIONING_FOR_FINE_CALIBRATION:
+    case PARKING_PROCEDURE_STATE_AIMING_FOR_FINE_CALIBRATION:
+    case PARKING_PROCEDURE_STATE_STABILIZE_AFTER_COARSE_CALIBRATION:
+    case PARKING_PROCEDURE_STATE_STABILIZE_BEFORE_FINE_CALIBRATION:
+    case PARKING_PROCEDURE_STATE_SLIGHT_LOWERING:
+      Stop();
+      _ChangeParkingModeState(PARKING_PROCEDURE_STATE_NOT_RUNNING);
+      GoToParkingPosition(speed);
+      break;
+  }
+}
+
 void PinneMotor::GoToParkingPosition() {
-  GoToParkingPosition(VNH5019Driver::SPEED_MAX / 4);
+  GoToParkingPosition(-1.0);
 }
 
 void PinneMotor::SetMotorControlMode(controlMode_t mode) {
@@ -466,17 +562,18 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
 
     switch (prevMode) {
     case CONTROL_MODE_PWM:
-      Stop();
       break;
     case CONTROL_MODE_TARGET_POSITION:
       _DeactivateTargetSpeedPID();
-      Stop();
       break;
     case CONTROL_MODE_TARGET_SPEED:
       _DeactivateTargetSpeedPID();
-      Stop();
+      break;
+    case CONTROL_MODE_PARKING:
+      _DeactivateTargetSpeedPID();
       break;
     }
+    Stop(); //stop either mode
 
     switch (_motorControlMode) {
     case CONTROL_MODE_PWM:
@@ -485,6 +582,9 @@ void PinneMotor::SetMotorControlMode(controlMode_t mode) {
       _targetSpeedState = TARGET_SPEED_STOPPED;
       break;
     case CONTROL_MODE_TARGET_SPEED:
+      _targetSpeedState = TARGET_SPEED_STOPPED;
+      break;
+    case CONTROL_MODE_PARKING:
       _targetSpeedState = TARGET_SPEED_STOPPED;
       break;
     }
@@ -533,11 +633,11 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
     this->_RouteMaxPositionMsg(msg, offset + initialOffset);
     return true;
   }
-  offset = msg.match("/goToParkingPosition", initialOffset);
-  if (offset) {
-    this->_RouteGoToParkingPositionMsg(msg, offset + initialOffset);
-    return true;
-  }
+  /* offset = msg.match("/goToParkingPosition", initialOffset); */
+  /* if (offset) { */
+  /*   this->_RouteGoToParkingPositionMsg(msg, offset + initialOffset); */
+  /*   return true; */
+  /* } */
   offset = msg.match("/goToTargetPosition", initialOffset);
   if (offset) {
     this->_RouteGoToTargetPositionMsg(msg, offset + initialOffset);
@@ -564,6 +664,7 @@ bool PinneMotor::routeOSC(OSCMessage &msg, int initialOffset) {
 void PinneMotor::_RouteStopMsg(OSCMessage &msg, int initialOffset) {
   this->Stop();
   _Stopped();
+  _ChangeParkingModeState(PARKING_PROCEDURE_STATE_NOT_RUNNING);
 }
 
 void PinneMotor::_RouteBipolarPWMMsg(OSCMessage &msg, int initialOffset) {
@@ -674,10 +775,12 @@ void PinneMotor::_RouteMaxPositionMsg(OSCMessage &msg, int initialOffset) {
 
 void PinneMotor::_RouteGoToParkingPositionMsg(OSCMessage &msg,
                                               int initialOffset) {
-  if ((msg.size() > 0) && (msg.isInt(0))) {
-    this->GoToParkingPosition(msg.getInt(0));
-  } else {
-    this->GoToParkingPosition();
+  if (GetMotorControlMode() == CONTROL_MODE_PARKING) {
+    if ((msg.size() > 0) && (msg.isFloat(0))) {
+      this->GoToParkingPosition(msg.getFloat(0));
+    } else {
+      this->GoToParkingPosition();
+    }
   }
 }
 
