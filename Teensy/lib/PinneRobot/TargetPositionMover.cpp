@@ -22,11 +22,11 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
                                              position_t targetPosition,
                                              int duration, double minSpeed,
                                              double beta, double skirtRatio,
-                                             int tickDuration) {
+                                             int tickDuration, int16_t moveId) {
 
   this->_Reset();
   this->_InitMove(startPosition, targetPosition, minSpeed, beta, skirtRatio,
-                  tickDuration);
+                  tickDuration, moveId);
   _duration = max(_tickDuration, duration);
   _numTicks = _duration / _tickDuration;
   _skirtSegmentDuration = _duration * _skirtRatio;
@@ -41,10 +41,10 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
                                              position_t targetPosition,
                                              double maxSpeed, double minSpeed,
                                              double beta, double skirtRatio,
-                                             int tickDuration) {
+                                             int tickDuration, int16_t moveId) {
   this->_Reset();
   this->_InitMove(startPosition, targetPosition, minSpeed, beta, skirtRatio,
-                  tickDuration);
+                  tickDuration, moveId);
   _maxSpeedPlanned = max(maxSpeed, _minSpeed);
   _numTicks = _distance / (_maxSpeedPlanned + (_minSpeed * _skirtRatio));
   _numSkirtTicks = _numTicks * _skirtRatio;
@@ -55,7 +55,7 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
 
 void TargetPositionMover::PlanMoveByConstantSpeed(
     position_t startPosition, position_t targetPosition, double speed,
-    double minSpeed, double beta, double skirtRatio, int tickDuration) {
+    double minSpeed, double beta, double skirtRatio, int tickDuration, int16_t moveId) {
 
   this->_Reset();
   _maxSpeedPlanned = speed;
@@ -117,7 +117,8 @@ void TargetPositionMover::_CalculateFadeSegmentBuffer() {
 void TargetPositionMover::_InitMove(position_t startPosition,
                                     position_t targetPosition, double minSpeed,
                                     double beta, double skirtRatio,
-                                    int tickDuration) {
+                                    int tickDuration, int16_t moveId) {
+  _moveId = moveId;
   _startPosition = max(0, startPosition);
   _targetPosition = max(0, targetPosition);
   _minSpeed = abs(minSpeed);
@@ -198,7 +199,7 @@ void TargetPositionMover::_UpdateProgress(int distanceToTarget) {
   float pDiff = abs(_progress - p);
   _progress = p;
   if( pDiff > 0.00001) {
-    _comm->SendTargetPositionMoverProgress(_progress, _motor->GetAddress());
+    _comm->SendTargetPositionMoverProgress(_progress, _motor->GetAddress(), _moveId);
   }
 }
 
@@ -426,6 +427,6 @@ bool TargetPositionMover::_CheckPositionTargetHit(position_t currentPosition) {
 void TargetPositionMover::_ChangeState(targetPositionMoverState_t state) {
   if (_state != state) {
     _state = state;
-    _comm->NotifyTargetPositionMoverStateChange(_state, _motor->GetAddress());
+    _comm->NotifyTargetPositionMoverStateChange(_state, _motor->GetAddress(), _moveId);
   }
 }

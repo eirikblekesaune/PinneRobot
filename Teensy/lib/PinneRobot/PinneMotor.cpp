@@ -477,7 +477,7 @@ void PinneMotor::SetMaxPosition(position_t maxPosition) {
 
 void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
                                               double minSpeed, double beta,
-                                              double skirtRatio) {
+                                              double skirtRatio, int16_t moveId) {
   OSCMessage a("/GoToTargetPositionByDuration");
   a.add(targetPosition);
   a.add(duration);
@@ -488,7 +488,7 @@ void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
   if (!_targetPositionMover->IsMoving()) {
     position_t currentPosition = GetCurrentPosition();
     _targetPositionMover->PlanMoveByDuration(
-        currentPosition, targetPosition, duration, minSpeed, beta, skirtRatio);
+        currentPosition, targetPosition, duration, minSpeed, beta, skirtRatio, moveId);
     if (_targetPositionMover->StartMove()) {
       OSCMessage b("/StartedMove");
       _comm->SendOSCMessage(b);
@@ -501,7 +501,7 @@ void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
 
 void PinneMotor::GoToTargetPositionByMaxSpeed(int targetPosition,
                                               double minSpeed, double maxSpeed,
-                                              double beta, double skirtRatio) {
+                                              double beta, double skirtRatio, int16_t moveId) {
   /* if (!_targetPositionMover->IsMoving()) { */
   /*   position_t currentPosition = GetCurrentPosition(); */
   /*   _targetPositionMover->PlanMoveByMaxSpeed( */
@@ -514,11 +514,11 @@ void PinneMotor::GoToTargetPositionByMaxSpeed(int targetPosition,
 void PinneMotor::GoToTargetPositionByConstantSpeed(int targetPosition,
                                                    double speed,
                                                    double minSpeed, double beta,
-                                                   double skirtRatio) {
+                                                   double skirtRatio, int16_t moveId) {
   if (!_targetPositionMover->IsMoving()) {
     position_t currentPosition = GetCurrentPosition();
     _targetPositionMover->PlanMoveByConstantSpeed(
-        currentPosition, targetPosition, speed, minSpeed, beta, skirtRatio);
+        currentPosition, targetPosition, speed, minSpeed, beta, skirtRatio, moveId);
     if (_targetPositionMover->StartMove()) {
       OSCMessage b("/StartedMove");
       _comm->SendOSCMessage(b);
@@ -790,6 +790,7 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
     if (msg.size() >= 2 && (msg.isInt(0))) {
       int targetPosition = msg.getInt(0);
       double minSpeed, beta, skirtRatio;
+      int16_t moveId = -1;
       if (msg.size() >= 3 && (msg.isFloat(2))) {
         minSpeed = msg.getFloat(2);
       } else {
@@ -805,12 +806,15 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
       } else {
         skirtRatio = 0.1;
       }
+      if (msg.size() >= 6 && (msg.isInt(5))) {
+        moveId = msg.getFloat(5);
+      }
       int offset = msg.match("/byDuration", initialOffset);
       if (offset) {
         if (msg.isInt(1)) {
           int duration = msg.getInt(1);
           this->GoToTargetPositionByDuration(targetPosition, duration, minSpeed,
-                                             beta, skirtRatio);
+                                             beta, skirtRatio, moveId);
         }
       }
       offset = msg.match("/byMaxSpeed", initialOffset);
@@ -818,7 +822,7 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
         if (msg.isFloat(1)) {
           double maxSpeed = msg.getFloat(1);
           this->GoToTargetPositionByMaxSpeed(targetPosition, maxSpeed, minSpeed,
-                                             beta, skirtRatio);
+                                             beta, skirtRatio, moveId);
         }
       }
 
@@ -827,7 +831,7 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
         if (msg.isFloat(1)) {
           double speed = msg.getFloat(1);
           this->GoToTargetPositionByConstantSpeed(targetPosition, speed,
-                                                  minSpeed, beta, skirtRatio);
+                                                  minSpeed, beta, skirtRatio, moveId);
         }
       }
     }

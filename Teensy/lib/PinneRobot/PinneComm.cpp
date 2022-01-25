@@ -125,7 +125,7 @@ void PinneComm::NotifyMotorStateChange(motorState_t stateChange,
 }
 
 void PinneComm::NotifyTargetPositionMoverStateChange(
-    targetPositionMoverState_t stateChange, address_t address) {
+    targetPositionMoverState_t stateChange, address_t address, int16_t moveId) {
   String replyAddress = String();
   replyAddress.reserve(64);
   replyAddress.append("/pinne/");
@@ -134,11 +134,12 @@ void PinneComm::NotifyTargetPositionMoverStateChange(
   OSCMessage msg(replyAddress.c_str());
   String stateStr = String(TargetPositionMoverStateChangeMap.at(stateChange));
   msg.add(stateStr.c_str());
+  msg.add(moveId);
   SendOSCMessage(msg);
 }
 
 // FIXME: too little time for DRY
-void PinneComm::SendTargetPositionMoverProgress(float progress, address_t address) {
+void PinneComm::SendTargetPositionMoverProgress(float progress, address_t address, int16_t moveId) {
   String replyAddress = String();
   replyAddress.reserve(64);
   replyAddress.append("/pinne/");
@@ -146,6 +147,7 @@ void PinneComm::SendTargetPositionMoverProgress(float progress, address_t addres
   replyAddress.append("/goToTargetPosition/moverProgress");
   OSCMessage msg(replyAddress.c_str());
   msg.add(progress);
+  msg.add(moveId);
   SendOSCMessage(msg);
 }
 
