@@ -26,6 +26,8 @@ public:
 private:
   position_t _lastAPositionSent;
   position_t _lastBPositionSent;
+  int _lastPwmA;
+  int _lastPwmB;
   PinneComm *_comm;
   controlMode_t _motorControlMode;
   void _RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset);

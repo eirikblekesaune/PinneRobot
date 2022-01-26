@@ -48,13 +48,19 @@ void PinneRobot::init()
   _lastBPositionSent = -1;
 }
 
+static bool motorDidStop(int currentPwm, int previousPwm) {
+  return (currentPwm == 0) && (previousPwm != 0);
+}
+
 void PinneRobot::update()
 {
   motorA->Update();
   motorB->Update();
   position_t posA = motorA->GetCurrentPosition();
   position_t posB = motorB->GetCurrentPosition();
-  if (_lastAPositionSent != posA || (_lastBPositionSent != posB)) {
+  int pwmA = motorA->GetBipolarPWM();
+  int pwmB = motorB->GetBipolarPWM();
+  if (_lastAPositionSent != posA || (_lastBPositionSent != posB) || (motorDidStop(pwmA, _lastPwmA) || (motorDidStop(pwmB, _lastPwmB)))) {
     OSCMessage msg("/pinne/currentPosition");
     msg.add(posA);
     msg.add(posB);
@@ -66,6 +72,8 @@ void PinneRobot::update()
     _lastAPositionSent = posA;
     _lastBPositionSent = posB;
   }
+  _lastPwmA = pwmA;
+  _lastPwmB = pwmB;
 }
 
 void PinneRobot::GoToParkingPosition(float speed)
