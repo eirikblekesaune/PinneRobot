@@ -21,6 +21,7 @@ PinneMotor::PinneMotor(int topStopSensorPin, int slackStopSensorPin,
   _measuredSpeed = 0.0;
   _blockingMask = NOTHING_BLOCKS;
   _parkingProcedureState = PARKING_PROCEDURE_STATE_NOT_RUNNING;
+  _motorControlMode = CONTROL_MODE_PWM;
 }
 
 void PinneMotor::init() {
