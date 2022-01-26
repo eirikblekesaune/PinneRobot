@@ -88,14 +88,14 @@ class PinneMotor
           void GoToParkingPosition();
           void GoToTargetPositionByDuration(int targetPosition, int duration,
                                             double minSpeed, double beta,
-                                            double skirtRatio, int16_t moveId);
+                                            double skirtRatio, uint8_t moveId);
           void GoToTargetPositionByMaxSpeed(int targetPosition, double maxSpeed,
                                             double minSpeed, double beta,
-                                            double skirtRatio, int16_t moveId);
+                                            double skirtRatio, uint8_t moveId);
           void GoToTargetPositionByConstantSpeed(int targetPosition,
                                                  double speed, double minSpeed,
                                                  double beta,
-                                                 double skirtRatio, int16_t moveId);
+                                                 double skirtRatio, uint8_t moveId);
 
           bool routeOSC(OSCMessage &msg, int initialOffset);
           uint8_t GetBlockingMask() { return _blockingMask; }

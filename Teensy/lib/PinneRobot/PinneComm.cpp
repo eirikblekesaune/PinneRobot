@@ -125,7 +125,7 @@ void PinneComm::NotifyMotorStateChange(motorState_t stateChange,
 }
 
 void PinneComm::NotifyTargetPositionMoverStateChange(
-    targetPositionMoverState_t stateChange, address_t address, int16_t moveId) {
+    targetPositionMoverState_t stateChange, address_t address, uint8_t moveId) {
   String replyAddress = String();
   replyAddress.reserve(64);
   replyAddress.append("/pinne/");
@@ -139,7 +139,7 @@ void PinneComm::NotifyTargetPositionMoverStateChange(
 }
 
 // FIXME: too little time for DRY
-void PinneComm::SendTargetPositionMoverProgress(float progress, address_t address, int16_t moveId) {
+void PinneComm::SendTargetPositionMoverProgress(float progress, address_t address, uint8_t moveId) {
   String replyAddress = String();
   replyAddress.reserve(64);
   replyAddress.append("/pinne/");

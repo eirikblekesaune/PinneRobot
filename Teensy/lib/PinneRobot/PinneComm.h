@@ -203,10 +203,10 @@ public:
   void NotifyMotorStateChange(motorState_t stateChange, address_t address);
   void
   NotifyTargetPositionMoverStateChange(targetPositionMoverState_t stateChange,
-                                       address_t address, int16_t moveId);
+                                       address_t address, uint8_t moveId);
   void SendParkingProceduresState(parkingProcedureState_t state, address_t address);
 
-  void SendTargetPositionMoverProgress(float progress, address_t address, int16_t moveId);
+  void SendTargetPositionMoverProgress(float progress, address_t address, uint8_t moveId);
   void DebugUnitPrint(address_t address, const char *);
   void DebugUnitPrint(address_t address, int val);
   void DebugPrint(int val);
