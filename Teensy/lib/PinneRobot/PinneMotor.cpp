@@ -475,9 +475,18 @@ void PinneMotor::SetMaxPosition(position_t maxPosition) {
   _maxPosition = maxPosition;
 }
 
+int PinneMotor::GetBipolarPWM() {
+  int bpPWM = GetPWM();
+  if (GetDirection() == DIRECTION_UP) {
+    bpPWM = -bpPWM;
+  }
+  return bpPWM;
+};
+
+
 void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
-                                              double minSpeed, double beta,
-                                              double skirtRatio, uint8_t moveId) {
+    double minSpeed, double beta,
+    double skirtRatio, uint8_t moveId) {
   OSCMessage a("/GoToTargetPositionByDuration");
   a.add(targetPosition);
   a.add(duration);
@@ -680,12 +689,8 @@ void PinneMotor::_RouteBipolarPWMMsg(OSCMessage &msg, int initialOffset) {
     }
   } else {
     if (_comm->HasQueryAddress(msg, initialOffset)) {
-      int bpPWM = GetPWM();
-      if (GetDirection() == DIRECTION_UP) {
-        bpPWM = -bpPWM;
-      }
       OSCMessage replyMsg("/");
-      replyMsg.add(GetPWM());
+      replyMsg.add(GetBipolarPWM());
       _comm->ReturnQueryValue(CMD_BIPOLAR_PWM, _address, replyMsg);
     }
   }
