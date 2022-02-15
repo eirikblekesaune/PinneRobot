@@ -62,6 +62,7 @@ void TargetPositionMover::PlanMoveByConstantSpeed(
   _startPosition = max(0, startPosition);
   _targetPosition = max(0, targetPosition);
   _tickDuration = max(1, tickDuration);
+  _moveId = moveId;
   _minSpeed = abs(minSpeed);
   _metro->interval(_tickDuration);
   _skirtRatio = constrain(skirtRatio, 0.0, 0.5);

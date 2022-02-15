@@ -498,7 +498,7 @@ void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
   if (!_targetPositionMover->IsMoving()) {
     position_t currentPosition = GetCurrentPosition();
     _targetPositionMover->PlanMoveByDuration(
-        currentPosition, targetPosition, duration, minSpeed, beta, skirtRatio, moveId);
+        currentPosition, targetPosition, duration, minSpeed, beta, skirtRatio, 50, moveId);
     if (_targetPositionMover->StartMove()) {
       OSCMessage b("/StartedMove");
       _comm->SendOSCMessage(b);
@@ -528,7 +528,7 @@ void PinneMotor::GoToTargetPositionByConstantSpeed(int targetPosition,
   if (!_targetPositionMover->IsMoving()) {
     position_t currentPosition = GetCurrentPosition();
     _targetPositionMover->PlanMoveByConstantSpeed(
-        currentPosition, targetPosition, speed, minSpeed, beta, skirtRatio, moveId);
+        currentPosition, targetPosition, speed, minSpeed, beta, skirtRatio, 50, moveId);
     if (_targetPositionMover->StartMove()) {
       OSCMessage b("/StartedMove");
       _comm->SendOSCMessage(b);
@@ -813,7 +813,7 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
         skirtRatio = 0.1;
       }
       if (msg.size() >= 6 && (msg.isInt(5))) {
-        moveId = msg.getFloat(5);
+        moveId = msg.getInt(5);
       }
       int offset = msg.match("/byDuration", initialOffset);
       if (offset) {

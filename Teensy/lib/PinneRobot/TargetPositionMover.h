@@ -27,18 +27,6 @@ public:
   TargetPositionMover(PinneMotor *motor, PinneComm *comm);
   void PlanMoveByDuration(position_t startPosition, position_t targetPosition,
                           int duration, double minSpeed, double beta,
-                          double skirtRatio, uint8_t moveId) {
-    this->PlanMoveByDuration(startPosition, targetPosition, duration, minSpeed,
-                             beta, skirtRatio, 50, moveId);
-  };
-  void PlanMoveByMaxSpeed(position_t startPosition, position_t targetPosition,
-                          double maxSpeed, double minSpeed, double beta,
-                          double skirtRatio, uint8_t moveId) {
-    this->PlanMoveByMaxSpeed(startPosition, targetPosition, maxSpeed, minSpeed,
-                             beta, skirtRatio, 50, moveId);
-  };
-  void PlanMoveByDuration(position_t startPosition, position_t targetPosition,
-                          int duration, double minSpeed, double beta,
                           double skirtRatio, int tickDuration, uint8_t moveId);
   void PlanMoveByMaxSpeed(position_t startPosition, position_t targetPosition,
                           double maxSpeed, double minSpeed, double beta,
@@ -47,13 +35,6 @@ public:
                                position_t targetPosition, double speed,
                                double minSpeed, double beta, double skirtRatio,
                                int tickDuration, uint8_t moveId);
-  void PlanMoveByConstantSpeed(position_t startPosition,
-                               position_t targetPosition, double speed,
-                               double minSpeed, double beta,
-                               double skirtRatio, uint8_t moveId) {
-    this->PlanMoveByConstantSpeed(startPosition, targetPosition, speed,
-                                  minSpeed, beta, skirtRatio, 50, moveId);
-  }
 
   bool StartMove();
   void StopMove();
