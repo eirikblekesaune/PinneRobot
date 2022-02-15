@@ -110,7 +110,7 @@ void PinneMotor::SetDirection(direction_t direction) {
 bool PinneMotor::IsBlocked() {
   if (_blockingMask > NOTHING_BLOCKS) {
     direction_t direction = GetDirection();
-    bool topBlockingMask;
+    uint8_t topBlockingMask;
     if(GetMotorControlMode() == CONTROL_MODE_PARKING) {
       topBlockingMask = TOP_SENSOR_BLOCKS;
     } else {
