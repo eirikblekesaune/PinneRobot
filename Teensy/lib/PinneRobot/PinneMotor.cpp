@@ -232,6 +232,8 @@ void PinneMotor::_ParkingModeUpdate() {
       if((otherMotor->GetBlockingMask() & TOP_SENSOR_BLOCKS) > 0) {
         _parkingProcedureStabilizeStartTime = millis();
         _ChangeParkingModeState(PARKING_PROCEDURE_STATE_STABILIZE_AFTER_COARSE_CALIBRATION);
+        otherMotor->_parkingProcedureStabilizeStartTime = _parkingProcedureStabilizeStartTime;
+        otherMotor->_ChangeParkingModeState(PARKING_PROCEDURE_STATE_STABILIZE_AFTER_COARSE_CALIBRATION);
       }
       break;
     case PARKING_PROCEDURE_STATE_STABILIZE_AFTER_COARSE_CALIBRATION:
@@ -244,8 +246,15 @@ void PinneMotor::_ParkingModeUpdate() {
     case PARKING_PROCEDURE_STATE_POSITIONING_FOR_FINE_CALIBRATION:
       if(GetCurrentPosition() >= 30) {
         SetBipolarTargetSpeed(0.0);
+        _ChangeParkingModeState(PARKING_PROCEDURE_STATE_SYNC_BEFORE_STABILIZE);
+      }
+      break;
+    case PARKING_PROCEDURE_STATE_SYNC_BEFORE_STABILIZE:
+      if(otherMotor->_parkingProcedureState == PARKING_PROCEDURE_STATE_SYNC_BEFORE_STABILIZE) {
         _parkingProcedureStabilizeStartTime = millis();
         _ChangeParkingModeState(PARKING_PROCEDURE_STATE_STABILIZE_BEFORE_FINE_CALIBRATION);
+        otherMotor->_parkingProcedureStabilizeStartTime = _parkingProcedureStabilizeStartTime;
+        otherMotor->_ChangeParkingModeState(PARKING_PROCEDURE_STATE_STABILIZE_BEFORE_FINE_CALIBRATION);
       }
       break;
     case PARKING_PROCEDURE_STATE_STABILIZE_BEFORE_FINE_CALIBRATION:
@@ -552,6 +561,7 @@ void PinneMotor::GoToParkingPosition(double speed) {
     case PARKING_PROCEDURE_STATE_POSITIONING_FOR_FINE_CALIBRATION:
     case PARKING_PROCEDURE_STATE_AIMING_FOR_FINE_CALIBRATION:
     case PARKING_PROCEDURE_STATE_STABILIZE_AFTER_COARSE_CALIBRATION:
+    case PARKING_PROCEDURE_STATE_SYNC_BEFORE_STABILIZE:
     case PARKING_PROCEDURE_STATE_STABILIZE_BEFORE_FINE_CALIBRATION:
     case PARKING_PROCEDURE_STATE_SLIGHT_LOWERING:
       Stop();
