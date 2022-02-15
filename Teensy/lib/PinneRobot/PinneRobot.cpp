@@ -88,6 +88,11 @@ void PinneRobot::SetMotorControlMode(controlMode_t mode) {
   motorB->SetMotorControlMode(_motorControlMode);
 }
 
+void PinneRobot::Sync(int32_t syncStamp) {
+  _syncTime = millis();
+  _syncStamp = syncStamp;
+}
+
 void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   int offset;
   offset = msg.match("/motorA", initialOffset);
@@ -109,6 +114,10 @@ void PinneRobot::routeOSC(OSCMessage &msg, int initialOffset) {
   offset = msg.match("/goToParkingPosition", initialOffset);
   if (offset) {
     this->_RouteGoToParkingPositionMsg(msg, offset + initialOffset);
+  }
+  offset = msg.match("/sync", initialOffset);
+  if (offset) {
+    this->_RouteSyncMsg(msg, offset + initialOffset);
   }
 }
 
@@ -159,4 +168,18 @@ void PinneRobot::_RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset) {
 void PinneRobot::_RouteStopMsg(OSCMessage &msg, int initialOffset) {
   motorA->Stop();
   motorB->Stop();
+}
+
+void PinneRobot::_RouteSyncMsg(OSCMessage &msg, int initialOffset) {
+    if( (msg.size() == 1) && (msg.isInt(0)) ) {
+      int32_t syncStamp = msg.getInt(0);
+      this->Sync(syncStamp);
+    } else if(_comm->HasQueryAddress(msg, initialOffset)) {
+      OSCMessage replyMsg("/");
+      uint32_t timeSinceSync = millis() - _syncTime;
+      replyMsg.add(_syncStamp);
+      replyMsg.add(static_cast<uint16_t>(timeSinceSync >> 16)); // time since last sync
+      replyMsg.add(static_cast<uint16_t>(timeSinceSync & 0x0000FFFF)); // time since last sync
+      _comm->ReturnQueryValue(CMD_SYNC, replyMsg);
+    }
 }

@@ -22,6 +22,7 @@ public:
   void routeOSC(OSCMessage &msg, int initialOffset);
   controlMode_t GetMotorControlMode() { return _motorControlMode; };
   void SetMotorControlMode(controlMode_t mode);
+  void Sync(int32_t syncStamp);
 
 private:
   position_t _lastAPositionSent;
@@ -33,6 +34,9 @@ private:
   void _RouteMotorControlModeMsg(OSCMessage &msg, int initialOffset);
   void _RouteGoToParkingPositionMsg(OSCMessage &msg, int initialOffset);
   void _RouteStopMsg(OSCMessage &msg, int initialOffset);
+  void _RouteSyncMsg(OSCMessage &msg, int initialOffset);
+  int32_t _syncStamp;
+  uint32_t _syncTime;
 };
 
 #endif

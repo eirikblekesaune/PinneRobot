@@ -63,6 +63,7 @@ enum command_t : uint8_t {
   CMD_MOTOR_CONTROL_MODE,
   CMD_BIPOLAR_TARGET_SPEED,
   CMD_TARGET_POSITION_MOVER,
+  CMD_SYNC,
   CMD_UNKNOWN
 };
 
@@ -150,7 +151,8 @@ const std::map<command_t, String> CommandMap{
     {CMD_MEASURED_SPEED, "measuredSpeed"},
     {CMD_ECHO_MESSAGES, "echoMessages"},
     {CMD_PID_PARAMETERS, "pidParameters"},
-    {CMD_MOTOR_CONTROL_MODE, "motorControlMode"}};
+    {CMD_MOTOR_CONTROL_MODE, "motorControlMode"},
+    {CMD_SYNC, "sync"}};
 
 const std::map<address_t, String> AddressMap{{ADDRESS_A, "motorA"},
                                              {ADDRESS_B, "motorB"},
