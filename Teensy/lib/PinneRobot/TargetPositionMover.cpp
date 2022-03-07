@@ -22,7 +22,7 @@ void TargetPositionMover::PlanMoveByDuration(position_t startPosition,
                                              position_t targetPosition,
                                              int duration, double minSpeed,
                                              double beta, double skirtRatio,
-                                             int tickDuration, uint8_t moveId) {
+                                             int tickDuration, int32_t moveId) {
 
   this->_Reset();
   this->_InitMove(startPosition, targetPosition, minSpeed, beta, skirtRatio,
@@ -41,7 +41,7 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
                                              position_t targetPosition,
                                              double maxSpeed, double minSpeed,
                                              double beta, double skirtRatio,
-                                             int tickDuration, uint8_t moveId) {
+                                             int tickDuration, int32_t moveId) {
   this->_Reset();
   this->_InitMove(startPosition, targetPosition, minSpeed, beta, skirtRatio,
                   tickDuration, moveId);
@@ -55,7 +55,7 @@ void TargetPositionMover::PlanMoveByMaxSpeed(position_t startPosition,
 
 void TargetPositionMover::PlanMoveByConstantSpeed(
     position_t startPosition, position_t targetPosition, double speed,
-    double minSpeed, double beta, double skirtRatio, int tickDuration, uint8_t moveId) {
+    double minSpeed, double beta, double skirtRatio, int tickDuration, int32_t moveId) {
 
   this->_Reset();
   _maxSpeedPlanned = speed;
@@ -118,7 +118,7 @@ void TargetPositionMover::_CalculateFadeSegmentBuffer() {
 void TargetPositionMover::_InitMove(position_t startPosition,
                                     position_t targetPosition, double minSpeed,
                                     double beta, double skirtRatio,
-                                    int tickDuration, uint8_t moveId) {
+                                    int tickDuration, int32_t moveId) {
   _moveId = moveId;
   _startPosition = max(0, startPosition);
   _targetPosition = max(0, targetPosition);

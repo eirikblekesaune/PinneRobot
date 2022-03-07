@@ -500,7 +500,7 @@ int PinneMotor::GetBipolarPWM() {
 
 void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
     double minSpeed, double beta,
-    double skirtRatio, uint8_t moveId) {
+    double skirtRatio, int32_t moveId) {
   OSCMessage a("/GoToTargetPositionByDuration");
   a.add(targetPosition);
   a.add(duration);
@@ -519,7 +519,7 @@ void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
 
 void PinneMotor::GoToTargetPositionByMaxSpeed(int targetPosition,
                                               double minSpeed, double maxSpeed,
-                                              double beta, double skirtRatio, uint8_t moveId) {
+                                              double beta, double skirtRatio, int32_t moveId) {
   /* if (!_targetPositionMover->IsMoving()) { */
   /*   position_t currentPosition = GetCurrentPosition(); */
   /*   _targetPositionMover->PlanMoveByMaxSpeed( */
@@ -532,7 +532,7 @@ void PinneMotor::GoToTargetPositionByMaxSpeed(int targetPosition,
 void PinneMotor::GoToTargetPositionByConstantSpeed(int targetPosition,
                                                    double speed,
                                                    double minSpeed, double beta,
-                                                   double skirtRatio, uint8_t moveId) {
+                                                   double skirtRatio, int32_t moveId) {
   if (!_targetPositionMover->IsMoving()) {
     position_t currentPosition = GetCurrentPosition();
     _targetPositionMover->PlanMoveByConstantSpeed(
@@ -802,7 +802,7 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
     if (msg.size() >= 2 && (msg.isInt(0))) {
       int targetPosition = msg.getInt(0);
       double minSpeed, beta, skirtRatio;
-      uint8_t moveId = 0;
+      int32_t moveId = 0;
       if (msg.size() >= 3 && (msg.isFloat(2))) {
         minSpeed = msg.getFloat(2);
       } else {

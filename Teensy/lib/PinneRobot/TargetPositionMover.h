@@ -27,14 +27,14 @@ public:
   TargetPositionMover(PinneMotor *motor, PinneComm *comm);
   void PlanMoveByDuration(position_t startPosition, position_t targetPosition,
                           int duration, double minSpeed, double beta,
-                          double skirtRatio, int tickDuration, uint8_t moveId);
+                          double skirtRatio, int tickDuration, int32_t moveId);
   void PlanMoveByMaxSpeed(position_t startPosition, position_t targetPosition,
                           double maxSpeed, double minSpeed, double beta,
-                          double skirtRatio, int tickDuration, uint8_t moveId);
+                          double skirtRatio, int tickDuration, int32_t moveId);
   void PlanMoveByConstantSpeed(position_t startPosition,
                                position_t targetPosition, double speed,
                                double minSpeed, double beta, double skirtRatio,
-                               int tickDuration, uint8_t moveId);
+                               int tickDuration, int32_t moveId);
 
   bool StartMove();
   void StopMove();
@@ -65,7 +65,7 @@ private:
   void _Reset();
   void _InitMove(position_t startPosition, position_t targetPosition,
                  double minSpeed, double beta, double skirtRatio,
-                 int tickDuration, uint8_t moveId);
+                 int tickDuration, int32_t moveId);
   bool _CheckPositionTargetHit(position_t currentPosition);
   void _FinalizeMovePlan();
   void _CalculateFadeSegmentBuffer();
@@ -75,7 +75,7 @@ private:
   double _MapSpeedValue(double speed, double maxSpeed);
   double _EstimateRemainingDistance(double remainingTicksToTarget);
   double _GetSkirtSum();
-  uint8_t _moveId;
+  int32_t _moveId;
   bool _isMoving;
   PinneMotor *_motor;
   PinneComm *_comm;
