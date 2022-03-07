@@ -89,7 +89,13 @@ enum targetPositionMoverState_t : uint8_t {
   TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT,
   TARGET_POSITION_MOVER_STATE_MAX_SPEED_SEGMENT,
   TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT,
+  //in byMaxSpeed or byDuration mode, when mover failed to reach
+  //target within planned fade out segment
   TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED,
+  TARGET_POSITION_MOVER_STATE_FAILED_TO_START_MOVE,
+  //happens when a move if stopped early, typically by sending 
+  //new goto target position message or stop message
+  TARGET_POSITION_MOVER_STATE_MOVE_CANCELLED,
   TARGET_POSITION_MOVER_STATE_REACHED_TARGET
 };
 
@@ -102,6 +108,9 @@ const std::map<targetPositionMoverState_t, String>
         {TARGET_POSITION_MOVER_STATE_FADE_OUT_SEGMENT, "fade_out_segment"},
         {TARGET_POSITION_MOVER_STATE_FINISHED_BUT_TARGET_NOT_REACHED,
          "finished_but_target_not_reached"},
+        {TARGET_POSITION_MOVER_STATE_FAILED_TO_START_MOVE, 
+        "failed_to_start_move"},
+        {TARGET_POSITION_MOVER_STATE_MOVE_CANCELLED, "move_cancelled"},
         {TARGET_POSITION_MOVER_STATE_REACHED_TARGET, "reached_target"}};
 
 enum setGet_t : uint8_t { SET_MESSAGE, GET_MESSAGE, SETGET_UNKNOWN };

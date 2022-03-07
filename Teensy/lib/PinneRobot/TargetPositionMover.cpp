@@ -153,11 +153,17 @@ bool TargetPositionMover::StartMove() {
     _ChangeState(TARGET_POSITION_MOVER_STATE_FADE_IN_SEGMENT);
     return true;
   } else {
+    _ChangeState(TARGET_POSITION_MOVER_STATE_FAILED_TO_START_MOVE);
     return false;
   }
 }
 
 void TargetPositionMover::StopMove() { this->_Reset(); }
+
+void TargetPositionMover::CancelMove() {
+  _ChangeState(TARGET_POSITION_MOVER_STATE_MOVE_CANCELLED);
+  this->StopMove();
+}
 
 void TargetPositionMover::_Reset() {
   _isMoving = false;
@@ -348,6 +354,8 @@ void TargetPositionMover::Update(position_t currentPosition) {
           case TARGET_POSITION_MOVER_STATE_REACHED_TARGET:
           case TARGET_POSITION_MOVER_STATE_READY:
           case TARGET_POSITION_MOVER_STATE_NOT_READY:
+          case TARGET_POSITION_MOVER_STATE_MOVE_CANCELLED:
+          case TARGET_POSITION_MOVER_STATE_FAILED_TO_START_MOVE:
             break;
           }
         }

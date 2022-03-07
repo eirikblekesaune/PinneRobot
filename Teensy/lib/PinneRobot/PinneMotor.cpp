@@ -68,7 +68,11 @@ void PinneMotor::Stop() {
     this->SetBipolarTargetSpeed(0);
     break;
   case CONTROL_MODE_TARGET_POSITION:
-    _targetPositionMover->StopMove();
+    if(_targetPositionMover->IsMoving()) {
+      _targetPositionMover->CancelMove();
+    } else {
+      _targetPositionMover->StopMove();
+    }
     this->SetBipolarTargetSpeed(0);
     break;
   case CONTROL_MODE_PARKING:
@@ -508,13 +512,8 @@ void PinneMotor::GoToTargetPositionByDuration(int targetPosition, int duration,
     position_t currentPosition = GetCurrentPosition();
     _targetPositionMover->PlanMoveByDuration(
         currentPosition, targetPosition, duration, minSpeed, beta, skirtRatio, 50, moveId);
-    if (_targetPositionMover->StartMove()) {
-      OSCMessage b("/StartedMove");
-      _comm->SendOSCMessage(b);
-    } else {
-      OSCMessage c("/CouldNotStartMove");
-      _comm->SendOSCMessage(c);
-    }
+
+    _targetPositionMover->StartMove();
   }
 }
 
@@ -538,13 +537,10 @@ void PinneMotor::GoToTargetPositionByConstantSpeed(int targetPosition,
     position_t currentPosition = GetCurrentPosition();
     _targetPositionMover->PlanMoveByConstantSpeed(
         currentPosition, targetPosition, speed, minSpeed, beta, skirtRatio, 50, moveId);
-    if (_targetPositionMover->StartMove()) {
-      OSCMessage b("/StartedMove");
-      _comm->SendOSCMessage(b);
-    } else {
-      OSCMessage c("/CouldNotStartMove");
-      _comm->SendOSCMessage(c);
-    }
+    _targetPositionMover->StartMove();
+  } else {
+    _targetPositionMover->CancelMove();
+    GoToTargetPositionByConstantSpeed(targetPosition, speed, minSpeed, beta, skirtRatio, moveId);
   }
 }
 

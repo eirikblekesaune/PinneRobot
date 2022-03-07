@@ -38,6 +38,7 @@ public:
 
   bool StartMove();
   void StopMove();
+  void CancelMove();
   void Update(position_t currentPosition);
   bool DidReachTarget();
   double GetCurrentSpeed();
