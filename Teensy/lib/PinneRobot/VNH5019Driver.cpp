@@ -22,6 +22,7 @@ void VNH5019Driver::init()
         pinMode(_PWM, OUTPUT);
         analogWriteFrequency(_PWM, 36621);
 
+        _brake = 0;
         SetPWM(0);
         SetDirection(0);
 }
