@@ -99,6 +99,14 @@ enum targetPositionMoverState_t : uint8_t {
   TARGET_POSITION_MOVER_STATE_REACHED_TARGET
 };
 
+enum targetPositionMode_t : uint8_t {
+  TARGET_POSITION_MODE_BY_DURATION,
+  TARGET_POSITION_MODE_BY_MAX_SPEED,
+  TARGET_POSITION_MODE_BY_CONSTANT_SPEED,
+  TARGET_POSITION_MODE_UNKNOWN
+};
+
+
 const std::map<targetPositionMoverState_t, String>
     TargetPositionMoverStateChangeMap{
         {TARGET_POSITION_MOVER_STATE_NOT_READY, "not_ready"},
@@ -112,6 +120,13 @@ const std::map<targetPositionMoverState_t, String>
         "failed_to_start_move"},
         {TARGET_POSITION_MOVER_STATE_MOVE_CANCELLED, "move_cancelled"},
         {TARGET_POSITION_MOVER_STATE_REACHED_TARGET, "reached_target"}};
+
+const std::map<targetPositionMode_t, String> TargetPositionMoverModeMap {
+  {TARGET_POSITION_MODE_BY_DURATION, "byDuration"},
+  {TARGET_POSITION_MODE_BY_MAX_SPEED, "byMaxSpeed"},
+  {TARGET_POSITION_MODE_BY_CONSTANT_SPEED, "byConstantSpeed"},
+  {TARGET_POSITION_MODE_UNKNOWN, "unknown"},
+};
 
 enum setGet_t : uint8_t { SET_MESSAGE, GET_MESSAGE, SETGET_UNKNOWN };
 

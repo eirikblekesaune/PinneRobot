@@ -12,15 +12,9 @@ typedef int position_t;
 enum direction_t : uint8_t;
 enum address_t : uint8_t;
 enum targetPositionMoverState_t : uint8_t;
+enum targetPositionMode_t : uint8_t;
 class PinneComm;
 class PinneMotor;
-
-enum targetPositionMode_t : uint8_t {
-  TARGET_POSITION_MODE_BY_DURATION,
-  TARGET_POSITION_MODE_BY_MAX_SPEED,
-  TARGET_POSITION_MODE_BY_CONSTANT_SPEED,
-  TARGET_POSITION_MODE_UNKNOWN
-};
 
 class TargetPositionMover {
 public:
