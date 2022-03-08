@@ -122,6 +122,7 @@ class PinneMotor
           controlMode_t _motorControlMode;
 
           PID_CLASS *_speedPID;
+          int _speedPID_pOnE; //caching this here since library sets this private
           int _speedometerInterval;
           Metro *_speedometerMetro;
           position_t _prevPosition;

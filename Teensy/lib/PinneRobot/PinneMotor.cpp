@@ -42,9 +42,10 @@ void PinneMotor::init() {
   _speedometerInterval = 50;
   _speedometerMetro = new Metro(_speedometerInterval);
 
+  _speedPID_pOnE = P_ON_M;
   _speedPID =
       new PID_CLASS(&_measuredSpeed, &_targetSpeedPIDOutput,
-                    &_targetSpeedPIDSetpoint, 2.0, 1000.0, 1.0, P_ON_M, DIRECT);
+                    &_targetSpeedPIDSetpoint, 2.0, 1000.0, 1.0, _speedPID_pOnE, DIRECT);
 
   _speedPID->SetOutputLimits(-_driver->SPEED_MAX, _driver->SPEED_MAX);
   _speedPID->SetSampleTime(_speedometerInterval);
@@ -874,12 +875,14 @@ void PinneMotor::_RoutePIDParametersMsg(OSCMessage &msg, int initialOffset) {
     ki = msg.getFloat(1);
     kd = msg.getFloat(2);
     pOnE = msg.getInt(3);
-    _speedPID->SetTunings(kp, ki, kd, pOnE);
+    _speedPID_pOnE = pOnE;
+    _speedPID->SetTunings(kp, ki, kd, _speedPID_pOnE);
   } else if (_comm->HasQueryAddress(msg, initialOffset)) {
     OSCMessage replyMsg("/");
     replyMsg.add(static_cast<float>(_speedPID->GetKp()));
     replyMsg.add(static_cast<float>(_speedPID->GetKi()));
     replyMsg.add(static_cast<float>(_speedPID->GetKd()));
+    replyMsg.add(static_cast<int>(_speedPID_pOnE));
     _comm->ReturnQueryValue(CMD_PID_PARAMETERS, _address, replyMsg);
   }
 }
