@@ -1,7 +1,7 @@
 #include <TargetPositionMover.h>
 
 TargetPositionMover::TargetPositionMover(PinneMotor *motor, PinneComm *comm)
-    : _motor(motor), _comm(comm) {
+    : _motor(motor), _comm(comm), _progress(0.0) {
   _metro = new Metro(_tickDuration);
   for (size_t i = 0; i < _fadeSegmentBufferSize; i++) {
     _fadeSegmentBuffer[i] = 0.0;
