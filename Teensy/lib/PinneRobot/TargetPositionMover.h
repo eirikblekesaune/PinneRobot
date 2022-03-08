@@ -54,6 +54,9 @@ public:
   unsigned long TimeSincePreviousUpdate();
   size_t CurrentTickIndex() { return _currentTickIndex; }
   targetPositionMode_t GetMode() { return _mode; };
+  targetPositionMoverState_t GetState() {return _state;}
+  float GetProgress() { return _progress; }
+  int32_t GetMoveId() { return _moveId; }
 
 private:
   void _Reset();

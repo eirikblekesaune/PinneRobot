@@ -849,6 +849,42 @@ void PinneMotor::_RouteGoToTargetPositionMsg(OSCMessage &msg,
       }
     }
   }
+  int offset = msg.match("/moverState", initialOffset);
+  if(offset) {
+    if(_comm->HasQueryAddress(msg, offset + initialOffset)) {
+      OSCMessage replyMsg("/");
+      targetPositionMoverState_t moverState = _targetPositionMover->GetState();
+      String moverStateStr = String(TargetPositionMoverStateChangeMap.at(moverState));
+      replyMsg.add(moverStateStr.c_str());
+      _comm->ReturnQueryValue(CMD_TARGET_POSITION_MOVER_STATE, _address, replyMsg);
+    }
+  }
+  offset = msg.match("/moverProgress", initialOffset);
+  if(offset) {
+    if(_comm->HasQueryAddress(msg, offset + initialOffset)) {
+      OSCMessage replyMsg("/");
+      replyMsg.add(_targetPositionMover->GetProgress());
+      _comm->ReturnQueryValue(CMD_TARGET_POSITION_MOVER_PROGRESS, _address, replyMsg);
+    }
+  }
+  offset = msg.match("/moveId", initialOffset);
+  if(offset) {
+    if(_comm->HasQueryAddress(msg, offset + initialOffset)) {
+      OSCMessage replyMsg("/");
+      replyMsg.add(_targetPositionMover->GetMoveId());
+      _comm->ReturnQueryValue(CMD_TARGET_POSITION_MOVER_ID, _address, replyMsg);
+    }
+  }
+  offset = msg.match("/moverMode", initialOffset);
+  if(offset) {
+    if(_comm->HasQueryAddress(msg, offset + initialOffset)) {
+      OSCMessage replyMsg("/");
+      targetPositionMode_t moverMode = _targetPositionMover->GetMode();
+      String mode = String(TargetPositionMoverModeMap.at(moverMode));
+      replyMsg.add(mode.c_str());
+      _comm->ReturnQueryValue(CMD_TARGET_POSITION_MOVER_MODE, _address, replyMsg);
+    }
+  }
 }
 
 void PinneMotor::_RouteMeasuredSpeedMsg(OSCMessage &msg, int initialOffset) {
